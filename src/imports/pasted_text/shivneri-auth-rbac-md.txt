@@ -1,0 +1,1913 @@
+Upgrade the existing SHIVNERI Enterprise Transport Management Platform by implementing a complete ENTERPRISE-GRADE AUTHENTICATION + RBAC + TENANT-AWARE ACCESS CONTROL experience across every portal.
+
+IMPORTANT:
+
+Do NOT redesign the existing Shivneri application unnecessarily.
+
+Preserve the current:
+- Brand identity
+- Sidebar
+- Header
+- Tables
+- Dashboard cards
+- Colors
+- Typography
+- Existing dialogs
+- Ride management
+- Fleet management
+- Driver management
+- Organization management
+- Live operations
+- AI Assistant
+
+Add a complete identity and authorization layer around the existing product.
+
+The final product should feel like a real secure enterprise SaaS platform.
+
+============================================================
+1. SHIVNERI PORTAL ARCHITECTURE
+============================================================
+
+Implement four protected experiences:
+
+1. SHIVNERI PLATFORM ADMIN PORTAL
+2. CLIENT ORGANIZATION PORTAL
+3. EMPLOYEE MOBILE APP
+4. DRIVER MOBILE APP
+
+Every experience must require authentication.
+
+Every authenticated user must have:
+- User identity
+- Organization / tenant
+- Role
+- Permissions
+- Account status
+- Session
+- Security status
+
+Never allow a user to directly select a portal and bypass authorization.
+
+The system must determine the destination from the authenticated identity and assigned access.
+
+============================================================
+2. LOGIN EXPERIENCE
+============================================================
+
+Create a premium enterprise login screen.
+
+Header:
+
+SHIVNERI
+
+Enterprise Transport Management
+
+Subtitle:
+
+"Secure, trackable and automated corporate transportation."
+
+Login options:
+
+[ Email / Employee ID ]
+[ Mobile OTP ]
+[ Enterprise SSO ]
+
+For enterprise accounts also show:
+
+Continue with SSO
+Continue with Microsoft
+Continue with Google Workspace
+
+Optional:
+
+MFA / TOTP
+
+Footer:
+
+Privacy Policy
+Security
+Terms
+Help & Support
+
+============================================================
+3. LOGIN FLOW
+============================================================
+
+Implement this conceptual authentication flow:
+
+LOGIN
+↓
+IDENTITY VERIFICATION
+↓
+MFA / OTP IF REQUIRED
+↓
+ACCOUNT STATUS CHECK
+↓
+TENANT RESOLUTION
+↓
+ROLE RESOLUTION
+↓
+PERMISSION RESOLUTION
+↓
+POLICY EVALUATION
+↓
+PORTAL RESOLUTION
+↓
+AUTHORIZED DASHBOARD
+
+Show a short loading state:
+
+"Securing your session..."
+
+Then:
+
+"Verifying organization access..."
+
+Then:
+
+"Loading your workspace..."
+
+Do not expose internal security implementation details to normal users.
+
+============================================================
+4. MULTI-TENANT ORGANIZATION RESOLUTION
+============================================================
+
+After successful authentication, resolve the user's organization server-side.
+
+Example:
+
+TCS Pune Campus
+ORG-001
+
+For organization users, the organization should be automatically determined from the account.
+
+DO NOT allow the user to manually change organization_id to access another tenant.
+
+If the user belongs to multiple authorized organizations:
+
+Show:
+
+"Select Workspace"
+
+TCS Pune Campus
+Infosys BPM
+Wipro Technologies
+
+Only organizations explicitly assigned to the user should appear.
+
+After selection:
+
+Store selected authorized organization context.
+
+============================================================
+5. PLATFORM ADMIN LOGIN
+============================================================
+
+Create a separate platform administration access experience.
+
+Platform roles:
+
+Super Admin
+Platform Admin
+Operations Admin
+Finance Admin
+Security Admin
+Support Admin
+Auditor
+
+These roles are defined in the Shivneri research requirements. :contentReference[oaicite:1]{index=1}
+
+After login:
+
+Super Admin
+→ Platform Dashboard
+
+Platform Admin
+→ Platform Dashboard
+
+Operations Admin
+→ Live Operations
+
+Finance Admin
+→ Billing / Finance
+
+Security Admin
+→ Security & Incidents
+
+Support Admin
+→ Support / Operations
+
+Auditor
+→ Audit Center
+
+Do not give every platform role full access.
+
+============================================================
+6. ORGANIZATION PORTAL LOGIN
+============================================================
+
+Organization roles:
+
+Organization Admin
+Transport Manager
+Operations Manager
+HR Manager
+Security Manager
+Finance Manager
+Report Manager
+Employee
+
+Use role-specific landing pages.
+
+Organization Admin:
+→ Organization Dashboard
+
+Transport Manager:
+→ Transport Operations
+
+Operations Manager:
+→ Live Operations
+
+HR Manager:
+→ Employees
+
+Security Manager:
+→ Safety / Incidents
+
+Finance Manager:
+→ Billing
+
+Report Manager:
+→ Reports
+
+Employee:
+→ Employee experience
+
+These roles and tenant-specific controls are part of the documented organization model. :contentReference[oaicite:2]{index=2}
+
+============================================================
+7. FLEET ROLES
+============================================================
+
+Support:
+
+Fleet Manager
+Driver Supervisor
+Vehicle Manager
+Driver
+
+Fleet Manager:
+→ Fleet Dashboard
+
+Driver Supervisor:
+→ Drivers / Assignments
+
+Vehicle Manager:
+→ Vehicles / Maintenance
+
+Driver:
+→ Driver Mobile App
+
+============================================================
+8. EMPLOYEE MOBILE LOGIN
+============================================================
+
+Employee login options:
+
+Employee ID
+Email
+OTP
+Enterprise SSO
+
+After authentication:
+
+Validate:
+
+User
+Organization
+Employee profile
+Role
+Transport eligibility
+Permissions
+
+Then open Employee Home.
+
+Employee Home should contain only features permitted for the employee.
+
+Default employee features:
+
+Upcoming Ride
+Book Ride
+Ride History
+Live Tracking
+ETA
+SOS
+Location Sharing
+Rating
+Complaints
+Profile
+
+The source requirements explicitly define these employee capabilities. :contentReference[oaicite:3]{index=3}
+
+============================================================
+9. DRIVER MOBILE LOGIN
+============================================================
+
+Driver login:
+
+Mobile Number
+OTP
+Employee/Driver ID
+Password if configured
+
+Optional MFA for privileged driver operations.
+
+After login:
+
+Verify:
+
+Driver identity
+Organization
+Driver status
+Verification status
+Vehicle assignment
+Shift
+Account status
+
+If driver is not verified:
+
+Show:
+
+"Account Verification Required"
+
+Do not allow trip execution.
+
+If driver is suspended:
+
+"Driver account suspended"
+
+Contact operations.
+
+If verified:
+
+Open Driver Dashboard.
+
+Driver features:
+
+Assigned Trips
+Accept Trip
+Reject Trip
+Navigation
+Passenger OTP
+Start Ride
+Complete Ride
+SOS
+Accident Report
+Breakdown Report
+Trip History
+Performance
+
+These capabilities align with the documented Driver Mobile App. :contentReference[oaicite:4]{index=4}
+
+============================================================
+10. RBAC ENGINE
+============================================================
+
+Create a centralized RBAC model.
+
+Every role receives permissions.
+
+Permission format:
+
+resource.action
+
+Examples:
+
+organization.read
+organization.update
+organization.suspend
+
+employee.create
+employee.read
+employee.update
+employee.delete
+employee.suspend
+
+driver.create
+driver.read
+driver.update
+driver.verify
+driver.suspend
+
+vehicle.create
+vehicle.read
+vehicle.update
+vehicle.assign
+vehicle.decommission
+
+ride.create
+ride.read
+ride.assign
+ride.accept
+ride.reject
+ride.start
+ride.cancel
+ride.complete
+
+tracking.view
+tracking.share
+tracking.history
+
+sos.trigger
+sos.view
+sos.resolve
+
+incident.create
+incident.manage
+
+billing.view
+billing.generate
+billing.approve
+
+report.view
+report.export
+report.schedule
+
+role.create
+role.update
+permission.assign
+policy.create
+audit.view
+
+Use the documented permission catalog as the foundation. :contentReference[oaicite:5]{index=5}
+
+============================================================
+11. PERMISSION MATRIX UI
+============================================================
+
+Create:
+
+ACCESS CONTROL CENTER
+
+Tabs:
+
+Roles
+Permissions
+Users
+Policies
+Access Requests
+Audit
+
+Role table:
+
+Role
+Scope
+Users
+Permissions
+Status
+Last Updated
+Actions
+
+Example:
+
+Transport Manager
+Organization
+12 users
+34 permissions
+Active
+
+Security Manager
+Organization
+4 users
+28 permissions
+Active
+
+Finance Manager
+Organization
+3 users
+18 permissions
+Active
+
+============================================================
+12. ROLE CREATION
+============================================================
+
+Create:
+
+"+ Create Role"
+
+Dialog:
+
+Role Name
+Description
+Role Scope
+
+Scope:
+
+Platform
+Organization
+Department
+Location
+
+Permission groups:
+
+Organization
+Employees
+Drivers
+Vehicles
+Rides
+Tracking
+Safety
+Recordings
+Billing
+Reports
+Administration
+
+Each permission has:
+
+☐ Read
+☐ Create
+☐ Update
+☐ Delete
+☐ Approve
+☐ Export
+
+Example:
+
+Rides
+
+☑ ride.read
+☑ ride.assign
+☑ ride.cancel
+☐ ride.delete
+
+Button:
+
+Save Role
+
+============================================================
+13. ROLE ASSIGNMENT
+============================================================
+
+Create:
+
+Assign Role
+
+User:
+Akshat Gupta
+
+Organization:
+TCS Pune Campus
+
+Role:
+Transport Manager
+
+Scope:
+
+Organization
+Department
+Location
+
+Department:
+
+Engineering
+
+Locations:
+
+Pune
+
+Permissions inherited:
+
+34
+
+Button:
+
+Assign Role
+
+Show warning:
+
+"Changing this role changes the user's access to organization resources."
+
+============================================================
+14. MULTIPLE ROLES
+============================================================
+
+Support users having multiple roles where authorized.
+
+Example:
+
+Akshat Gupta
+
+Roles:
+
+Transport Manager
+Report Manager
+
+Show:
+
+Effective Permissions
+
+34 + 12 inherited permissions
+
+Resolve conflicts according to policy.
+
+DO NOT simply expose all permissions without policy evaluation.
+
+============================================================
+15. DEFAULT DENY
+============================================================
+
+Implement:
+
+DEFAULT DENY.
+
+If a permission is not explicitly granted:
+
+DENY
+
+Example:
+
+User tries to access Billing.
+
+Show:
+
+Access Restricted
+
+"You don't have permission to view billing information."
+
+Buttons:
+
+Request Access
+Go Back
+
+Never show sensitive information behind the denied screen.
+
+============================================================
+16. PERMISSION-AWARE NAVIGATION
+============================================================
+
+Sidebar items must be generated according to permissions.
+
+Example:
+
+Transport Manager:
+
+✓ Dashboard
+✓ Employees
+✓ Rides
+✓ Drivers
+✓ Vehicles
+✓ Routes
+✓ Live Operations
+✗ Billing
+✗ Security Audit
+
+Finance Manager:
+
+✓ Dashboard
+✓ Billing
+✓ Reports
+✗ Driver Management
+✗ Live Operations
+
+Security Manager:
+
+✓ Dashboard
+✓ Safety
+✓ Incidents
+✓ SOS
+✓ Audit
+✗ Billing
+
+Do not simply disable every unauthorized item.
+
+Sensitive modules should normally be hidden from navigation.
+
+============================================================
+17. PERMISSION-AWARE BUTTONS
+============================================================
+
+Buttons must also respect permissions.
+
+Example:
+
+If user has:
+
+employee.read
+
+Show:
+
+View
+
+If user has:
+
+employee.update
+
+Show:
+
+Edit
+
+If user has:
+
+employee.delete
+
+Show:
+
+Delete
+
+If user only has:
+
+employee.read
+
+Do NOT show Delete.
+
+For restricted actions show a lock only when helpful.
+
+Example:
+
+🔒 Requires approval
+
+============================================================
+18. RESOURCE OWNERSHIP
+============================================================
+
+RBAC alone is NOT enough.
+
+Add ownership rules.
+
+Employee:
+
+Can view own rides.
+
+Employee cannot view another employee's ride.
+
+Driver:
+
+Can view assigned rides.
+
+Driver cannot access another driver's trips.
+
+Manager:
+
+Can access employees within assigned organization / department / scope.
+
+Example:
+
+ALLOW:
+
+ride.employee_id == user.id
+
+AND
+
+ride.organization_id == user.organization_id
+
+Otherwise:
+
+DENY.
+
+This follows the documented resource ownership model. :contentReference[oaicite:6]{index=6}
+
+============================================================
+19. TENANT ISOLATION
+============================================================
+
+Every protected resource belongs to an organization.
+
+Example:
+
+Organization:
+TCS
+
+Resource:
+Ride #10421
+
+Authenticated organization:
+TCS
+
+→ ALLOW
+
+Authenticated organization:
+Infosys
+
+→ DENY
+
+Show:
+
+"Access denied. This resource belongs to another organization."
+
+Never expose:
+- Employee data
+- Driver data
+- Ride data
+- Billing
+- Locations
+- Incidents
+
+across tenants.
+
+The documentation specifically requires server-side tenant resolution and tenant-scoped queries. :contentReference[oaicite:7]{index=7}
+
+============================================================
+20. ABAC / POLICY LAYER
+============================================================
+
+After RBAC permission check, add contextual policy evaluation.
+
+Evaluate:
+
+USER
++
+ROLE
++
+ACTION
++
+RESOURCE
++
+ORGANIZATION
++
+CONTEXT
+
+Possible result:
+
+ALLOW
+DENY
+REQUIRE APPROVAL
+
+Example:
+
+Transport Manager
++
+ride.cancel
++
+own organization
++
+before cancellation cutoff
+
+→ ALLOW
+
+Same action after cutoff:
+
+→ DENY
+
+Security Manager
++
+recording.view
++
+active SOS
++
+authorized incident
+
+→ ALLOW + AUDIT
+
+These policy outcomes follow the documented policy engine. :contentReference[oaicite:8]{index=8}
+
+============================================================
+21. REQUIRE APPROVAL
+============================================================
+
+If access is not immediately allowed:
+
+Show:
+
+Approval Required
+
+"You have permission to request this action, but approval is required."
+
+Button:
+
+Request Approval
+
+Create:
+
+Access Request
+
+Requester
+Role
+Resource
+Action
+Reason
+Approver
+Expiry
+
+Status:
+
+Pending
+
+============================================================
+22. BREAK-GLASS ACCESS
+============================================================
+
+For emergencies:
+
+Employee triggers SOS.
+
+Security receives alert.
+
+Authorized security user requests emergency access.
+
+Show:
+
+Emergency Access
+
+Reason:
+Active SOS investigation
+
+Requested data:
+
+✓ Live Location
+✓ Emergency Contact
+✓ Driver Information
+
+Duration:
+
+30 minutes
+
+Button:
+
+Grant Emergency Access
+
+Show:
+
+"All emergency access will be logged."
+
+Access automatically expires.
+
+The documented emergency workflow requires minimum necessary access, limited duration, logging, and automatic expiry. :contentReference[oaicite:9]{index=9}
+
+============================================================
+23. SENSITIVE DATA MASKING
+============================================================
+
+Sensitive fields must depend on permissions.
+
+Phone:
+
+••••••8821
+
+Full phone visible only with authorized permission.
+
+Identity documents:
+
+Restricted
+
+Emergency contacts:
+
+Security-only
+
+Live location:
+
+Own ride / authorized operations
+
+Recording:
+
+Incident-based authorization
+
+Billing:
+
+Finance permissions
+
+Exports:
+
+Authorized permission + audit
+
+These controls are explicitly recommended for sensitive data. :contentReference[oaicite:10]{index=10}
+
+============================================================
+24. MFA / STEP-UP AUTHENTICATION
+============================================================
+
+For privileged users:
+
+Super Admin
+Finance Admin
+Security Admin
+Organization Admin
+
+Require MFA.
+
+Flow:
+
+Password / SSO
+↓
+MFA
+↓
+Trusted Device Check
+↓
+Dashboard
+
+For sensitive actions:
+
+Export billing
+Download recording
+Change permissions
+Grant emergency access
+
+Require:
+
+"Verify your identity"
+
+OTP / TOTP
+
+============================================================
+25. DEVICE & SESSION MANAGEMENT
+============================================================
+
+Create:
+
+Security Settings
+
+Devices:
+
+Windows Laptop
+Chrome
+Pune
+Active now
+
+Android Phone
+Chrome
+Last active:
+2 hours ago
+
+Actions:
+
+Revoke Session
+
+Create:
+
+"Sign out all other devices"
+
+Show session metadata where appropriate.
+
+The requirements call for trusted devices, new-device verification, session revocation, timeouts, and anomaly monitoring. :contentReference[oaicite:11]{index=11}
+
+============================================================
+26. ACCOUNT STATES
+============================================================
+
+Support:
+
+Active
+Pending
+Suspended
+Locked
+Deactivated
+Verification Required
+
+Each state gets a dedicated UI.
+
+Suspended:
+
+"Your account has been suspended."
+
+Contact administrator.
+
+Locked:
+
+"Your account has been temporarily locked."
+
+Try again later / contact support.
+
+============================================================
+27. LOGIN SECURITY
+============================================================
+
+Design:
+
+Invalid password
+Invalid OTP
+Expired OTP
+Too many attempts
+Session expired
+MFA failed
+Unauthorized device
+Account suspended
+SSO failure
+Network error
+
+Never reveal whether an unrelated account exists.
+
+============================================================
+28. AUTHORIZATION DECISION UI
+============================================================
+
+Create a reusable:
+
+Authorization Decision Dialog
+
+Example:
+
+Access Denied
+
+Action:
+Download Recording
+
+Resource:
+Incident #INC-20481
+
+Decision:
+DENY
+
+Reason:
+
+"Your current role does not include recording.download."
+
+For authorized administrators show:
+
+Policy ID
+Policy version
+Conditions
+Evaluation result
+Correlation ID
+
+Normal users should only see a practical explanation.
+
+This matches the documented Access Transparency requirement. :contentReference[oaicite:12]{index=12}
+
+============================================================
+29. POLICY SIMULATOR
+============================================================
+
+Create:
+
+Policy Simulator
+
+Fields:
+
+User
+Organization
+Role
+Action
+Resource
+Department
+Location
+Time
+Shift
+Incident Status
+
+Button:
+
+Evaluate
+
+Result:
+
+✓ ALLOW
+
+or
+
+✕ DENY
+
+or
+
+⚠ REQUIRE APPROVAL
+
+Show:
+
+Reason
+Policy ID
+Conditions evaluated
+Timestamp
+Correlation ID
+
+============================================================
+30. AUDIT EVERY SECURITY ACTION
+============================================================
+
+Create:
+
+Security & Audit Center
+
+Track:
+
+Login
+Logout
+Failed Login
+MFA
+Role Changes
+Permission Changes
+Policy Changes
+Sensitive Data Access
+Location Access
+SOS Access
+Recording Access
+Exports
+Billing Changes
+Admin Actions
+Emergency Access
+
+Table:
+
+Timestamp
+Actor
+Organization
+Action
+Resource
+Result
+IP
+Device
+Correlation ID
+
+The source requirements specifically call for security-sensitive events to be auditable. :contentReference[oaicite:13]{index=13}
+
+============================================================
+31. ROLE-SPECIFIC DASHBOARD EXPERIENCE
+============================================================
+
+Do NOT create one identical dashboard for every role.
+
+Create role-aware dashboards.
+
+SUPER ADMIN:
+
+Organizations
+Users
+Drivers
+Vehicles
+Trips
+Revenue
+Security
+System Health
+
+TRANSPORT MANAGER:
+
+Today's Trips
+Active Trips
+Delayed Trips
+Drivers
+Vehicles
+Routes
+Assignments
+
+SECURITY MANAGER:
+
+SOS
+Incidents
+Live Location
+Emergency Access
+Security Events
+
+FINANCE MANAGER:
+
+Revenue
+Invoices
+Trip Cost
+Payments
+Approvals
+Exports
+
+HR MANAGER:
+
+Employees
+Eligibility
+Shifts
+Transport Requests
+Attendance
+
+REPORT MANAGER:
+
+Reports
+Analytics
+Scheduled Reports
+Exports
+
+EMPLOYEE:
+
+Upcoming Ride
+Book Ride
+Track Ride
+Ride History
+SOS
+Feedback
+
+DRIVER:
+
+Assigned Trips
+Navigation
+Passenger Verification
+Start Ride
+Complete Ride
+SOS
+Performance
+
+============================================================
+32. ROLE SWITCHING
+============================================================
+
+If an authorized user has multiple roles:
+
+Add:
+
+"Current Role"
+
+dropdown in profile menu.
+
+Example:
+
+Akshat Gupta
+
+Current Role:
+Transport Manager
+
+Switch Role:
+
+Transport Manager
+Report Manager
+
+When switching:
+
+Recalculate permissions.
+
+Refresh navigation.
+
+Refresh dashboard.
+
+Refresh available actions.
+
+Never allow switching into an unassigned role.
+
+============================================================
+33. ACCESS REQUEST CENTER
+============================================================
+
+Create:
+
+Access Requests
+
+Tabs:
+
+Pending
+Approved
+Rejected
+Expired
+
+Request card:
+
+Requester
+Organization
+Requested Role
+Permission
+Resource
+Reason
+Approver
+Expiry
+Status
+
+Actions:
+
+Approve
+Reject
+View Details
+
+Approval actions themselves must require appropriate permissions.
+
+============================================================
+34. CUSTOM ROLE BUILDER
+============================================================
+
+Organization Admin gets:
+
+Access Control Center
+
+Create Custom Role.
+
+Example:
+
+"Night Operations Supervisor"
+
+Scope:
+Organization
+
+Department:
+Operations
+
+Location:
+Pune
+
+Time:
+18:00–06:00
+
+Permissions:
+
+ride.read ✓
+ride.assign ✓
+ride.cancel ✓
+driver.read ✓
+vehicle.read ✓
+tracking.view ✓
+billing.view ✗
+recording.download ✗
+
+Save.
+
+Show:
+
+"Role created successfully."
+
+============================================================
+35. LOGIN → PORTAL ROUTING EXAMPLES
+============================================================
+
+Example 1:
+
+Raj Kumar
+Role:
+Driver
+
+→ Driver Mobile
+
+Example 2:
+
+Priya Sharma
+Role:
+Employee
+
+Organization:
+TCS
+
+→ Employee Mobile
+
+Example 3:
+
+Amit
+Role:
+Transport Manager
+
+Organization:
+Infosys
+
+→ Client Organization Portal
+
+Example 4:
+
+Security Admin
+Platform role
+
+→ Shivneri Admin Portal
+
+Example 5:
+
+Finance Manager
+
+→ Finance-focused Organization Portal
+
+============================================================
+36. MOBILE RBAC
+============================================================
+
+RBAC must apply to mobile applications too.
+
+Employee mobile navigation:
+
+Home
+Rides
+Book
+History
+Safety
+Profile
+
+Driver mobile:
+
+Home
+Trips
+Navigation
+Earnings
+Safety
+Profile
+
+Do not assume mobile users have unrestricted access.
+
+Every mobile API action must correspond to permissions.
+
+============================================================
+37. LOGOUT
+============================================================
+
+Profile menu:
+
+Account
+Security
+Sessions
+Switch Role
+Logout
+
+Logout confirmation:
+
+"Sign out of Shivneri?"
+
+Buttons:
+
+Cancel
+Sign Out
+
+After logout:
+
+Clear session.
+
+Return to Login.
+
+============================================================
+38. SESSION EXPIRATION
+============================================================
+
+If session expires:
+
+Show:
+
+"Your session has expired."
+
+Buttons:
+
+Sign In Again
+
+Preserve unsaved data where appropriate.
+
+Do not expose protected information after expiration.
+
+============================================================
+39. SECURITY ARCHITECTURE VISUAL
+============================================================
+
+Create a Figma architecture diagram:
+
+USER
+↓
+AUTHENTICATION
+↓
+MFA
+↓
+TENANT RESOLUTION
+↓
+RBAC
+↓
+ABAC / POLICY ENGINE
+↓
+RESOURCE OWNERSHIP
+↓
+BUSINESS RULES
+↓
+ALLOW / DENY / REQUIRE APPROVAL
+↓
+DATABASE / API
+↓
+AUDIT EVENT
+
+Use this diagram as a dedicated page:
+
+"Authorization Architecture"
+
+============================================================
+40. BACKEND AUTHORIZATION PRINCIPLE
+============================================================
+
+The UI should reflect permissions, but the UI must NOT be treated as the security boundary.
+
+Frontend:
+Hide / disable unauthorized actions.
+
+Backend:
+Authoritative authorization.
+
+Every API request should conceptually be checked by:
+
+Authentication
+Tenant
+Role
+Permission
+Policy
+Ownership
+Business Rule
+
+Then:
+
+ALLOW / DENY / REQUIRE_APPROVAL
+
+The documentation explicitly states that backend authorization must remain authoritative. :contentReference[oaicite:14]{index=14}
+
+============================================================
+41. DATA MODEL VISUALIZATION
+============================================================
+
+Create an architecture page showing:
+
+Organization
+↓
+Users
+↓
+Roles
+↓
+Permissions
+
+Organization
+↓
+Policies
+
+User
+↓
+UserRole
+↓
+RolePermission
+
+Employee
+Driver
+Vehicle
+Ride
+Incident
+AccessRequest
+AuditEvent
+
+Use the documented data model as the basis. :contentReference[oaicite:15]{index=15}
+
+============================================================
+42. ADMIN SECURITY DASHBOARD
+============================================================
+
+Create security KPIs:
+
+Active Sessions
+Failed Logins
+MFA Challenges
+Access Denials
+Pending Approvals
+Emergency Access
+Policy Violations
+Suspended Accounts
+
+Charts:
+
+Login activity
+Denied access
+Permission changes
+Security incidents
+
+============================================================
+43. AI SECURITY ASSISTANT
+============================================================
+
+Add:
+
+"Ask Shivneri AI"
+
+for authorized administrators.
+
+Examples:
+
+"Why was this access denied?"
+
+"Explain this policy decision."
+
+"Show users with unusual access activity."
+
+"Summarize today's security events."
+
+"Which permissions changed today?"
+
+"Find pending access requests."
+
+IMPORTANT:
+
+AI can explain and assist.
+
+AI must NOT become the final authorization authority.
+
+Authorization remains deterministic and policy-based.
+
+This is explicitly required by the Shivneri architecture. :contentReference[oaicite:16]{index=16}
+
+============================================================
+44. SECURITY NOTIFICATIONS
+============================================================
+
+Create notification examples:
+
+🔐 New login detected
+
+⚠ Failed login attempts
+
+👤 Role changed
+
+🔑 Permission updated
+
+🚨 Emergency access granted
+
+📍 Sensitive location accessed
+
+📄 Recording downloaded
+
+⚠ Access request pending
+
+============================================================
+45. DESIGN SYSTEM
+============================================================
+
+Keep existing Shivneri design.
+
+Create reusable components:
+
+LoginPage
+SSOButton
+OTPInput
+MFADialog
+WorkspaceSelector
+RoleBadge
+PermissionBadge
+AccessDenied
+ApprovalRequired
+RoleSelector
+PermissionMatrix
+PolicyEvaluator
+AuditEvent
+SecurityAlert
+SessionCard
+DeviceCard
+AccessRequest
+AuthorizationDialog
+
+Variants:
+
+Allowed
+Denied
+Requires Approval
+Expired
+Suspended
+Restricted
+Loading
+Error
+Success
+
+============================================================
+46. FIGMA PROTOTYPE FLOWS
+============================================================
+
+Create fully connected prototype flows.
+
+FLOW 1:
+
+Login
+→ Email
+→ Password
+→ MFA
+→ Tenant Resolution
+→ Role Resolution
+→ Transport Manager Dashboard
+
+FLOW 2:
+
+Employee Login
+→ OTP
+→ Employee Dashboard
+→ Upcoming Ride
+
+FLOW 3:
+
+Driver Login
+→ OTP
+→ Verification
+→ Driver Dashboard
+→ Assigned Ride
+
+FLOW 4:
+
+Security Admin
+→ Login
+→ MFA
+→ Security Dashboard
+→ SOS
+→ Emergency Access
+→ Audit
+
+FLOW 5:
+
+Finance Manager
+→ Login
+→ MFA
+→ Finance Dashboard
+→ Billing
+
+FLOW 6:
+
+Unauthorized User
+→ Login
+→ Dashboard
+→ Restricted Module
+→ Access Denied
+→ Request Access
+
+FLOW 7:
+
+Transport Manager
+→ Employee
+→ View
+→ Allowed
+
+FLOW 8:
+
+Transport Manager
+→ Employee
+→ Delete
+→ Permission Denied
+
+FLOW 9:
+
+Security Manager
+→ Active SOS
+→ Request Emergency Access
+→ Approval
+→ Temporary Access
+→ Audit
+→ Auto Expiry
+
+FLOW 10:
+
+Multi-role User
+→ Profile
+→ Switch Role
+→ Recalculate Permissions
+→ New Dashboard
+
+============================================================
+47. FINAL SECURITY EXPERIENCE
+============================================================
+
+The final Shivneri system should communicate:
+
+WHO ARE YOU?
+↓
+WHICH ORGANIZATION DO YOU BELONG TO?
+↓
+WHAT ROLE DO YOU HAVE?
+↓
+WHAT PERMISSIONS DO YOU HAVE?
+↓
+WHAT RESOURCE ARE YOU ACCESSING?
+↓
+IS THE RESOURCE YOURS?
+↓
+DO CONTEXTUAL POLICIES ALLOW IT?
+↓
+DO BUSINESS RULES ALLOW IT?
+↓
+ALLOW / DENY / REQUIRE APPROVAL
+↓
+AUDIT THE DECISION
+
+Every portal login must follow this security model.
+
+Every navigation item must respect it.
+
+Every button must respect it.
+
+Every dialog must respect it.
+
+Every sensitive API action must respect it.
+
+Every mobile action must respect it.
+
+Every emergency action must respect it.
+
+Every export must respect it.
+
+Every AI-assisted action must respect it.
+
+============================================================
+48. FINAL PRODUCT POSITIONING
+============================================================
+
+The finished product should feel like:
+
+"SHIVNERI — Secure Enterprise Corporate Mobility Platform"
+
+NOT merely:
+
+"Employee Cab Booking System"
+
+The experience should combine:
+
+Multi-Tenant SaaS
++
+Enterprise Authentication
++
+RBAC
++
+ABAC / Policy Engine
++
+Tenant Isolation
++
+Live Transportation
++
+Fleet Management
++
+Safety
++
+Billing
++
+Analytics
++
+Auditability
++
+AI Assistance
+
+Make security visible through the UX without making the application difficult to use.
+
+Use realistic sample users, organizations, roles, permissions, rides, drivers, vehicles, incidents and audit events.
+
+Make the complete prototype presentation-ready for an enterprise client demonstration.
