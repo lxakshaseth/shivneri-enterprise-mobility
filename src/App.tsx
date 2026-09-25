@@ -654,10 +654,591 @@ function Sidebar({ active, onNav }: { active: View; onNav: (v: View) => void }) 
   );
 }
 
+// ─── Platform Documentation Database ─────────────────────────────────────────
+type DocArticleItem = {
+  title: string;
+  category: string;
+  readTime: string;
+  lastUpdated: string;
+  badge: string;
+  summary: string;
+  metrics?: { label: string; value: string; desc?: string }[];
+  steps?: { step: number; title: string; desc: string }[];
+  table?: { title: string; headers: string[]; rows: string[][] };
+  keyPoints?: string[];
+  callout?: { title: string; text: string; type: 'info' | 'warning' | 'tip' };
+  code?: { language: string; content: string };
+  relatedPages: string[];
+};
+
+const DOC_ARTICLES: Record<string, DocArticleItem> = {
+  'Introduction': {
+    title: 'Platform Architecture & System Overview',
+    category: 'Getting Started',
+    readTime: '3 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Core Architecture',
+    summary: 'Shivneri Enterprise Mobility is a unified mission-critical transport dispatch platform engineered for large-scale enterprise campuses, tech parks, and BPO operations across Pune, Mumbai, and Bangalore.',
+    metrics: [
+      { label: 'Uptime SLA', value: '99.98%', desc: 'High-availability multi-region cluster' },
+      { label: 'Daily Trips Handled', value: '12,500+', desc: 'Across Hinjewadi, Magarpatta & BKC' },
+      { label: 'Telemetry Frequency', value: '3 Seconds', desc: 'Sub-second WebSocket GPS stream' },
+      { label: 'Compliance Rate', value: '100%', desc: 'RTO, Police KYC & AIS-140 standard' },
+    ],
+    steps: [
+      { step: 1, title: 'Unified Operations Center', desc: 'Combines real-time GPS fleet tracking, automated roster dispatch, SOS emergency escalation, and compliance vaults into a single enterprise dashboard.' },
+      { step: 2, title: 'Driver Companion App', desc: 'Provides turn-by-turn navigation, digital passenger pickup check-ins via dynamic OTP, panic buttons, and automated shift trip sheets.' },
+      { step: 3, title: 'Employee Digital Pass', desc: 'Enables real-time cab tracking, seat reservations, driver contact masking, live ETA sharing with family, and instant SOS triggers.' },
+      { step: 4, title: 'Automated Billing & Audit Engine', desc: 'Converts GPS telematics into compliant GST invoices, automated FASTag toll reconciliation, and transparent driver partner payouts.' },
+    ],
+    keyPoints: [
+      'Engineered specifically for Tier-1 technology companies (TCS, Infosys, Wipro, Cognizant).',
+      'Full compliance with Maharashtra Motor Vehicles Rules and AIS-140 safety mandate.',
+      '24/7 Security Operations Center (SOC) with direct police PCR 112 escalation integration.',
+      'Seamless REST APIs and webhooks for Workday, Darwinbox, and SAP SuccessFactors HRMS.',
+    ],
+    callout: {
+      title: 'Enterprise Scalability',
+      text: 'Shivneri handles multi-tenant client instances with isolated data partitions, corporate billing hierarchies, and department-level cost centers.',
+      type: 'info',
+    },
+    relatedPages: ['Quick Setup', 'First Organization', 'Live Tracking', 'Billing & Invoices'],
+  },
+  'Quick Setup': {
+    title: '10-Minute Rapid Onboarding Guide',
+    category: 'Getting Started',
+    readTime: '4 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Getting Started',
+    summary: 'Follow this rapid deployment checklist to launch your enterprise transport fleet and automated employee rostering in under 10 minutes.',
+    steps: [
+      { step: 1, title: 'Create Client Organization Profile', desc: 'Navigate to Organizations → Add Organization. Enter your corporate entity legal name, GSTIN, registered office, and assigned account manager.' },
+      { step: 2, title: 'Define Campus Geofences & Pickup Hubs', desc: 'Under Routes & Zones, draw polygon geofences around company main gates (e.g. Infosys Phase 2 Gate 1, TCS Sahyadri Park Gate 3) and key transit hubs.' },
+      { step: 3, title: 'Onboard Fleet Vehicles', desc: 'Register cabs in Fleet Vehicles with registration numbers, seating capacities (4, 6, 7, 17), and upload mandatory RC and insurance copies.' },
+      { step: 4, title: 'Verify & Authorize Drivers', desc: 'Add commercial drivers with valid transport badges, complete Aadhaar KYC, and submit for 24-hour background verification.' },
+      { step: 5, title: 'Import Employee Shift Rosters', desc: 'Upload CSV employee list with shift windows (Morning 08:00, General 09:30, Evening 18:30, Night 22:00) and pickup geo-coordinates.' },
+      { step: 6, title: 'Launch Live Operations', desc: 'Switch to Live Ops view to monitor real-time vehicle dispatch, passenger boarding OTPs, and corridor adherence.' },
+    ],
+    table: {
+      title: 'Pre-Deployment Checklist',
+      headers: ['Requirement', 'Format / Document', 'Processing SLA'],
+      rows: [
+        ['Corporate Legal Profile', 'GSTIN & PAN Certificate', 'Instant Approval'],
+        ['Vehicle Registration', 'RC Book + Comprehensive Insurance', 'Automated OCR Scan (<5 min)'],
+        ['Driver KYC Verification', 'Commercial Badge + Police Verification', 'Approved in <24 Hours'],
+        ['Employee Roster Roster', 'CSV Template / HRMS Webhook', 'Instant Validation'],
+      ],
+    },
+    callout: {
+      title: 'Need Setup Assistance?',
+      text: 'Our dedicated deployment engineering team provides 24/7 white-glove onboarding for enterprise accounts. Reach out via Live Chat Support.',
+      type: 'tip',
+    },
+    relatedPages: ['Introduction', 'First Organization', 'Adding Vehicles', 'Driver Verification'],
+  },
+  'First Organization': {
+    title: 'Corporate Tenant Configuration & Policies',
+    category: 'Getting Started',
+    readTime: '4 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Tenant Admin',
+    summary: 'Manage multi-tenant corporate clients (e.g. TCS Pune Campus, Infosys BPM, Wipro Tech) with customized billing plans, shift policies, and female employee safety escorts.',
+    metrics: [
+      { label: 'Active Orgs', value: '44 Clients', desc: 'Across IT & BFSI corridors' },
+      { label: 'Default Shift Slots', value: '4 Windows', desc: 'Morning, General, Evening, Night' },
+      { label: 'Escort Guard Policy', value: 'Mandatory', desc: 'Female staff drops past 20:00' },
+    ],
+    steps: [
+      { step: 1, title: 'Assign Subscription Tier', desc: 'Select Enterprise Gold, Platinum, or Dedicated Fleet Retainer based on expected monthly trip volume and dedicated cab allocations.' },
+      { step: 2, title: 'Configure Night Safety & Escort Rules', desc: 'Enforce mandatory security guard assignment for female employees travelling between 20:00 and 06:00 as required by Maharashtra State Labour Regulations.' },
+      { step: 3, title: 'Establish Billing & Cost Center Codes', desc: 'Map department codes (Engineering, Operations, HR, Finance) to enable granular monthly chargeback reports.' },
+      { step: 4, title: 'Designate Corporate Client Admin', desc: 'Provision role-based access for client HR and Facilities teams to manage rosters and review on-time performance.' },
+    ],
+    keyPoints: [
+      'Complete tenant isolation: Organization data and employee PII remain strictly segregated.',
+      'Custom SLA definitions: Configurable on-time performance thresholds (default 98.0%).',
+      'Automatic geofenced campus arrival and departure notifications for facilities managers.',
+    ],
+    callout: {
+      title: 'Statutory Women Safety Compliance',
+      text: 'Shivneri automatically prevents single female employee drops at night without an assigned verified security escort and confirmed driver deboarding confirmation.',
+      type: 'warning',
+    },
+    relatedPages: ['Quick Setup', 'Invite Employees', 'Billing & Invoices', 'Access Control'],
+  },
+  'Invite Employees': {
+    title: 'Employee Roster Onboarding & App Activation',
+    category: 'Getting Started',
+    readTime: '4 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'User Management',
+    summary: 'Seamlessly onboard thousands of enterprise employees through bulk CSV import, HRMS synchronization (Workday, Darwinbox), or individual invites with automated SMS credentials.',
+    steps: [
+      { step: 1, title: 'Bulk CSV Roster Import', desc: 'Download our standard employee roster template with columns: Employee ID, Full Name, Email, Mobile, Department, Shift Window, and Pickup Landmark.' },
+      { step: 2, title: 'Automated Geocoding & Route Clustering', desc: 'Platform automatically geocodes residential addresses into latitude/longitude coordinates and suggests the nearest safe designated pickup stop.' },
+      { step: 3, title: 'Eligibility Rules Verification', desc: 'Set transport eligibility based on commute radius (>5 km), shift timing, or medical necessity with single-click admin override.' },
+      { step: 4, title: 'SMS & WhatsApp App Invite Dispatch', desc: 'Employees receive an automated welcome message containing a secure login link, company single sign-on (SSO) credentials, and mobile pass setup instructions.' },
+    ],
+    table: {
+      title: 'Mandatory Employee Roster Fields',
+      headers: ['Field Name', 'Example Value', 'Validation Rule'],
+      rows: [
+        ['Employee ID', 'EMP-10481', 'Unique alphanumeric string'],
+        ['Department', 'Engineering / HR / Finance', 'Pre-configured department code'],
+        ['Shift Window', 'Morning (08:00) / Night (22:00)', 'Matched to corporate roster'],
+        ['Pickup Landmark', 'Kothrud Stand, Karve Rd, Pune', 'Geocoded to safe pickup hub'],
+        ['Emergency Phone', '+91 98765 43210', '10-digit mobile for SOS contact'],
+      ],
+    },
+    callout: {
+      title: 'Automated HRMS Webhook Sync',
+      text: 'For organizations with >500 employees, connect our REST API webhook to automatically add new joiners and revoke access for relieved personnel.',
+      type: 'tip',
+    },
+    relatedPages: ['First Organization', 'Route Configuration', 'Ride Scheduling', 'API Keys'],
+  },
+  'Adding Vehicles': {
+    title: 'Fleet Vehicle Registration & Capacity Matrix',
+    category: 'Fleet Management',
+    readTime: '4 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Fleet Ops',
+    summary: 'Register commercial passenger vehicles across sedans, MPVs, electric fleet, and mini-buses with strict capacity caps, AIS-140 telematics, and maintenance scheduling.',
+    metrics: [
+      { label: 'Active Fleet', value: '142 Vehicles', desc: 'Total tracked commercial units' },
+      { label: 'EV Adoption', value: '28% Green Fleet', desc: 'Tata Nexon & Tigor EVs' },
+      { label: 'Max Speed Limit', value: '80 km/h', desc: 'Governor calibrated limit' },
+    ],
+    steps: [
+      { step: 1, title: 'Vehicle Information Entry', desc: 'Enter commercial registration number (e.g. MH12AB1234), model, manufacturing year, and fuel type (CNG, Diesel, Electric).' },
+      { step: 2, title: 'Seating Capacity & Passenger Caps', desc: 'Assign licensed seating capacity: Sedan (3-4 passengers), MPV (5-6 passengers), MUV (6-7 passengers), and Mini-Bus (12-17 passengers).' },
+      { step: 3, title: 'AIS-140 GPS & Panic Device Pairing', desc: 'Link hardware IMEI number of the onboard AIS-140 telematics device and emergency panic buttons installed inside the cabin.' },
+      { step: 4, title: 'Document Vault Verification', desc: 'Upload commercial RC book, comprehensive commercial passenger insurance, PUC certificate, and state carriage permit.' },
+    ],
+    table: {
+      title: 'Fleet Category Specifications & Capacity Rules',
+      headers: ['Vehicle Category', 'Representative Models', 'Ideal Passenger Load', 'Primary Route Use'],
+      rows: [
+        ['Compact Sedan', 'Maruti Dzire, Tata Tigor', '3 to 4 Passengers', 'Executive point-to-point'],
+        ['Executive MPV', 'Maruti Ertiga, Kia Carens', '5 to 6 Passengers', 'Standard cluster routes'],
+        ['Premium MUV', 'Toyota Innova Crysta', '6 to 7 Passengers', 'Long-distance airport & shift'],
+        ['Electric Vehicle', 'Tata Nexon EV, MG ZS EV', '3 to 4 Passengers', 'Zero-emission campus shuttle'],
+        ['Mini-Bus', 'Force Traveller Urbania', '12 to 17 Passengers', 'High-density shift dispersal'],
+      ],
+    },
+    callout: {
+      title: 'Strict Capacity Rule',
+      text: 'To ensure comfort and compliance with corporate travel safety policies, cabs must never exceed assigned passenger capacity. Shivneri algorithms restrict booking once full.',
+      type: 'warning',
+    },
+    relatedPages: ['Compliance Docs', 'Driver Verification', 'Route Configuration', 'Live Tracking'],
+  },
+  'Driver Verification': {
+    title: 'Driver KYC, Police Verification & Safety Vetting',
+    category: 'Fleet Management',
+    readTime: '5 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Safety & Compliance',
+    summary: 'Maintain an impeccable, fully compliant driver workforce through our rigorous 5-step background verification, commercial badge checks, and continuous rating audits.',
+    metrics: [
+      { label: 'Verified Drivers', value: '98.6%', desc: 'Full KYC & PCC clearance' },
+      { label: 'Min Driver Rating', value: '4.2 ★', desc: 'Disciplinary threshold' },
+      { label: 'Verification SLA', value: '<24 Hours', desc: 'Fast-track supervisor review' },
+    ],
+    steps: [
+      { step: 1, title: 'Commercial Driving License Check', desc: 'Verify valid commercial driving license with state transport authority (RTO) public service vehicle (PSV) transport badge endorsement.' },
+      { step: 2, title: 'Police Clearance Certificate (PCC)', desc: 'Obtain official police character certificate issued by the Commissioner of Police (Pune / Mumbai) within the preceding 12 months.' },
+      { step: 3, title: 'Aadhaar Biometric & Address KYC', desc: 'Complete Aadhaar authentication to confirm residential permanent address and emergency contact details.' },
+      { step: 4, title: 'Medical Fitness & Eye Examination', desc: 'Submit authorized medical practitioner fitness certificate including color vision test and blood group confirmation.' },
+      { step: 5, title: 'Gender Sensitivity & Defensive Driving Training', desc: 'Mandatory completion of Shivneri 4-hour orientation on corporate passenger etiquette, POSH norms, and defensive driving.' },
+    ],
+    table: {
+      title: 'Verification Requirements & Validity Periods',
+      headers: ['Document / Check', 'Issuing Authority', 'Validity Window', 'Mandatory for On Duty?'],
+      rows: [
+        ['Commercial Driving License', 'RTO Maharashtra', 'As per card expiry', 'Yes (Mandatory)'],
+        ['Police Clearance (PCC)', 'City Police Commissionerate', '12 Months', 'Yes (Mandatory)'],
+        ['Aadhaar KYC', 'UIDAI Portal', 'Permanent', 'Yes (Mandatory)'],
+        ['Medical Fitness Certificate', 'Registered MBBS Doctor', '12 Months', 'Yes (Mandatory)'],
+        ['POSH & Safety Certification', 'Shivneri Training Academy', 'Annual Renewal', 'Yes (Mandatory)'],
+      ],
+    },
+    callout: {
+      title: 'Zero Tolerance Policy',
+      text: 'Drivers with any unresolved criminal complaint, alcohol violation, or 2+ passenger safety complaints are immediately suspended and barred across all corporate fleets.',
+      type: 'warning',
+    },
+    relatedPages: ['Adding Vehicles', 'SOS & Safety', 'Trip Lifecycle', 'Access Control'],
+  },
+  'Route Configuration': {
+    title: 'Route Configuration & Corridor Optimization',
+    category: 'Fleet Management',
+    readTime: '5 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Route Engineering',
+    summary: 'Design high-efficiency transit corridors, optimize multi-stop employee pickup sequences, and eliminate dead mileage across major tech park zones.',
+    metrics: [
+      { label: 'Average Trip Time', value: '34 Mins', desc: 'Target <45 min commute' },
+      { label: 'On-Time Arrival', value: '98.2%', desc: 'Within 5 min grace window' },
+      { label: 'Fuel Saved / Month', value: '18,400 L', desc: 'Via corridor grouping' },
+    ],
+    steps: [
+      { step: 1, title: 'Clustered Geofence Stops', desc: 'Group residential pickups situated within a 1.2 km radius to establish common safe transit nodes and reduce in-city detour times.' },
+      { step: 2, title: 'Traffic-Aware Dispatch Sequencing', desc: 'Sequence pickups in directional order toward the campus destination to prevent backtracking and circular travel.' },
+      { step: 3, title: 'Peak Traffic Buffer Calibration', desc: 'Incorporate live Google/OSM traffic estimates with historical buffer curves for key choke points (Chandani Chowk, Wakad Flyover, Hadapsar).' },
+      { step: 4, title: 'Maximum In-Cab Travel Time Limit', desc: 'Enforce the corporate 45-minute maximum travel time policy: routes exceeding 45 minutes are automatically split into two separate cabs.' },
+    ],
+    table: {
+      title: 'Key Pune Corporate Transit Corridors',
+      headers: ['Corridor Name', 'Route Arterial', 'Distance', 'Avg Morning Travel Time'],
+      rows: [
+        ['Corridor 1 (West Pune)', 'Kothrud → Bavdhan → Hinjewadi Phase 1', '18.2 km', '38 Minutes'],
+        ['Corridor 2 (North West)', 'Baner → Balewadi → Wakad → Hinjewadi Phase 2', '12.4 km', '24 Minutes'],
+        ['Corridor 3 (East Pune)', 'Hadapsar → Kharadi Bypass → EON IT Park', '14.1 km', '30 Minutes'],
+        ['Corridor 4 (Central North)', 'Aundh → Jagtap Dairy → Hinjewadi Phase 3', '16.8 km', '33 Minutes'],
+        ['Corridor 5 (Pimpri-Chinchwad)', 'Chinchwad → Akurdi → Talawade Software Park', '11.5 km', '22 Minutes'],
+      ],
+    },
+    callout: {
+      title: 'Dynamic Traffic Rerouting',
+      text: 'When severe congestion (>20 min delay) is detected on main arterial routes, Shivneri auto-suggests alternative bypass routes directly to the driver app.',
+      type: 'tip',
+    },
+    relatedPages: ['Live Tracking', 'Ride Scheduling', 'Trip Lifecycle', 'Adding Vehicles'],
+  },
+  'Compliance Docs': {
+    title: 'Regulatory Document Vault & Expiry Alerts',
+    category: 'Fleet Management',
+    readTime: '4 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Compliance & Audit',
+    summary: 'Automated digital vault for tracking vehicle fitness certificates, state transport permits, pollution checks (PUC), and commercial insurance policies.',
+    metrics: [
+      { label: 'Vault Accuracy', value: '100%', desc: 'Verified digital records' },
+      { label: 'Warning Window', value: '45 / 15 / 0 Days', desc: 'Tiered expiry notifications' },
+      { label: 'Auto-Grounding', value: 'Instant', desc: 'On expired insurance or fitness' },
+    ],
+    steps: [
+      { step: 1, title: 'Digital Document Upload & OCR', desc: 'Upload scanned copies of RC, Insurance, Permit, and Fitness. OCR auto-extracts certificate numbers and validity dates.' },
+      { step: 2, title: 'Tiered Expiry Alert System', desc: 'Fleet operators receive automated WhatsApp and email reminders at 45 days, 15 days, and 3 days before document expiration.' },
+      { step: 3, title: 'Automated Dispatch Lockout', desc: 'If a vehicle\'s commercial insurance or fitness certificate expires, the system automatically removes the vehicle from active dispatch rosters.' },
+      { step: 4, title: 'Audit Trail & RTO Inspection Pack', desc: 'Generate complete 1-click audit compliance zip bundles for corporate client facility audits and government transport inspections.' },
+    ],
+    table: {
+      title: 'Monitored Statutory Documents',
+      headers: ['Document Type', 'Statutory Renewal Period', 'Renewal Window', 'Impact of Expiry'],
+      rows: [
+        ['Comprehensive Insurance', 'Annual Renewal', '30 Days Prior', 'Immediate Dispatch Block'],
+        ['Fitness Certificate (Form 38)', 'Annual / Bi-annual', '45 Days Prior', 'Immediate Dispatch Block'],
+        ['Pollution Certificate (PUC)', 'Every 6 Months', '15 Days Prior', 'Warning & Fine Accrual'],
+        ['State Carriage Permit', 'Every 5 Years', '60 Days Prior', 'Vehicle De-registration'],
+        ['Speed Governor Calibration', 'Annual Certification', '30 Days Prior', 'Commercial License Hold'],
+      ],
+    },
+    callout: {
+      title: 'Zero Compliance Non-Adherence',
+      text: 'Never risk legal liability. Shivneri guarantees that zero vehicles operate without active commercial passenger insurance and fitness certification.',
+      type: 'info',
+    },
+    relatedPages: ['Adding Vehicles', 'Driver Verification', 'Access Control', 'Billing & Invoices'],
+  },
+  'Live Tracking': {
+    title: 'Real-Time Telemetry & Fleet Tracking Dashboard',
+    category: 'Operations',
+    readTime: '4 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Live Operations',
+    summary: 'High-precision telemetry engine displaying live vehicle positions, route corridors, passenger onboarding status, and speed compliance updated every 3 seconds.',
+    metrics: [
+      { label: 'Update Interval', value: '3 Seconds', desc: 'Low-latency telemetry socket' },
+      { label: 'GPS Precision', value: '<2.5 Meters', desc: 'Differential GPS triangulation' },
+      { label: 'Deviation Alert', value: '>300 Meters', desc: 'Corridor threshold alert' },
+    ],
+    steps: [
+      { step: 1, title: 'Map Canvas Layer Switching', desc: 'Toggle seamlessly between Dark Mode Operations view, OpenStreetMap detailed vector tiles, and ESRI World Satellite imagery.' },
+      { step: 2, title: 'Real-Time Status Indicator Color Coding', desc: 'Monitor vehicle states: Green (On Duty / Available), Blue (On Active Trip with passengers), Amber (Delayed >10m), Red (SOS / Critical Deviation).' },
+      { step: 3, title: 'Corridor Geofence Tracking', desc: 'Visual corridor bands represent planned transit paths. If a vehicle leaves the designated route by >300 meters, an alert is instantly sent to the SOC.' },
+      { step: 4, title: 'Active Trip Inspection Panel', desc: 'Click any active vehicle to inspect driver name, assigned passengers, pickup checklist, vehicle speed, odometer reading, and estimated time of arrival (ETA).' },
+    ],
+    keyPoints: [
+      'Sub-second telemetry processing powered by high-throughput WebSockets.',
+      'Automatic passenger pickup check-in with geo-fenced safe arrival verification.',
+      'Live road speed limit monitoring with alerts when vehicles exceed 80 km/h.',
+      'Integrated video/audio telematics stream for high-security night shifts.',
+    ],
+    callout: {
+      title: 'Operations Room Multi-Screen Support',
+      text: 'The Live Operations dashboard is optimized for video walls and dispatch command centers with full-screen toggle, dark mode, and audible alert toggles.',
+      type: 'tip',
+    },
+    relatedPages: ['SOS & Safety', 'Trip Lifecycle', 'Route Configuration', 'Ride Scheduling'],
+  },
+  'SOS & Safety': {
+    title: 'SOS Emergency Protocols & 24/7 SOC Dispatch',
+    category: 'Operations',
+    readTime: '5 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Critical Response',
+    summary: 'Enterprise-grade employee security protocols with instant in-app panic triggers, direct Police Control Room (112) escalation, and dedicated Quick Response Patrol Teams.',
+    metrics: [
+      { label: 'Avg SOC Response', value: '18 Seconds', desc: 'Operator connection time' },
+      { label: 'QRT Intercept SLA', value: '<12 Minutes', desc: 'Rapid patrol team arrival' },
+      { label: 'Police 112 Link', value: 'Automated', desc: 'Instant live GPS handover' },
+    ],
+    steps: [
+      { step: 1, title: 'SOS Incident Trigger', desc: 'Employee, driver, or hardware panic button pressed inside the vehicle, or impact sensor triggers automated rollover/collision event.' },
+      { step: 2, title: 'Immediate SOC Red Alert & Audio Link', desc: 'Screen flashes red with audible siren. Two-way audio channel opens automatically to the cabin to verify passenger safety.' },
+      { step: 3, title: 'Emergency Contact & Police Notification', desc: 'Automated SMS broadcast to employee emergency contacts. Parallel digital dispatch to Police Control Room (112) with live tracking link.' },
+      { step: 4, title: 'Quick Response Team (QRT) Intercept', desc: 'Nearest Shivneri patrol vehicle is dispatched to the vehicle\'s current GPS coordinate for on-scene intervention.' },
+      { step: 5, title: 'Incident Resolution & Post-Event Report', desc: 'SOC manager logs incident narrative, confirms employee safe arrival, and archives audio/telemetry recordings for corporate HR security audit.' },
+    ],
+    table: {
+      title: 'Emergency Contact Escalation Matrix',
+      headers: ['Escalation Level', 'Contact Authority', 'Response Protocol', 'Target SLA'],
+      rows: [
+        ['Level 1: SOC Operator', 'Shivneri 24/7 Security Desk', 'Cabin two-way audio verification', '<30 Seconds'],
+        ['Level 2: Police Emergency', 'State Police Control Room (112)', 'Direct GPS data stream dispatch', '<60 Seconds'],
+        ['Level 3: Corporate Security', 'Client Transport & Security Head', 'Automated SMS & Phone bridge', '<2 Minutes'],
+        ['Level 4: Field QRT Patrol', 'Nearest Mobilized Patrol Unit', 'Physical vehicle intercept', '<12 Minutes'],
+      ],
+    },
+    callout: {
+      title: 'Night Shift Women Safety Mandate',
+      text: 'Between 20:00 and 06:00, female employees are never the first pickup or last drop without an onboard verified security guard. Drivers must wait until the employee safely enters their building gate.',
+      type: 'warning',
+    },
+    relatedPages: ['Live Tracking', 'Trip Lifecycle', 'Driver Verification', 'Access Control'],
+  },
+  'Trip Lifecycle': {
+    title: 'End-to-End Trip State Machine & Lifecycle',
+    category: 'Operations',
+    readTime: '5 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Trip Management',
+    summary: 'Comprehensive breakdown of the 6 core operational states from automated schedule generation to final employee deboarding and billing lock.',
+    steps: [
+      { step: 1, title: 'Scheduled (Roster Generated)', desc: 'Roster engine pairs vehicles and drivers 2 hours before shift. Route optimization groups passengers along common corridors.' },
+      { step: 2, title: 'Driver Assigned & Dispatched (45m Prior)', desc: 'Driver receives push notification with pickup sequence, passenger names, and optimal departure time to meet shift arrival SLA.' },
+      { step: 3, title: 'Arrived at Pickup Hub (Geofence Trigger)', desc: 'Vehicle enters 100m geofence radius of employee landmark. Automated push notification and SMS sent: "Your Shivneri cab has arrived".' },
+      { step: 4, title: 'Passenger Boarding & OTP Verification', desc: 'Employee boards and provides a 4-digit dynamic OTP displayed on their mobile pass. Driver verifies OTP in app before initiating trip.' },
+      { step: 5, title: 'In Transit & Corridor Monitoring', desc: 'Vehicle navigates designated corridor. Real-time telemetry streams to Live Operations and employee family tracking link.' },
+      { step: 6, title: 'Safe Deboard & Digital Trip Sheet Lock', desc: 'Vehicle enters destination campus or home geofence. Employee confirms arrival; trip sheet logs final odometer, time, and generates billing record.' },
+    ],
+    table: {
+      title: 'Lifecycle Status State Matrix',
+      headers: ['Status Name', 'Trigger Event', 'Allowed Actions', 'Next Permissible State'],
+      rows: [
+        ['Scheduled', 'Roster batch job runs', 'Re-assign vehicle, cancel ride', 'Assigned / Dispatched'],
+        ['Assigned', 'Driver acknowledges assignment', 'Re-route, swap driver', 'En Route to Hub'],
+        ['Arrived', 'Vehicle enters 100m geofence', 'Call passenger, start waiting timer', 'Boarded (OTP Verified)'],
+        ['In Transit', 'Driver starts trip post-OTP', 'Trigger SOS, reroute for detour', 'Completed / Dropped'],
+        ['Completed', 'All passengers deboarded safely', 'Download trip sheet, review rating', 'Billing Reconciled'],
+      ],
+    },
+    callout: {
+      title: 'Dynamic OTP Security',
+      text: 'Dynamic OTPs refresh every 15 minutes and prevent unauthorized passengers or proxy boardings, ensuring 100% accurate corporate attendance records.',
+      type: 'tip',
+    },
+    relatedPages: ['Ride Scheduling', 'Live Tracking', 'SOS & Safety', 'Billing & Invoices'],
+  },
+  'Ride Scheduling': {
+    title: 'Automated Shift Rostering & Ad-Hoc Booking',
+    category: 'Operations',
+    readTime: '4 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Scheduling',
+    summary: 'Configure recurring shift rosters, manage employee commute preferences, and handle ad-hoc managerial ride requests with automated capacity-matching algorithms.',
+    metrics: [
+      { label: 'Roster Cut-off', value: '120 Minutes', desc: 'Before shift commencement' },
+      { label: 'Auto-Dispatch Window', value: '45 Minutes', desc: 'Prior to first pickup' },
+      { label: 'Seat Fill Rate', value: '88.4%', desc: 'Optimized cab sharing' },
+    ],
+    steps: [
+      { step: 1, title: 'Shift Window Definition', desc: 'Configure standard shift slots: Morning Inward (08:00 AM), General Shift (09:30 AM), Evening Outward (06:30 PM), Night Shift (10:00 PM).' },
+      { step: 2, title: 'Recurring Weekly Commute Plans', desc: 'Employees select their in-office days (e.g. Mon/Wed/Fri) via the mobile app. System automatically provisions seats for confirmed days.' },
+      { step: 3, title: 'Ad-Hoc & Late-Night Ride Requests', desc: 'Employees working unscheduled overtime can request an ad-hoc emergency ride subject to manager one-click approval.' },
+      { step: 4, title: 'Capacity Optimization & Cab Allocation', desc: 'Algorithm clusters employees based on proximity, pairing 3-4 passengers into sedans or 5-6 into MPVs to maximize cost efficiency.' },
+    ],
+    keyPoints: [
+      'Rosters lock 2 hours before shift commencement to guarantee driver dispatch certainty.',
+      'Automated SMS confirmations sent to employees with assigned vehicle registration and driver contact.',
+      'Seamless integration with corporate turnstile attendance systems for automatic no-show detection.',
+    ],
+    callout: {
+      title: 'No-Show & Cancellation Rules',
+      text: 'Cancellations within 60 minutes of scheduled pickup are logged as late cancellations to track departmental transport wastage and optimize future fleet sizing.',
+      type: 'info',
+    },
+    relatedPages: ['Trip Lifecycle', 'Route Configuration', 'Invite Employees', 'Billing & Invoices'],
+  },
+  'Access Control': {
+    title: 'Role-Based Access Control (RBAC) & Data Privacy',
+    category: 'Administration',
+    readTime: '4 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Security & Governance',
+    summary: 'Enterprise role-based security framework ensuring granular access controls, PII data masking, tamper-proof audit trails, and ISO 27001 data governance.',
+    metrics: [
+      { label: 'System Roles', value: '5 Standard Roles', desc: 'Custom permissions supported' },
+      { label: 'PII Phone Masking', value: '100% Masked', desc: 'Virtual cloud telephony PBX' },
+      { label: 'Audit Log Retention', value: '7 Years', desc: 'Statutory compliance archive' },
+    ],
+    steps: [
+      { step: 1, title: 'Role Assignment & Provisioning', desc: 'Assign users to predefined enterprise roles with least-privilege security permissions.' },
+      { step: 2, title: 'PII Data Masking & Phone Protection', desc: 'Driver and employee mobile numbers are masked by default (e.g. ••••••4821). All calling occurs through an encrypted virtual PBX bridge.' },
+      { step: 3, title: 'Corporate Client Sub-Administration', desc: 'Enable client corporate administrators (e.g. Infosys Facility Manager) to view only their organization\'s rides, employees, and billing invoices.' },
+      { step: 4, title: 'Tamper-Proof Audit Logging', desc: 'Every user action—driver verification, ride override, route change, or billing adjustment—is recorded with timestamp, user ID, and IP address.' },
+    ],
+    table: {
+      title: 'Platform Role Permission Matrix',
+      headers: ['Role Name', 'Live Ops & Tracking', 'Driver Verification', 'Employee Roster', 'Billing & Invoices'],
+      rows: [
+        ['Super Administrator', 'Full Access', 'Full Access', 'Full Access', 'Full Access'],
+        ['Operations Dispatcher', 'Full Control', 'View & Assign', 'View & Route', 'No Access'],
+        ['Transport Manager', 'Full Control', 'Full Approval', 'Full Management', 'View & Dispute'],
+        ['Corporate Client Admin', 'Tenant Only', 'View Assigned', 'Tenant Employees', 'Tenant Invoices'],
+        ['Finance Auditor', 'Read Only', 'No Access', 'No Access', 'Full Financial Access'],
+      ],
+    },
+    callout: {
+      title: 'Enterprise Single Sign-On (SSO)',
+      text: 'Shivneri integrates natively with SAML 2.0 and OIDC providers including Microsoft Azure Active Directory, Okta, and Google Workspace.',
+      type: 'tip',
+    },
+    relatedPages: ['Billing & Invoices', 'Analytics Reports', 'API Keys', 'First Organization'],
+  },
+  'Billing & Invoices': {
+    title: 'Corporate Invoicing, Pricing Models & Driver Payouts',
+    category: 'Administration',
+    readTime: '6 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Finance & Invoicing',
+    summary: 'Comprehensive enterprise financial manual covering commercial pricing models, GST tax structures (SAC 996601), automated monthly reconciliation, toll integration, and driver partner settlements.',
+    metrics: [
+      { label: 'SAC / HSN Code', value: '996601', desc: 'Passenger Road Transport' },
+      { label: 'GST Tax Slabs', value: '5% / 12%', desc: '5% without ITC / 12% with ITC' },
+      { label: 'Payment Terms', value: 'Net-30', desc: 'Corporate monthly invoice cycle' },
+      { label: 'Driver Settlement', value: 'Weekly (Tue)', desc: 'Direct NEFT / IMPS transfer' },
+    ],
+    steps: [
+      { step: 1, title: 'Real-Time Trip Cost Logging', desc: 'Every corporate ride calculates billable distance using GPS-certified odometer tracking, toll plaza FASTag deductions, and applicable night surcharges.' },
+      { step: 2, title: 'Contractual Pricing Model Application', desc: 'Platform automatically computes trip cost based on client agreement: per-kilometer slab, fixed route matrix, or dedicated vehicle monthly retainer.' },
+      { step: 3, title: 'Monthly Automated Reconciliation (1st–3rd)', desc: 'Corporate facility heads receive an automated draft ledger with a 48-hour window to review trip counts, SLA delay penalty offsets, or disputed dead-mileage.' },
+      { step: 4, title: 'GST e-Invoice Generation & QR Code (4th)', desc: 'Final approved tax invoices are generated automatically with Invoice Reference Number (IRN), digital signature, and detailed employee transit annexures.' },
+      { step: 5, title: 'Driver Partner Weekly Settlement (Every Tuesday)', desc: 'Verified driver trips are settled directly to driver bank accounts after adjusting statutory 1% TDS (Section 194C) and fuel advances.' },
+    ],
+    table: {
+      title: 'Shivneri Enterprise Corporate Rate Matrix (Pune & Mumbai)',
+      headers: ['Vehicle Category', 'Base Minimum (4 hrs / 40 km)', 'Extra Km Rate', 'Extra Hour', 'Night Surcharge (22:00-06:00)'],
+      rows: [
+        ['Sedan (Dzire / Tigor)', '₹1,250', '₹18.50 / km', '₹120 / hr', '+15%'],
+        ['Executive MPV (Ertiga / XL6)', '₹1,650', '₹22.00 / km', '₹150 / hr', '+15%'],
+        ['Premium MUV (Innova Crysta)', '₹2,400', '₹28.00 / km', '₹220 / hr', '+20%'],
+        ['Electric Sedan (Tata Nexon EV)', '₹1,350', '₹16.50 / km', '₹110 / hr', '+10% (Green Fleet)'],
+        ['Tempo Traveller (12-20 Seater)', '₹3,800', '₹38.00 / km', '₹350 / hr', '+20%'],
+      ],
+    },
+    keyPoints: [
+      'Automated FASTag toll pass-through: National Highway & Expressway tolls matched to active trip IDs.',
+      'Cost-center tagging by Department: Engineering, HR, Finance, Operations breakdowns.',
+      'Multi-entity support: Separate billing entities for Maharashtra, Karnataka, and Telangana.',
+      'Automated SLA penalty credits: Delayed pickups >15m automatically discount invoice total.',
+    ],
+    callout: {
+      title: 'Automated FASTag & Toll Reconciliation',
+      text: 'Shivneri connects directly with the National Electronic Toll Collection (NETC) FASTag gateway. Toll plaza charges (e.g. Rajiv Gandhi Infotech Expressway, Hinjewadi flyovers) are logged against the active trip ID with zero manual expense reimbursement required.',
+      type: 'tip',
+    },
+    relatedPages: ['Access Control', 'Analytics Reports', 'Trip Lifecycle', 'Quick Setup'],
+  },
+  'Analytics Reports': {
+    title: 'Executive KPIs, SLA Metrics & ESG Reporting',
+    category: 'Administration',
+    readTime: '4 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Business Intelligence',
+    summary: 'Executive dashboards delivering actionable insights into fleet utilization, on-time performance (OTP), transport cost per employee, and environmental ESG carbon savings.',
+    metrics: [
+      { label: 'On-Time Performance', value: '98.2%', desc: 'Industry benchmark: 94%' },
+      { label: 'Fleet Utilization', value: '88.4%', desc: 'Active vs idle capacity' },
+      { label: 'CO2 Offset / Month', value: '14.2 Tonnes', desc: 'Saved via EV & shared rides' },
+      { label: 'Avg Commute Cost', value: '₹342 / Head', desc: 'Optimized routing rate' },
+    ],
+    steps: [
+      { step: 1, title: 'Operational Performance Metrics', desc: 'Track daily trips completed, delayed trips, cancellations, and driver rating trends across shift windows.' },
+      { step: 2, title: 'Cost Center & Budget Analytics', desc: 'Analyze spend trends by corporate department, identify high-commute clusters, and compare budget allocation vs actuals.' },
+      { step: 3, title: 'ESG Carbon Footprint Reporting', desc: 'Measure greenhouse gas emissions avoided by transitioning routes to electric vehicles and smart passenger pooling.' },
+      { step: 4, title: 'Scheduled Executive Export Delivery', desc: 'Configure automated Monday 8:00 AM PDF and XLSX digest emails sent directly to the Chief Human Resources Officer and Head of Transport.' },
+    ],
+    table: {
+      title: 'Executive SLA Target vs Actual Matrix',
+      headers: ['Performance Metric', 'Target SLA', 'Current Actual', 'Status'],
+      rows: [
+        ['On-Time Arrival (OTP)', '≥ 96.0%', '98.2%', 'Exceeding Target (Green)'],
+        ['Fleet Vehicle Utilization', '≥ 85.0%', '88.4%', 'Exceeding Target (Green)'],
+        ['Average Seat Occupancy', '≥ 3.2 Pax', '3.4 Pax', 'Exceeding Target (Green)'],
+        ['SOS Incident Response Time', '< 60 Seconds', '18 Seconds', 'Exceeding Target (Green)'],
+        ['Employee Satisfaction Rating', '≥ 4.5 ★', '4.78 ★', 'Exceeding Target (Green)'],
+      ],
+    },
+    callout: {
+      title: 'Custom BI Warehouse Export',
+      text: 'Connect your corporate Microsoft PowerBI, Tableau, or Google BigQuery data warehouse directly to our scheduled telemetry data lake.',
+      type: 'tip',
+    },
+    relatedPages: ['Billing & Invoices', 'Live Tracking', 'Access Control', 'API Keys'],
+  },
+  'API Keys': {
+    title: 'Developer REST API & Webhooks Integration',
+    category: 'Administration',
+    readTime: '5 min read',
+    lastUpdated: 'Sep 2026',
+    badge: 'Developer Docs',
+    summary: 'Enterprise developer guide for integrating corporate HRMS platforms, biometric access turnstiles, and external dispatch systems via REST APIs and real-time webhooks.',
+    metrics: [
+      { label: 'API Base URL', value: 'api.shivneri.in/v2', desc: 'TLS 1.3 encrypted endpoints' },
+      { label: 'Rate Limit', value: '5,000 req/min', desc: 'High-throughput enterprise tier' },
+      { label: 'Webhook SLA', value: '<250 ms', desc: 'Real-time event push' },
+    ],
+    steps: [
+      { step: 1, title: 'API Key Generation & Provisioning', desc: 'Generate high-entropy Bearer API keys in Settings → API Keys. Provision separate keys for Sandbox and Production environments.' },
+      { step: 2, title: 'Bearer Authentication Header', desc: 'Include the authorization token in all HTTPS request headers: Authorization: Bearer shivneri_live_sk_...' },
+      { step: 3, title: 'Configuring Inbound Webhooks', desc: 'Register your corporate endpoint to receive real-time webhook payloads for ride dispatch, arrival, SOS alerts, and trip completions.' },
+      { step: 4, title: 'HMAC SHA-256 Signature Verification', desc: 'Verify incoming webhook payloads using the secret HMAC header to ensure requests originate securely from Shivneri servers.' },
+    ],
+    code: {
+      language: 'curl',
+      content: 'curl -X POST https://api.shivneri.in/v2/rides/schedule \\\n  -H "Authorization: Bearer shivneri_live_sk_94821a8f..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{\n    "organization_id": "ORG-1001",\n    "shift_code": "NIGHT_2200",\n    "passenger_ids": ["EMP-10481", "EMP-10484"],\n    "pickup_corridor": "CORRIDOR_WAKAD_HINJEWADI",\n    "vehicle_category": "EXECUTIVE_MPV",\n    "require_escort_guard": true\n  }\'',
+    },
+    table: {
+      title: 'Core REST API Endpoints',
+      headers: ['Method', 'Endpoint Route', 'Description'],
+      rows: [
+        ['GET', '/v2/organizations', 'List all client tenants and contractual parameters'],
+        ['POST', '/v2/employees/sync', 'Bulk upsert employee roster records from HRMS'],
+        ['POST', '/v2/rides/schedule', 'Schedule recurring or on-demand corporate ride'],
+        ['GET', '/v2/rides/{id}/telemetry', 'Fetch sub-second live GPS coordinates & speed'],
+        ['POST', '/v2/rides/{id}/sos', 'Emergency trigger webhook to SOC operations'],
+        ['GET', '/v2/billing/invoices', 'Retrieve monthly corporate tax invoices & annexures'],
+      ],
+    },
+    callout: {
+      title: 'Sandbox Testing Environment',
+      text: 'Use base URL https://sandbox-api.shivneri.in/v2 with mock GPS streams to test your internal HRMS integration before deploying to production.',
+      type: 'info',
+    },
+    relatedPages: ['Access Control', 'Analytics Reports', 'Billing & Invoices', 'Quick Setup'],
+  },
+};
+
 // ─── Help Dialog ─────────────────────────────────────────────────────────────
 function HelpDialog({ onClose }: { onClose: () => void }) {
   const [search, setSearch] = useState('');
   const [activeItem, setActiveItem] = useState<string | null>(null);
+  const [selectedDocPage, setSelectedDocPage] = useState<string | null>(null);
+  const [docCopied, setDocCopied] = useState(false);
+  const [docSearch, setDocSearch] = useState('');
   const [chatMsg, setChatMsg] = useState('');
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'support'; text: string }[]>([
     { role: 'support', text: 'Hi! Welcome to Shivneri Support. How can I help you today?' }
@@ -668,14 +1249,14 @@ function HelpDialog({ onClose }: { onClose: () => void }) {
   const [submitted, setSubmitted] = useState(false);
 
   const ALL_ITEMS = [
-    { id: 'docs',    group: 'Getting Started', icon: '📖', label: 'Platform Documentation', desc: 'Full user & admin guide',       badge: null },
-    { id: 'videos',  group: 'Getting Started', icon: '🎬', label: 'Video Tutorials',         desc: 'Step-by-step walkthroughs',     badge: null },
-    { id: 'quick',   group: 'Getting Started', icon: '⚡', label: 'Quick Start Guide',        desc: 'Get up and running fast',       badge: null },
-    { id: 'api',     group: 'Getting Started', icon: '🔑', label: 'API Reference',            desc: 'REST API & webhooks',           badge: null },
-    { id: 'chat',    group: 'Support',         icon: '💬', label: 'Live Chat Support',         desc: 'Avg. response: 2 min',          badge: 'Online' },
-    { id: 'email',   group: 'Support',         icon: '📧', label: 'Email Support',             desc: 'support@shivneri.in',           badge: null },
-    { id: 'bug',     group: 'Support',         icon: '🐛', label: 'Report a Bug',              desc: 'Help us improve',               badge: null },
-    { id: 'feature', group: 'Support',         icon: '💡', label: 'Feature Request',           desc: 'Suggest an improvement',        badge: null },
+    { id: 'docs',    group: 'Getting Started', icon: '📖', label: 'Platform Documentation', desc: 'Full user & admin guide (16 articles)', badge: null },
+    { id: 'videos',  group: 'Getting Started', icon: '🎬', label: 'Video Tutorials',         desc: 'Step-by-step walkthroughs',             badge: null },
+    { id: 'quick',   group: 'Getting Started', icon: '⚡', label: 'Quick Start Guide',        desc: 'Get up and running fast',               badge: null },
+    { id: 'api',     group: 'Getting Started', icon: '🔑', label: 'API Reference',            desc: 'REST API & webhooks',                   badge: null },
+    { id: 'chat',    group: 'Support',         icon: '💬', label: 'Live Chat Support',         desc: 'Avg. response: 2 min',                  badge: 'Online' },
+    { id: 'email',   group: 'Support',         icon: '📧', label: 'Email Support',             desc: 'support@shivneri.in',                   badge: null },
+    { id: 'bug',     group: 'Support',         icon: '🐛', label: 'Report a Bug',              desc: 'Help us improve',                       badge: null },
+    { id: 'feature', group: 'Support',         icon: '💡', label: 'Feature Request',           desc: 'Suggest an improvement',                badge: null },
   ];
 
   const filtered = search.trim()
@@ -705,33 +1286,283 @@ function HelpDialog({ onClose }: { onClose: () => void }) {
     if (!activeItem) return null;
     const item = ALL_ITEMS.find(i => i.id === activeItem);
 
-    if (activeItem === 'docs') return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-2">
-          <button onClick={() => setActiveItem(null)} className="text-xs text-blue-600 hover:underline">← Back</button>
-          <span className="text-xs text-slate-400">/</span>
-          <span className="text-xs text-slate-600 font-medium">Platform Documentation</span>
-        </div>
-        {[
-          { title: 'Getting Started', pages: ['Introduction', 'Quick Setup', 'First Organization', 'Invite Employees'] },
-          { title: 'Fleet Management', pages: ['Adding Vehicles', 'Driver Verification', 'Route Configuration', 'Compliance Docs'] },
-          { title: 'Operations', pages: ['Live Tracking', 'SOS & Safety', 'Trip Lifecycle', 'Ride Scheduling'] },
-          { title: 'Administration', pages: ['Access Control', 'Billing & Invoices', 'Analytics Reports', 'API Keys'] },
-        ].map(section => (
-          <div key={section.title}>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2">{section.title}</div>
-            <div className="space-y-1">
-              {section.pages.map(p => (
-                <button key={p} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 text-left transition-colors group">
-                  <span className="text-xs text-slate-600 group-hover:text-blue-700 flex-1">{p}</span>
-                  <span className="text-slate-300 group-hover:text-blue-400 text-xs">→</span>
+    if (activeItem === 'docs') {
+      if (selectedDocPage) {
+        const article = DOC_ARTICLES[selectedDocPage] || {
+          title: selectedDocPage,
+          category: 'Platform Documentation',
+          readTime: '3 min read',
+          lastUpdated: 'Sep 2026',
+          badge: 'Documentation',
+          summary: `Comprehensive operational guidelines for ${selectedDocPage} within the Shivneri Enterprise Mobility platform.`,
+          steps: [
+            { step: 1, title: 'Review System Prerequisites', desc: 'Ensure proper permissions and configurations in Settings.' },
+            { step: 2, title: 'Verify Operational Parameters', desc: 'Confirm data integrity and compliance status before execution.' },
+            { step: 3, title: 'Monitor Real-Time Execution', desc: 'Use Live Operations and telemetry to track status and SLAs.' },
+          ],
+          relatedPages: ['Introduction', 'Quick Setup', 'Billing & Invoices'],
+        };
+
+        return (
+          <div className="space-y-5 pb-6">
+            {/* Header & Breadcrumb */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedDocPage(null)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+                >
+                  ← Back to Docs
                 </button>
-              ))}
+                <span className="text-xs text-slate-300">/</span>
+                <span className="text-[11px] text-slate-400 font-medium">{article.category}</span>
+                <span className="text-xs text-slate-300">/</span>
+                <span className="text-xs text-slate-700 font-semibold truncate max-w-[200px]">{selectedDocPage}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setDocCopied(true);
+                    setTimeout(() => setDocCopied(false), 2000);
+                  }}
+                  className="text-[11px] font-medium px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
+                >
+                  {docCopied ? '✓ Copied Link' : '🔗 Copy Link'}
+                </button>
+              </div>
             </div>
+
+            {/* Title & Metadata */}
+            <div>
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                  {article.category}
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                  {article.badge}
+                </span>
+                <span className="text-[11px] text-slate-400">⏱ {article.readTime}</span>
+                <span className="text-slate-300">·</span>
+                <span className="text-[11px] text-slate-400">{article.lastUpdated}</span>
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 leading-snug">{article.title}</h2>
+            </div>
+
+            {/* Summary Box */}
+            <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50/70 to-indigo-50/50 border border-blue-200/70 text-xs text-slate-700 leading-relaxed shadow-xs">
+              <div className="font-semibold text-blue-900 mb-1 flex items-center gap-1.5">
+                <span>📋</span> Executive Overview
+              </div>
+              {article.summary}
+            </div>
+
+            {/* Quick Metrics (if available) */}
+            {article.metrics && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {article.metrics.map(m => (
+                  <div key={m.label} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide truncate">{m.label}</div>
+                    <div className="text-base font-bold text-slate-800 mt-0.5">{m.value}</div>
+                    {m.desc && <div className="text-[10px] text-slate-500 mt-0.5 truncate">{m.desc}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Key Points (if available) */}
+            {article.keyPoints && (
+              <div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Key Policies & Guidelines</h4>
+                <ul className="space-y-1.5">
+                  {article.keyPoints.map((pt, i) => (
+                    <li key={i} className="text-xs text-slate-600 flex items-start gap-2">
+                      <span className="text-blue-500 text-sm mt-[-1px]">✓</span>
+                      <span>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Steps Workflow */}
+            {article.steps && (
+              <div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">Implementation Steps & Workflow</h4>
+                <div className="space-y-2.5">
+                  {article.steps.map(s => (
+                    <div key={s.step} className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-200/80 hover:border-blue-200 transition-colors">
+                      <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5 shadow-xs">
+                        {s.step}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-slate-800">{s.title}</div>
+                        <div className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">{s.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Table (if available) */}
+            {article.table && (
+              <div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">{article.table.title}</h4>
+                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-[10px] uppercase font-semibold text-slate-500 border-b border-slate-200">
+                      <tr>
+                        {article.table.headers.map(h => (
+                          <th key={h} className="px-3.5 py-2.5">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {article.table.rows.map((row, i) => (
+                        <tr key={i} className="hover:bg-slate-50/80 transition-colors">
+                          {row.map((cell, j) => (
+                            <td key={j} className={`px-3.5 py-2.5 text-slate-700 ${j === 0 ? 'font-medium' : ''}`}>
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Code Snippet (if available) */}
+            {article.code && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Sample Integration Code</h4>
+                  <span className="text-[10px] font-mono text-slate-400 uppercase">{article.code.language}</span>
+                </div>
+                <pre className="p-3.5 rounded-xl bg-slate-900 text-slate-100 font-mono text-[11px] overflow-x-auto leading-relaxed border border-slate-800 shadow-sm">
+                  {article.code.content}
+                </pre>
+              </div>
+            )}
+
+            {/* Callout */}
+            {article.callout && (
+              <div className={`p-3.5 rounded-xl border flex items-start gap-2.5 ${
+                article.callout.type === 'warning'
+                  ? 'bg-amber-50/80 border-amber-200 text-amber-900'
+                  : article.callout.type === 'tip'
+                  ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
+                  : 'bg-blue-50/80 border-blue-200 text-blue-900'
+              }`}>
+                <span className="text-base mt-[-2px]">
+                  {article.callout.type === 'warning' ? '⚠️' : article.callout.type === 'tip' ? '💡' : 'ℹ️'}
+                </span>
+                <div>
+                  <div className="text-xs font-bold mb-0.5">{article.callout.title}</div>
+                  <div className="text-[11px] leading-relaxed opacity-90">{article.callout.text}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Related Articles */}
+            {article.relatedPages && article.relatedPages.length > 0 && (
+              <div className="pt-3 border-t border-slate-100">
+                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Related Documentation</div>
+                <div className="flex flex-wrap gap-2">
+                  {article.relatedPages.map(pageName => (
+                    <button
+                      key={pageName}
+                      onClick={() => setSelectedDocPage(pageName)}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 text-xs font-medium text-slate-700 hover:text-blue-700 transition-colors flex items-center gap-1.5"
+                    >
+                      <span>📄 {pageName}</span>
+                      <span className="text-slate-300 hover:text-blue-400">→</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        ))}
-      </div>
-    );
+        );
+      }
+
+      // Documentation Catalog Index
+      const SECTIONS = [
+        { title: 'Getting Started', pages: ['Introduction', 'Quick Setup', 'First Organization', 'Invite Employees'] },
+        { title: 'Fleet Management', pages: ['Adding Vehicles', 'Driver Verification', 'Route Configuration', 'Compliance Docs'] },
+        { title: 'Operations', pages: ['Live Tracking', 'SOS & Safety', 'Trip Lifecycle', 'Ride Scheduling'] },
+        { title: 'Administration', pages: ['Access Control', 'Billing & Invoices', 'Analytics Reports', 'API Keys'] },
+      ];
+
+      const filteredSections = SECTIONS.map(sec => ({
+        ...sec,
+        pages: sec.pages.filter(p => {
+          if (!docSearch.trim()) return true;
+          const q = docSearch.toLowerCase();
+          const art = DOC_ARTICLES[p];
+          return p.toLowerCase().includes(q) || (art && (art.title.toLowerCase().includes(q) || art.summary.toLowerCase().includes(q)));
+        })
+      })).filter(sec => sec.pages.length > 0);
+
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setActiveItem(null)} className="text-xs text-blue-600 hover:underline">← Back</button>
+              <span className="text-xs text-slate-400">/</span>
+              <span className="text-xs text-slate-700 font-semibold">Platform Documentation</span>
+            </div>
+            <span className="text-[11px] text-slate-400 font-medium">16 articles available</span>
+          </div>
+
+          {/* Quick Doc Search */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+            <input
+              value={docSearch}
+              onChange={e => setDocSearch(e.target.value)}
+              placeholder="Search all 16 topics (e.g. Billing, Verification, SOS)..."
+              className="w-full pl-8 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:bg-white transition-all"
+            />
+            {docSearch && (
+              <button onClick={() => setDocSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {filteredSections.map(section => (
+              <div key={section.title} className="bg-slate-50/50 rounded-xl p-3 border border-slate-100">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{section.title}</div>
+                  <span className="text-[10px] text-slate-400 font-medium">{section.pages.length} topics</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {section.pages.map(p => {
+                    const art = DOC_ARTICLES[p];
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setSelectedDocPage(p)}
+                        className="w-full flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-200/70 hover:border-blue-300 hover:bg-blue-50/60 text-left transition-all group shadow-xs cursor-pointer"
+                      >
+                        <div className="min-w-0 flex-1 mr-2">
+                          <div className="text-xs font-semibold text-slate-800 group-hover:text-blue-700 truncate">{p}</div>
+                          <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                            {art ? `${art.readTime} · ${art.badge}` : 'Guide'}
+                          </div>
+                        </div>
+                        <span className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 text-xs transition-transform flex-shrink-0">→</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
     if (activeItem === 'videos') return (
       <div className="space-y-3">
@@ -2591,10 +3422,10 @@ function EmployeesView() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [profileEmp, setProfileEmp] = useState<EmpRow | null>(null);
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 5;
+  const [pageSize, setPageSize] = useState(10);
 
   const DEPTS = ['All Depts', 'Engineering', 'HR', 'Finance', 'Operations'];
-  useEffect(() => { setPage(1); }, [search, dept]);
+  useEffect(() => { setPage(1); }, [search, dept, pageSize]);
 
   const filtered = employees.filter(e => {
     const matchDept = dept === 'All Depts' || e.dept === dept;
@@ -2603,8 +3434,8 @@ function EmployeesView() {
     return matchDept && matchSearch;
   });
 
-  const totalEmpPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pagedEmployees = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalEmpPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedEmployees = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const deptCounts: Record<string, number> = { 'All Depts': employees.length };
   employees.forEach(e => { deptCounts[e.dept] = (deptCounts[e.dept] || 0) + 1; });
@@ -2674,103 +3505,151 @@ function EmployeesView() {
         {dept !== 'All Depts' && <span> in <span className="text-slate-600 font-medium">{dept}</span></span>}
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
-              {['Employee ID', 'Name', 'Dept', 'Shift', 'Pickup', 'Drop', 'Eligibility', 'Upcoming Ride', 'Status', 'Actions'].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="px-4 py-12 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="text-3xl">🔍</span>
-                    <div className="text-sm text-slate-500 font-medium">No employees found</div>
-                    <div className="text-xs text-slate-400">
-                      {search ? `No results for "${search}"` : `No employees in ${dept}`}
+      {/* Table Card Container */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/80">
+                {['Employee ID', 'Name', 'Dept', 'Shift', 'Pickup', 'Drop', 'Eligibility', 'Upcoming Ride', 'Status', 'Actions'].map(h => (
+                  <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-3xl">🔍</span>
+                      <div className="text-sm text-slate-500 font-medium">No employees found</div>
+                      <div className="text-xs text-slate-400">
+                        {search ? `No results for "${search}"` : `No employees in ${dept}`}
+                      </div>
+                      {(search || dept !== 'All Depts') && (
+                        <button onClick={() => { setSearch(''); setDept('All Depts'); }} className="mt-1 px-3 py-1.5 text-xs text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">
+                          Clear filters
+                        </button>
+                      )}
                     </div>
-                    {(search || dept !== 'All Depts') && (
-                      <button onClick={() => { setSearch(''); setDept('All Depts'); }} className="mt-1 px-3 py-1.5 text-xs text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">
-                        Clear filters
+                  </td>
+                </tr>
+              ) : pagedEmployees.map(emp => (
+                <tr key={emp.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3"><span className="mono text-[11px] text-slate-400">{emp.id}</span></td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
+                        {emp.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <span className="text-xs font-medium text-slate-800">{emp.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-slate-600">{emp.dept}</td>
+                  <td className="px-4 py-3 text-xs text-slate-600">{emp.shift}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500">{emp.pickup}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500">{emp.drop}</td>
+                  <td className="px-4 py-3">
+                    <Badge label={emp.eligible ? 'Eligible' : 'Ineligible'} color={emp.eligible ? 'green' : 'red'} />
+                  </td>
+                  <td className="px-4 py-3"><span className="mono text-[11px] text-blue-600">{emp.ride}</span></td>
+                  <td className="px-4 py-3">
+                    <Badge label={emp.status} color={emp.status === 'Active' ? 'green' : 'slate'} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setProfileEmp(emp)}
+                        className="px-2 py-1 text-[10px] bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
+                      >
+                        View
                       </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ) : pagedEmployees.map(emp => (
-              <tr key={emp.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                <td className="px-4 py-3"><span className="mono text-[11px] text-slate-400">{emp.id}</span></td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
-                      {emp.name.split(' ').map(n => n[0]).join('')}
+                      <button
+                        onClick={() => setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, eligible: !e.eligible } : e))}
+                        className="px-2 py-1 text-[10px] bg-slate-100 text-slate-600 rounded hover:bg-slate-200"
+                        title="Toggle eligibility"
+                      >
+                        {emp.eligible ? 'Disable' : 'Enable'}
+                      </button>
                     </div>
-                    <span className="text-xs font-medium text-slate-800">{emp.name}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-xs text-slate-600">{emp.dept}</td>
-                <td className="px-4 py-3 text-xs text-slate-600">{emp.shift}</td>
-                <td className="px-4 py-3 text-xs text-slate-500">{emp.pickup}</td>
-                <td className="px-4 py-3 text-xs text-slate-500">{emp.drop}</td>
-                <td className="px-4 py-3">
-                  <Badge label={emp.eligible ? 'Eligible' : 'Ineligible'} color={emp.eligible ? 'green' : 'red'} />
-                </td>
-                <td className="px-4 py-3"><span className="mono text-[11px] text-blue-600">{emp.ride}</span></td>
-                <td className="px-4 py-3">
-                  <Badge label={emp.status} color={emp.status === 'Active' ? 'green' : 'slate'} />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setProfileEmp(emp)}
-                      className="px-2 py-1 text-[10px] bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, eligible: !e.eligible } : e))}
-                      className="px-2 py-1 text-[10px] bg-slate-100 text-slate-600 rounded hover:bg-slate-200"
-                      title="Toggle eligibility"
-                    >
-                      {emp.eligible ? 'Disable' : 'Enable'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-        <div className="text-xs text-slate-400">
-          Showing <span className="font-semibold text-slate-600">{filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-slate-600">{filtered.length}</span> employees
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors text-slate-600">← Prev</button>
-          {Array.from({ length: Math.min(totalEmpPages, 7) }, (_, i) => i + 1).map(p => (
-            <button key={p} onClick={() => setPage(p)}
-              className={`w-8 h-8 rounded-xl text-xs font-semibold transition-all ${p === page ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}>{p}</button>
-          ))}
-          {totalEmpPages > 7 && <span className="text-slate-400 text-xs px-1">…</span>}
-          <button onClick={() => setPage(p => Math.min(totalEmpPages, p + 1))} disabled={page === totalEmpPages}
-            className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors text-slate-600">Next →</button>
-        </div>
-      </div>
 
-      {/* Totals */}
-      <div className="mt-3 flex gap-4 text-xs text-slate-400">
-        <span>Active: <span className="text-green-600 font-semibold">{employees.filter(e => e.status === 'Active').length}</span></span>
-        <span>Inactive: <span className="text-slate-500 font-semibold">{employees.filter(e => e.status === 'Inactive').length}</span></span>
-        <span>Eligible: <span className="text-blue-600 font-semibold">{employees.filter(e => e.eligible).length}</span></span>
-        <span>Ineligible: <span className="text-red-500 font-semibold">{employees.filter(e => !e.eligible).length}</span></span>
+        {/* Integrated Card Footer */}
+        <div className="bg-slate-50/70 border-t border-slate-200 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+          {/* Status Breakdown Pills */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-slate-500">
+              Showing <span className="font-semibold text-slate-700">{filtered.length === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)}</span> of <span className="font-semibold text-slate-700">{filtered.length}</span> employees
+            </span>
+            <div className="h-3.5 w-px bg-slate-300 hidden md:block" />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active: {employees.filter(e => e.status === 'Active').length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive: {employees.filter(e => e.status === 'Inactive').length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Eligible: {employees.filter(e => e.eligible).length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ineligible: {employees.filter(e => !e.eligible).length}
+              </span>
+            </div>
+          </div>
+
+          {/* Rows per page & Pagination Controls */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span>Rows per page:</span>
+              <select
+                value={pageSize}
+                onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-2.5 py-1 text-xs font-semibold border border-slate-200 rounded-lg bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors text-slate-600"
+              >
+                ← Prev
+              </button>
+              {Array.from({ length: totalEmpPages }, (_, i) => i + 1).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${
+                    p === page
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:bg-slate-200/70'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage(p => Math.min(totalEmpPages, p + 1))}
+                disabled={page === totalEmpPages}
+                className="px-2.5 py-1 text-xs font-semibold border border-slate-200 rounded-lg bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors text-slate-600"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -5198,10 +6077,10 @@ function DriversView() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [profileDriver, setProfileDriver] = useState<DriverRow | null>(null);
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 5;
+  const [pageSize, setPageSize] = useState(10);
 
   const FILTERS = ['All Drivers', 'Available', 'On Trip', 'Pending Verification'];
-  useEffect(() => { setPage(1); }, [filter, search]);
+  useEffect(() => { setPage(1); }, [filter, search, pageSize]);
 
   const filtered = drivers.filter(d => {
     const matchFilter =
@@ -5222,8 +6101,8 @@ function DriversView() {
     'Pending Verification': drivers.filter(d => !d.verified).length,
   };
 
-  const totalDrvPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pagedDrivers = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalDrvPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedDrivers = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const verifyDriver = (id: string) => {
     setDrivers(prev => prev.map(d => d.id === id ? { ...d, verified: true, status: 'On Duty', available: true } : d));
@@ -5300,117 +6179,166 @@ function DriversView() {
         {search && <span> matching "<span className="text-slate-600 font-medium">{search}</span>"</span>}
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
-              {['Driver', 'ID', 'Vehicle', 'Availability', 'Trips Today', 'Rating', 'Incidents', 'Verified', 'Status', 'Actions'].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="px-4 py-12 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="text-3xl">🔍</span>
-                    <div className="text-sm text-slate-500 font-medium">No drivers found</div>
-                    <div className="text-xs text-slate-400">
-                      {search ? `No results for "${search}"` : `No drivers in "${filter}"`}
-                    </div>
-                    {(search || filter !== 'All Drivers') && (
-                      <button onClick={() => { setSearch(''); setFilter('All Drivers'); }} className="mt-1 px-3 py-1.5 text-xs text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">
-                        Clear filters
-                      </button>
-                    )}
-                  </div>
-                </td>
+      {/* Table Card Container */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/80">
+                {['Driver', 'ID', 'Vehicle', 'Availability', 'Trips Today', 'Rating', 'Incidents', 'Verified', 'Status', 'Actions'].map(h => (
+                  <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
+                ))}
               </tr>
-            ) : pagedDrivers.map(d => (
-              <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-                      {d.name.split(' ').map(n => n[0]).join('')}
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-3xl">🔍</span>
+                      <div className="text-sm text-slate-500 font-medium">No drivers found</div>
+                      <div className="text-xs text-slate-400">
+                        {search ? `No results for "${search}"` : `No drivers in "${filter}"`}
+                      </div>
+                      {(search || filter !== 'All Drivers') && (
+                        <button onClick={() => { setSearch(''); setFilter('All Drivers'); }} className="mt-1 px-3 py-1.5 text-xs text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">
+                          Clear filters
+                        </button>
+                      )}
                     </div>
-                    <div>
-                      <div className="text-xs font-medium text-slate-800">{d.name}</div>
-                      <div className="text-[10px] text-slate-400 mono">{d.phone}</div>
+                  </td>
+                </tr>
+              ) : pagedDrivers.map(d => (
+                <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                        {d.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-slate-800">{d.name}</div>
+                        <div className="text-[10px] text-slate-400 mono">{d.phone}</div>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 mono text-[11px] text-slate-400">{d.id}</td>
-                <td className="px-4 py-3 mono text-xs text-slate-600">{d.vehicle}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1.5">
-                    <StatusDot active={d.available} />
-                    <span className="text-xs text-slate-600">{d.available ? 'Available' : 'Busy'}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-xs text-slate-700">{d.trips}</td>
-                <td className="px-4 py-3">
-                  {d.rating > 0
-                    ? <span className="text-xs font-semibold text-amber-600">★ {d.rating}</span>
-                    : <span className="text-xs text-slate-300">—</span>}
-                </td>
-                <td className="px-4 py-3 text-xs text-slate-600">{d.incidents}</td>
-                <td className="px-4 py-3">
-                  <Badge label={d.verified ? '✓ Verified' : '⏳ Pending'} color={d.verified ? 'green' : 'amber'} />
-                </td>
-                <td className="px-4 py-3">
-                  <Badge label={d.status} color={statusColor(d.status)} />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setProfileDriver(d)}
-                      className="px-2 py-1 text-[10px] bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
-                    >
-                      View
-                    </button>
-                    {!d.verified && (
+                  </td>
+                  <td className="px-4 py-3 mono text-[11px] text-slate-400">{d.id}</td>
+                  <td className="px-4 py-3 mono text-xs text-slate-600">{d.vehicle}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <StatusDot active={d.available} />
+                      <span className="text-xs text-slate-600">{d.available ? 'Available' : 'Busy'}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-slate-700">{d.trips}</td>
+                  <td className="px-4 py-3">
+                    {d.rating > 0
+                      ? <span className="text-xs font-semibold text-amber-600">★ {d.rating}</span>
+                      : <span className="text-xs text-slate-300">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-slate-600">{d.incidents}</td>
+                  <td className="px-4 py-3">
+                    <Badge label={d.verified ? '✓ Verified' : '⏳ Pending'} color={d.verified ? 'green' : 'amber'} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge label={d.status} color={statusColor(d.status)} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1">
                       <button
-                        onClick={() => verifyDriver(d.id)}
-                        className="px-2 py-1 text-[10px] bg-green-50 text-green-600 rounded hover:bg-green-100 font-medium"
+                        onClick={() => setProfileDriver(d)}
+                        className="px-2 py-1 text-[10px] bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
                       >
-                        Verify ✓
+                        View
                       </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      {/* Pagination */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-        <div className="text-xs text-slate-400">
-          Showing <span className="font-semibold text-slate-600">{filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-slate-600">{filtered.length}</span> drivers
+                      {!d.verified && (
+                        <button
+                          onClick={() => verifyDriver(d.id)}
+                          className="px-2 py-1 text-[10px] bg-green-50 text-green-600 rounded hover:bg-green-100 font-medium"
+                        >
+                          Verify ✓
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors text-slate-600">← Prev</button>
-          {Array.from({ length: Math.min(totalDrvPages, 7) }, (_, i) => i + 1).map(p => (
-            <button key={p} onClick={() => setPage(p)}
-              className={`w-8 h-8 rounded-xl text-xs font-semibold transition-all ${p === page ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}>{p}</button>
-          ))}
-          {totalDrvPages > 7 && <span className="text-slate-400 text-xs px-1">…</span>}
-          <button onClick={() => setPage(p => Math.min(totalDrvPages, p + 1))} disabled={page === totalDrvPages}
-            className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors text-slate-600">Next →</button>
-        </div>
-      </div>
 
-      {/* Summary bar */}
-      <div className="mt-3 flex gap-4 text-xs text-slate-400">
-        <span>Verified: <span className="text-green-600 font-semibold">{drivers.filter(d => d.verified).length}</span></span>
-        <span>Pending: <span className="text-amber-600 font-semibold">{drivers.filter(d => !d.verified).length}</span></span>
-        <span>Available: <span className="text-blue-600 font-semibold">{drivers.filter(d => d.available).length}</span></span>
-        <span>On Trip: <span className="text-slate-600 font-semibold">{drivers.filter(d => d.status === 'On Trip').length}</span></span>
+        {/* Integrated Card Footer */}
+        <div className="bg-slate-50/70 border-t border-slate-200 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+          {/* Status Breakdown Pills with accurate math */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-slate-500">
+              Showing <span className="font-semibold text-slate-700">{filtered.length === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)}</span> of <span className="font-semibold text-slate-700">{filtered.length}</span> drivers
+            </span>
+            <div className="h-3.5 w-px bg-slate-300 hidden md:block" />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Verified drivers">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Verified: {drivers.filter(d => d.verified).length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="Pending verification">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending: {drivers.filter(d => !d.verified).length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200" title="Available for assignment">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Available: {drivers.filter(d => d.available).length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200" title="Currently on trip">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> On Trip: {drivers.filter(d => d.status === 'On Trip').length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200" title="SOS Emergency Active">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> SOS Active: {drivers.filter(d => d.status === 'SOS Active').length}
+              </span>
+            </div>
+          </div>
+
+          {/* Rows per page & Pagination Controls */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span>Rows per page:</span>
+              <select
+                value={pageSize}
+                onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-2.5 py-1 text-xs font-semibold border border-slate-200 rounded-lg bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors text-slate-600"
+              >
+                ← Prev
+              </button>
+              {Array.from({ length: totalDrvPages }, (_, i) => i + 1).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${
+                    p === page
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:bg-slate-200/70'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage(p => Math.min(totalDrvPages, p + 1))}
+                disabled={page === totalDrvPages}
+                className="px-2.5 py-1 text-xs font-semibold border border-slate-200 rounded-lg bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors text-slate-600"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -5998,8 +6926,8 @@ function VehiclesView() {
   const [showAddVehicle, setShowAddVehicle] = useState(false);
   const [showReviewAll, setShowReviewAll] = useState(false);
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 5;
-  useEffect(() => { setPage(1); }, [vehicleFilter]);
+  const [pageSize, setPageSize] = useState(10);
+  useEffect(() => { setPage(1); }, [vehicleFilter, pageSize]);
 
   const [vehicles, setVehicles] = useState<VehicleRow[]>([
     { num: 'MH12AB1234', model: 'Toyota Innova Crysta', cap: 7, driver: 'Raj Kumar', status: 'Active', insurance: '2025-03-14', fitness: '2024-11-20', permit: '2025-06-30', util: 82, nextService: '2024-10-15' },
@@ -6011,8 +6939,8 @@ function VehiclesView() {
   ]);
 
   const filteredVehicles = vehicleFilter === 'All' ? vehicles : vehicles.filter(v => v.status === vehicleFilter);
-  const totalVehPages = Math.max(1, Math.ceil(filteredVehicles.length / PAGE_SIZE));
-  const pagedVehicles = filteredVehicles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalVehPages = Math.max(1, Math.ceil(filteredVehicles.length / pageSize));
+  const pagedVehicles = filteredVehicles.slice((page - 1) * pageSize, page * pageSize);
 
   const today = new Date();
   const expiringSoon = (dateStr: string) => {
@@ -6100,23 +7028,71 @@ function VehiclesView() {
             ))}
           </tbody>
         </table>
-      </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-        <div className="text-xs text-slate-400">
-          Showing <span className="font-semibold text-slate-600">{filteredVehicles.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredVehicles.length)}</span> of <span className="font-semibold text-slate-600">{filteredVehicles.length}</span> vehicles
-        </div>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors text-slate-600">← Prev</button>
-          {Array.from({ length: Math.min(totalVehPages, 7) }, (_, i) => i + 1).map(p => (
-            <button key={p} onClick={() => setPage(p)}
-              className={`w-8 h-8 rounded-xl text-xs font-semibold transition-all ${p === page ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}>{p}</button>
-          ))}
-          {totalVehPages > 7 && <span className="text-slate-400 text-xs px-1">…</span>}
-          <button onClick={() => setPage(p => Math.min(totalVehPages, p + 1))} disabled={page === totalVehPages}
-            className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors text-slate-600">Next →</button>
+        {/* Integrated Card Footer */}
+        <div className="bg-slate-50/70 border-t border-slate-200 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-slate-500">
+              Showing <span className="font-semibold text-slate-700">{filteredVehicles.length === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, filteredVehicles.length)}</span> of <span className="font-semibold text-slate-700">{filteredVehicles.length}</span> vehicles
+            </span>
+            <div className="h-3.5 w-px bg-slate-300 hidden md:block" />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active: {vehicles.filter(v => v.status === 'Active').length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Available: {vehicles.filter(v => v.status === 'Available').length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> In Service: {vehicles.filter(v => v.status === 'In Service').length}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span>Rows per page:</span>
+              <select
+                value={pageSize}
+                onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-2.5 py-1 text-xs font-semibold border border-slate-200 rounded-lg bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors text-slate-600"
+              >
+                ← Prev
+              </button>
+              {Array.from({ length: totalVehPages }, (_, i) => i + 1).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${
+                    p === page
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:bg-slate-200/70'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage(p => Math.min(totalVehPages, p + 1))}
+                disabled={page === totalVehPages}
+                className="px-2.5 py-1 text-xs font-semibold border border-slate-200 rounded-lg bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors text-slate-600"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -6128,8 +7104,8 @@ function RidesView() {
   const [filter, setFilter] = useState('All');
   const [selectedRide, setSelectedRide] = useState<RideRow | null>(null);
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 5;
-  useEffect(() => { setPage(1); }, [filter]);
+  const [pageSize, setPageSize] = useState(10);
+  useEffect(() => { setPage(1); }, [filter, pageSize]);
   const rides: RideRow[] = [
     { id: 'RIDE-10421', driver: 'Raj Kumar', vehicle: 'MH12AB1234', org: 'TCS Pune Campus', passengers: 4, pickup: 'Kothrud', drop: 'Hinjewadi Ph1', scheduled: '08:00', status: 'Completed', distance: '18 km', cost: '₹420' },
     { id: 'RIDE-10422', driver: 'Suresh Yadav', vehicle: 'MH12CD5678', org: 'Infosys BPM', passengers: 6, pickup: 'Baner', drop: 'Hinjewadi Ph2', scheduled: '08:30', status: 'Delayed', distance: '12 km', cost: '₹290' },
@@ -6142,8 +7118,8 @@ function RidesView() {
 
   const filters = ['All', 'On Route', 'Completed', 'Delayed', 'SOS', 'Assigned'];
   const filtered = filter === 'All' ? rides : rides.filter(r => r.status === filter);
-  const totalRidePages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pagedRides = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalRidePages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedRides = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const statusColor = (s: string): 'green' | 'blue' | 'amber' | 'red' | 'slate' | 'cyan' =>
     s === 'Completed' ? 'green' : s === 'On Route' ? 'blue' : s === 'Delayed' ? 'amber' : s === 'SOS' ? 'red' : 'slate';
@@ -6188,53 +7164,107 @@ function RidesView() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
-              {['Ride ID', 'Driver', 'Vehicle', 'Organization', 'Passengers', 'Pickup', 'Drop', 'Scheduled', 'Status', 'Distance', 'Cost', 'Actions'].map(h => (
-                <th key={h} className="px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {pagedRides.map((r, i) => (
-              <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                <td className="px-3 py-3 mono font-semibold text-blue-600">{r.id}</td>
-                <td className="px-3 py-3 text-slate-700">{r.driver}</td>
-                <td className="px-3 py-3 mono text-slate-500 text-[10px]">{r.vehicle}</td>
-                <td className="px-3 py-3 text-slate-600">{r.org}</td>
-                <td className="px-3 py-3 text-center text-slate-700">{r.passengers}</td>
-                <td className="px-3 py-3 text-slate-500">{r.pickup}</td>
-                <td className="px-3 py-3 text-slate-500">{r.drop}</td>
-                <td className="px-3 py-3 mono text-slate-500">{r.scheduled}</td>
-                <td className="px-3 py-3"><Badge label={r.status} color={statusColor(r.status)} /></td>
-                <td className="px-3 py-3 text-slate-600">{r.distance}</td>
-                <td className="px-3 py-3 font-medium text-slate-800">{r.cost}</td>
-                <td className="px-3 py-3">
-                  <button onClick={() => setSelectedRide(r)} className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-[10px] font-semibold">Details</button>
-                </td>
+      {/* Table Card Container */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/80">
+                {['Ride ID', 'Driver', 'Vehicle', 'Organization', 'Passengers', 'Pickup', 'Drop', 'Scheduled', 'Status', 'Distance', 'Cost', 'Actions'].map(h => (
+                  <th key={h} className="px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-        <div className="text-xs text-slate-400">
-          Showing <span className="font-semibold text-slate-600">{filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-slate-600">{filtered.length}</span> rides
+            </thead>
+            <tbody>
+              {pagedRides.map((r, i) => (
+                <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <td className="px-3 py-3 mono font-semibold text-blue-600">{r.id}</td>
+                  <td className="px-3 py-3 text-slate-700">{r.driver}</td>
+                  <td className="px-3 py-3 mono text-slate-500 text-[10px]">{r.vehicle}</td>
+                  <td className="px-3 py-3 text-slate-600">{r.org}</td>
+                  <td className="px-3 py-3 text-center text-slate-700">{r.passengers}</td>
+                  <td className="px-3 py-3 text-slate-500">{r.pickup}</td>
+                  <td className="px-3 py-3 text-slate-500">{r.drop}</td>
+                  <td className="px-3 py-3 mono text-slate-500">{r.scheduled}</td>
+                  <td className="px-3 py-3"><Badge label={r.status} color={statusColor(r.status)} /></td>
+                  <td className="px-3 py-3 text-slate-600">{r.distance}</td>
+                  <td className="px-3 py-3 font-medium text-slate-800">{r.cost}</td>
+                  <td className="px-3 py-3">
+                    <button onClick={() => setSelectedRide(r)} className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-[10px] font-semibold">Details</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors text-slate-600">← Prev</button>
-          {Array.from({ length: Math.min(totalRidePages, 7) }, (_, i) => i + 1).map(p => (
-            <button key={p} onClick={() => setPage(p)}
-              className={`w-8 h-8 rounded-xl text-xs font-semibold transition-all ${p === page ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}>{p}</button>
-          ))}
-          {totalRidePages > 7 && <span className="text-slate-400 text-xs px-1">…</span>}
-          <button onClick={() => setPage(p => Math.min(totalRidePages, p + 1))} disabled={page === totalRidePages}
-            className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors text-slate-600">Next →</button>
+
+        {/* Integrated Card Footer */}
+        <div className="bg-slate-50/70 border-t border-slate-200 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-slate-500">
+              Showing <span className="font-semibold text-slate-700">{filtered.length === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)}</span> of <span className="font-semibold text-slate-700">{filtered.length}</span> rides
+            </span>
+            <div className="h-3.5 w-px bg-slate-300 hidden md:block" />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Completed: {rides.filter(r => r.status === 'Completed').length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> On Route: {rides.filter(r => r.status === 'On Route').length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Delayed: {rides.filter(r => r.status === 'Delayed').length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> SOS: {rides.filter(r => r.status === 'SOS').length}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span>Rows per page:</span>
+              <select
+                value={pageSize}
+                onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-2.5 py-1 text-xs font-semibold border border-slate-200 rounded-lg bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors text-slate-600"
+              >
+                ← Prev
+              </button>
+              {Array.from({ length: totalRidePages }, (_, i) => i + 1).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${
+                    p === page
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:bg-slate-200/70'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage(p => Math.min(totalRidePages, p + 1))}
+                disabled={page === totalRidePages}
+                className="px-2.5 py-1 text-xs font-semibold border border-slate-200 rounded-lg bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors text-slate-600"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
