@@ -66,6 +66,13 @@ const PUNE_ZONES = [
   { id: 'hadapsar', name: 'HADAPSAR', sub: 'Industrial Belt', x: 840, y: 640, type: 'industrial' },
 ];
 
+// ─── REAL-WORLD PUNE GIS MAP TILES ─────────────────────────────────────────
+const PUNE_MAP_TILES = [
+  { x: 2886, y: 1832 }, { x: 2887, y: 1832 }, { x: 2888, y: 1832 }, { x: 2889, y: 1832 },
+  { x: 2886, y: 1833 }, { x: 2887, y: 1833 }, { x: 2888, y: 1833 }, { x: 2889, y: 1833 },
+  { x: 2886, y: 1834 }, { x: 2887, y: 1834 }, { x: 2888, y: 1834 }, { x: 2889, y: 1834 },
+];
+
 export default function LiveOpsView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tracking, setTracking] = useState<string | null>(null);
@@ -88,9 +95,9 @@ export default function LiveOpsView() {
   const [showRoutes, setShowRoutes] = useState(true);
   const [mapStyle, setMapStyle] = useState<'dark-ops' | 'satellite-contrast'>('dark-ops');
 
-  // Simulation loop for live vehicle movement
+  // Simulation loop for live vehicle movement (Gentle 800ms pace)
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 600);
+    const id = setInterval(() => setTick((t) => t + 1), 800);
     return () => clearInterval(id);
   }, []);
 
@@ -119,12 +126,13 @@ export default function LiveOpsView() {
     }
   };
 
-  // Realistic vehicle telemetry positioning
+  // Realistic vehicle telemetry positioning (Slow, smooth, gentle cruising along roads)
   const getVehiclePosition = (ride: LiveRide) => {
-    const baseSpeed = ride.status === 'On Route' ? 0.35 : ride.status === 'Delayed' ? 0.08 : 0;
+    // Significantly slowed down from 0.35 to 0.035 for gentle, realistic cruising
+    const baseSpeed = ride.status === 'On Route' ? 0.035 : ride.status === 'Delayed' ? 0.012 : 0;
     const phase = ride.mapX * 0.15 + ride.mapY * 0.11;
-    const offsetX = Math.sin(tick * baseSpeed + phase) * 1.6;
-    const offsetY = Math.cos(tick * baseSpeed * 0.8 + phase) * 1.1;
+    const offsetX = Math.sin(tick * baseSpeed + phase) * 1.5;
+    const offsetY = Math.cos(tick * baseSpeed * 0.8 + phase) * 1.0;
 
     // Convert percentage to SVG viewBox coordinates (1200 x 800)
     const svgX = (ride.mapX / 100) * 1200 + offsetX * 12;
@@ -336,8 +344,33 @@ export default function LiveOpsView() {
           style={{
             transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
           }}>
+          {/* ─── REAL-WORLD PUNE BACKGROUND MAP TILES ─── */}
+          <div className="absolute inset-0 grid grid-cols-4 grid-rows-3 select-none pointer-events-none min-w-[1200px] min-h-[800px] overflow-hidden">
+            {PUNE_MAP_TILES.map((t) => (
+              <div key={`${t.x}-${t.y}`} className="relative w-full h-full bg-slate-950 overflow-hidden">
+                <img
+                  src={
+                    mapStyle === 'satellite-contrast'
+                      ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/12/${t.y}/${t.x}`
+                      : `https://basemaps.cartocdn.com/rastertiles/dark_all/12/${t.x}/${t.y}.png`
+                  }
+                  alt={`Pune Map ${t.x},${t.y}`}
+                  className="w-full h-full object-cover transition-opacity duration-500"
+                  style={{
+                    filter:
+                      mapStyle === 'satellite-contrast'
+                        ? 'contrast(1.15) brightness(0.8)'
+                        : 'contrast(1.08) brightness(0.88)',
+                    opacity: mapStyle === 'satellite-contrast' ? 0.78 : 0.82,
+                  }}
+                  loading="eager"
+                />
+              </div>
+            ))}
+          </div>
+
           <svg
-            className="w-full h-full min-w-[1200px] min-h-[800px]"
+            className="w-full h-full min-w-[1200px] min-h-[800px] relative z-10"
             viewBox="0 0 1200 800"
             preserveAspectRatio="xMidYMid slice">
             <defs>
@@ -375,8 +408,8 @@ export default function LiveOpsView() {
               </filter>
             </defs>
 
-            {/* Base GIS Cartography Layers */}
-            <rect width="1200" height="800" fill="#040914" />
+            {/* Base GIS Cartography Layers - translucent to let real world map show */}
+            <rect width="1200" height="800" fill="rgba(4, 9, 20, 0.42)" />
             <rect width="1200" height="800" fill="url(#gisGrid)" />
 
             {/* Metro Center Ambient Light */}
@@ -755,7 +788,7 @@ export default function LiveOpsView() {
                   e.stopPropagation();
                   setSelectedId(isSel ? null : ride.id);
                 }}
-                className="absolute pointer-events-auto cursor-pointer group transition-all duration-300"
+                className="absolute pointer-events-auto cursor-pointer group transition-all duration-700 ease-out"
                 style={{
                   left: `${(vPos.x / 1200) * 100}%`,
                   top: `${(vPos.y / 800) * 100}%`,
@@ -881,6 +914,15 @@ export default function LiveOpsView() {
             }`}
             style={glassPanel(0.85)}>
             🚦
+          </button>
+          <button
+            onClick={() => setMapStyle((s) => (s === 'dark-ops' ? 'satellite-contrast' : 'dark-ops'))}
+            title={mapStyle === 'dark-ops' ? 'Switch to Real-World Satellite' : 'Switch to Real-World Dark GIS'}
+            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors ${
+              mapStyle === 'satellite-contrast' ? 'text-cyan-400 ring-1 ring-cyan-400/50' : 'text-slate-400 hover:text-white'
+            }`}
+            style={glassPanel(0.85)}>
+            {mapStyle === 'satellite-contrast' ? '🛰️' : '🗺️'}
           </button>
         </div>
 

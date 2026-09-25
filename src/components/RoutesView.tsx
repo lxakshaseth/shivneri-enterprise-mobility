@@ -44,6 +44,24 @@ export interface RouteRow {
   waypoints: RouteStop[];
 }
 
+// ─── REAL-WORLD PUNE GIS MAP TILES (Zoom 12 covers Hinjewadi, Wakad, Kothrud, Central Pune, Airport, Magarpatta, Kharadi) ───
+const PUNE_MAP_TILES = [
+  { x: 2886, y: 1832 }, { x: 2887, y: 1832 }, { x: 2888, y: 1832 }, { x: 2889, y: 1832 },
+  { x: 2886, y: 1833 }, { x: 2887, y: 1833 }, { x: 2888, y: 1833 }, { x: 2889, y: 1833 },
+  { x: 2886, y: 1834 }, { x: 2887, y: 1834 }, { x: 2888, y: 1834 }, { x: 2889, y: 1834 },
+];
+
+const getMapTileUrl = (x: number, y: number, style: 'dark' | 'satellite' | 'streets') => {
+  if (style === 'satellite') {
+    return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/12/${y}/${x}`;
+  }
+  if (style === 'streets') {
+    return `https://basemaps.cartocdn.com/rastertiles/voyager/12/${x}/${y}.png`;
+  }
+  // CartoDB Dark Matter (High-contrast dark GIS cartography with Pune arterial roads, highways & local labels)
+  return `https://basemaps.cartocdn.com/rastertiles/dark_all/12/${x}/${y}.png`;
+};
+
 // ─── SEED CORPORATE CAB ROUTES (Realistic 2, 3, 4 passengers) ──────────────
 const SEED_CAB_ROUTES: RouteRow[] = [
   {
@@ -279,10 +297,11 @@ export default function RoutesView() {
   const [showAssignDriver, setShowAssignDriver] = useState(false);
   const [toast, setToast] = useState('');
 
-  // ─── DYNAMIC CAB SIMULATION STATE ─────────────────────────────────────────
+  // ─── DYNAMIC CAB SIMULATION & REAL-WORLD MAP STATE ────────────────────────
+  const [mapStyle, setMapStyle] = useState<'dark' | 'satellite' | 'streets'>('dark');
   const [simPlaying, setSimPlaying] = useState(true);
-  const [simSpeed, setSimSpeed] = useState<1 | 2 | 4>(1);
-  const [cabProgress, setCabProgress] = useState(0.42); // 0.0 to 1.0 along the route
+  const [simSpeed, setSimSpeed] = useState<0.5 | 1 | 2>(1); // 0.5x Slow, 1x Normal, 2x Fast
+  const [cabProgress, setCabProgress] = useState(0.28); // 0.0 to 1.0 along the route
   const [selectedPassenger, setSelectedPassenger] = useState<Passenger | null>(null);
 
   const showToast = (msg: string) => {
@@ -305,15 +324,20 @@ export default function RoutesView() {
 
   const activeRoute = filteredRoutes[selectedIdx] ?? routes[0];
 
-  // Dynamic simulation loop moving the cab along the road route
+  // Dynamic simulation loop moving the cab along the road route at realistic, slow speed
   useEffect(() => {
     if (!simPlaying) return;
     const interval = setInterval(() => {
       setCabProgress((prev) => {
-        const next = prev + 0.0035 * simSpeed;
-        return next > 0.98 ? 0.02 : next;
+        // Slow realistic city commute pace:
+        // - At 1x speed: 0.0006 per 60ms = ~0.01 per second (~100 seconds to cover 18km route)
+        // - At 0.5x speed: 0.0003 per 60ms = ~0.005 per second (~200 seconds, gentle cruising)
+        // - At 2x speed: 0.0012 per 60ms = ~0.02 per second (~50 seconds)
+        const step = 0.0006 * simSpeed;
+        const next = prev + step;
+        return next > 0.99 ? 0.01 : next;
       });
-    }, 50);
+    }, 60);
     return () => clearInterval(interval);
   }, [simPlaying, simSpeed]);
 
@@ -341,7 +365,28 @@ export default function RoutesView() {
     return { x: currentX, y: currentY, heading, currentStopIdx: segIdx };
   };
 
-  const cabPos = getCabPosition();
+  // Dynamic realistic telemetry (speed in km/h based on stops, distance covered)
+  const getDynamicTelemetry = () => {
+    const pos = getCabPosition();
+    const totalSegs = activeRoute.waypoints.length - 1;
+    const segFloat = cabProgress * totalSegs;
+    const distToStop = Math.abs(segFloat - Math.round(segFloat));
+    // Slower speed near pickup stops (14-20 km/h), faster on open bypass road (38-48 km/h)
+    const baseSpeed = distToStop < 0.14 ? 16 : 42;
+    const currentSpeed = Math.round(baseSpeed + Math.sin(cabProgress * 18) * 3);
+    const totalDistNum = parseFloat(activeRoute.distance) || 15;
+    const kmCovered = (cabProgress * totalDistNum).toFixed(1);
+
+    return {
+      ...pos,
+      speedKmh: currentSpeed,
+      kmCovered,
+      pctProgress: Math.round(cabProgress * 100),
+    };
+  };
+
+  const telemetry = getDynamicTelemetry();
+  const cabPos = telemetry;
 
   // Color helper
   const getStatusColor = (status: string) => {
@@ -518,11 +563,47 @@ export default function RoutesView() {
           </div>
         </div>
 
-        {/* ─── REALISTIC DYNAMIC ROAD MAP CANVAS ─── */}
+        {/* ─── REALISTIC DYNAMIC ROAD MAP CANVAS WITH REAL-WORLD MAP ─── */}
         <div className="flex-1 relative overflow-hidden bg-slate-950">
+          {/* ─── REAL-WORLD PUNE BACKGROUND MAP TILES ─── */}
+          <div className="absolute inset-0 grid grid-cols-4 grid-rows-3 select-none pointer-events-none overflow-hidden">
+            {PUNE_MAP_TILES.map((t) => (
+              <div key={`${t.x}-${t.y}`} className="relative w-full h-full bg-slate-950 overflow-hidden">
+                <img
+                  src={getMapTileUrl(t.x, t.y, mapStyle)}
+                  alt={`Pune Map ${t.x},${t.y}`}
+                  className="w-full h-full object-cover transition-opacity duration-500"
+                  style={{
+                    filter:
+                      mapStyle === 'dark'
+                        ? 'contrast(1.1) brightness(0.92)'
+                        : mapStyle === 'satellite'
+                        ? 'contrast(1.15) brightness(0.85)'
+                        : 'none',
+                    opacity: mapStyle === 'dark' ? 0.86 : mapStyle === 'satellite' ? 0.8 : 0.92,
+                  }}
+                  loading="eager"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Atmospheric Contrast & Vignette Overlay to ensure route lines are crisp */}
+          <div
+            className="absolute inset-0 pointer-events-none transition-all duration-500"
+            style={{
+              background:
+                mapStyle === 'satellite'
+                  ? 'radial-gradient(ellipse at 50% 50%, rgba(2, 6, 23, 0.25) 0%, rgba(2, 6, 23, 0.85) 100%)'
+                  : mapStyle === 'streets'
+                  ? 'radial-gradient(ellipse at 50% 50%, rgba(15, 23, 42, 0.15) 0%, rgba(15, 23, 42, 0.65) 100%)'
+                  : 'radial-gradient(ellipse at 50% 50%, rgba(2, 6, 23, 0.4) 0%, rgba(2, 6, 23, 0.9) 100%)',
+            }}
+          />
+
           {/* Subtle GIS Map Grid */}
           <div
-            className="absolute inset-0 opacity-10 pointer-events-none"
+            className="absolute inset-0 opacity-15 pointer-events-none"
             style={{
               backgroundImage: 'radial-gradient(#38bdf8 1px, transparent 1px)',
               backgroundSize: '24px 24px',
@@ -550,7 +631,7 @@ export default function RoutesView() {
             </defs>
 
             {/* ─── BACKGROUND PUNE ARTERIAL ROAD NETWORK (Visual Context) ─── */}
-            <g opacity="0.18">
+            <g opacity="0.22">
               {/* NH 48 Western Bypass */}
               <path d="M 80,120 Q 300,240 500,340 Q 720,440 920,540" fill="none" stroke="#64748b" strokeWidth="12" strokeLinecap="round" />
               {/* River Line */}
@@ -565,8 +646,8 @@ export default function RoutesView() {
             <polyline
               points={activeRoute.waypoints.map((w) => `${w.x * 10},${w.y * 6.5}`).join(' ')}
               fill="none"
-              stroke="#0f2648"
-              strokeWidth="16"
+              stroke="#071529"
+              strokeWidth="18"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -576,7 +657,7 @@ export default function RoutesView() {
               points={activeRoute.waypoints.map((w) => `${w.x * 10},${w.y * 6.5}`).join(' ')}
               fill="none"
               stroke="#1e3a5f"
-              strokeWidth="10"
+              strokeWidth="12"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -586,11 +667,11 @@ export default function RoutesView() {
               points={activeRoute.waypoints.map((w) => `${w.x * 10},${w.y * 6.5}`).join(' ')}
               fill="none"
               stroke="url(#routeProgressGrad)"
-              strokeWidth="4"
+              strokeWidth="5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeDasharray="10 6"
-              opacity="0.9"
+              strokeDasharray="12 6"
+              opacity="0.95"
               filter="url(#roadShadow)"
             />
 
@@ -605,7 +686,7 @@ export default function RoutesView() {
                 <g key={stop.id} transform={`translate(${svgX}, ${svgY})`}>
                   {/* Outer pulse for current pickup */}
                   {isCurrent && (
-                    <circle r="18" fill="#38bdf8" opacity="0.3" className="pulse-dot" />
+                    <circle r="18" fill="#38bdf8" opacity="0.35" className="pulse-dot" />
                   )}
 
                   {/* Stop Marker Node */}
@@ -636,8 +717,8 @@ export default function RoutesView() {
                       width="130"
                       height="22"
                       rx="6"
-                      fill="rgba(15, 23, 42, 0.92)"
-                      stroke={isCurrent ? '#38bdf8' : 'rgba(255,255,255,0.15)'}
+                      fill="rgba(15, 23, 42, 0.94)"
+                      stroke={isCurrent ? '#38bdf8' : 'rgba(255,255,255,0.2)'}
                       strokeWidth="1"
                     />
                     <text
@@ -655,73 +736,120 @@ export default function RoutesView() {
             })}
           </svg>
 
-          {/* ─── DYNAMIC ANIMATED CAB MOVING ALONG THE ROAD ─── */}
+          {/* ─── DYNAMIC ANIMATED CAB MOVING ALONG THE ROAD (Smooth gliding at slow cruising speed) ─── */}
           <div
-            className="absolute transition-all duration-75 pointer-events-none"
+            className="absolute transition-[left,top] duration-75 ease-linear pointer-events-none"
             style={{
-              left: `${cabPos.x}%`,
-              top: `${cabPos.y}%`,
+              left: `${telemetry.x}%`,
+              top: `${telemetry.y}%`,
               transform: 'translate(-50%, -50%)',
               zIndex: 40,
             }}>
             {/* Cab Radar Pulse */}
-            <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full border-2 border-cyan-400 animate-ping opacity-40 pointer-events-none" />
+            <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full border-2 border-cyan-400 animate-ping opacity-35 pointer-events-none" />
 
             {/* Cab Vehicle Body */}
             <div
-              className="relative w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 border-2 border-white shadow-2xl flex items-center justify-center transition-transform"
+              className="relative w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 border-2 border-white shadow-2xl flex items-center justify-center transition-transform duration-75"
               style={{
-                transform: `rotate(${cabPos.heading}deg)`,
-                boxShadow: '0 0 20px rgba(56, 189, 248, 0.8)',
+                transform: `rotate(${telemetry.heading}deg)`,
+                boxShadow: '0 0 20px rgba(56, 189, 248, 0.85)',
               }}>
               <span className="text-xs">🚗</span>
             </div>
 
             {/* In-Cab Mini HUD Floating Tooltip */}
-            <div className="absolute left-8 -top-3 bg-slate-900/95 text-white px-2.5 py-1.5 rounded-xl border border-cyan-400/50 shadow-2xl whitespace-nowrap z-50">
+            <div className="absolute left-8 -top-3 bg-slate-900/95 backdrop-blur-md text-white px-2.5 py-1.5 rounded-xl border border-cyan-400/50 shadow-2xl whitespace-nowrap z-50">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[10px] font-bold text-cyan-300 font-mono">
                   {activeRoute.vehicle}
                 </span>
-                <span className="text-[9px] text-slate-400">· {activeRoute.driver}</span>
+                <span className="text-[9px] text-slate-300">· {activeRoute.driver}</span>
               </div>
-              <div className="text-[9px] text-slate-300 mt-0.5">
-                Speed: <strong className="text-emerald-400">38 km/h</strong> · Occupancy: <strong className="text-white">{activeRoute.employees} in cab</strong>
+              <div className="text-[9px] text-slate-300 mt-0.5 flex items-center gap-2">
+                <span>Speed: <strong className="text-emerald-400 font-mono">{telemetry.speedKmh} km/h</strong></span>
+                <span>·</span>
+                <span>Covered: <strong className="text-cyan-300 font-mono">{telemetry.kmCovered} km</strong></span>
               </div>
             </div>
           </div>
 
-          {/* ─── DYNAMIC SIMULATION CONTROLS (FLOATING ON MAP) ─── */}
-          <div className="absolute top-4 left-4 z-30 flex items-center gap-2 p-1.5 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-700/80 shadow-2xl">
+          {/* ─── DYNAMIC SIMULATION CONTROLS & ROUTE SCRUBBER (FLOATING TOP-LEFT) ─── */}
+          <div className="absolute top-4 left-4 z-30 flex items-center gap-2.5 p-1.5 bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-700/80 shadow-2xl">
             {/* Play/Pause Button */}
             <button
               onClick={() => setSimPlaying((p) => !p)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors">
-              <span>{simPlaying ? '⏸ Pause' : '▶ Play Simulation'}</span>
+              <span>{simPlaying ? '⏸ Pause' : '▶ Play'}</span>
             </button>
 
-            {/* Speed Toggles */}
+            {/* Realistic Slow Speed Toggles (0.5x, 1x, 2x) */}
             <div className="flex items-center bg-slate-800 rounded-xl p-0.5 border border-slate-700">
-              {([1, 2, 4] as const).map((spd) => (
+              {([0.5, 1, 2] as const).map((spd) => (
                 <button
                   key={spd}
                   onClick={() => setSimSpeed(spd)}
+                  title={spd === 0.5 ? 'Slow / Cruising Speed' : spd === 1 ? 'Normal City Speed' : 'Fast Preview'}
                   className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-colors ${
-                    simSpeed === spd ? 'bg-cyan-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                    simSpeed === spd ? 'bg-cyan-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
                   }`}>
-                  {spd}x
+                  {spd}x {spd === 0.5 ? 'Slow' : spd === 1 ? 'Normal' : 'Fast'}
                 </button>
               ))}
             </div>
 
-            {/* Reset / Step */}
+            {/* Route Scrubber Slider */}
+            <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-700">
+              <span className="text-[10px] text-slate-400 font-mono">Progress:</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.001"
+                value={cabProgress}
+                onChange={(e) => setCabProgress(parseFloat(e.target.value))}
+                className="w-24 md:w-32 h-1.5 accent-cyan-400 bg-slate-700 rounded-lg cursor-pointer"
+                title="Scrub cab position along route"
+              />
+              <span className="text-[10px] font-mono text-cyan-300 font-bold min-w-[28px]">
+                {telemetry.pctProgress}%
+              </span>
+            </div>
+
+            {/* Reset to Start */}
             <button
-              onClick={() => setCabProgress(0.05)}
-              title="Reset Cab to Start"
-              className="w-7 h-7 flex items-center justify-center rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs">
+              onClick={() => setCabProgress(0.02)}
+              title="Reset Cab to Route Start"
+              className="w-7 h-7 flex items-center justify-center rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs border border-slate-700">
               ↺
             </button>
+          </div>
+
+          {/* ─── REAL-WORLD MAP STYLE SWITCHER (FLOATING TOP-RIGHT) ─── */}
+          <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 p-1.5 bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-700/80 shadow-2xl">
+            <span className="text-[10px] font-bold text-slate-400 px-1.5 hidden md:inline">
+              Real-World Map:
+            </span>
+            {(
+              [
+                { id: 'dark', label: '🗺️ Dark Streets' },
+                { id: 'satellite', label: '🛰️ Satellite' },
+                { id: 'streets', label: '🏙️ Streets' },
+              ] as const
+            ).map((style) => (
+              <button
+                key={style.id}
+                onClick={() => setMapStyle(style.id)}
+                className={`px-2.5 py-1 text-[10px] font-bold rounded-xl transition-all ${
+                  mapStyle === style.id
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}>
+                {style.label}
+              </button>
+            ))}
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-1" title="Real-World Pune GIS Active" />
           </div>
 
           {/* ─── LIVE CAB TELEMETRY SUMMARY DOCK (BOTTOM OF MAP) ─── */}
@@ -755,15 +883,17 @@ export default function RoutesView() {
               </div>
 
               <div>
-                <div className="text-slate-400">Cab Load:</div>
+                <div className="text-slate-400">Cab Capacity:</div>
                 <div className="font-semibold text-emerald-400">
-                  {activeRoute.employees} Employees Assigned (Full Cab)
+                  👥 {activeRoute.employees} in cab ({activeRoute.capacity} seat cab)
                 </div>
               </div>
 
               <div>
-                <div className="text-slate-400">Route Distance:</div>
-                <div className="font-semibold text-white font-mono">{activeRoute.distance} · ETA {activeRoute.eta}</div>
+                <div className="text-slate-400">Route Telemetry:</div>
+                <div className="font-semibold text-white font-mono">
+                  {telemetry.kmCovered} / {activeRoute.distance} ({telemetry.pctProgress}%) · Cruising {telemetry.speedKmh} km/h
+                </div>
               </div>
             </div>
 
