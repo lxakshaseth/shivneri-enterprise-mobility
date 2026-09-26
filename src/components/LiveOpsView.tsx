@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
+import { SmartDispatchLiveOpsPanel } from './dispatch';
+import { getMapboxRasterTileUrl, MAPBOX_ACCESS_TOKEN } from '../services/mapbox/mapboxService';
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 export interface LiveRide {
@@ -545,6 +547,7 @@ export default function LiveOpsView() {
   const [tick, setTick] = useState(0);
   const [activeTab, setActiveTab] = useState<'trips' | 'feed'>('trips'); // 'trips' or 'feed'
   const [feedFilter, setFeedFilter] = useState<'all' | 'trip' | 'traffic' | 'sos'>('all');
+  const [showSmartDispatchModal, setShowSmartDispatchModal] = useState(false);
   
   // SOS Incident state
   const [sosIncident, setSosIncident] = useState<SosIncident>(INITIAL_SOS_INCIDENT);
@@ -775,6 +778,34 @@ export default function LiveOpsView() {
         </div>
       )}
 
+      {/* ─── SMART DYNAMIC DISPATCH CENTER MODAL ─── */}
+      {showSmartDispatchModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-6 animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700 text-white rounded-3xl w-full max-w-6xl h-[92vh] shadow-2xl flex flex-col overflow-hidden animate-scaleUp">
+            <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-8 h-8 rounded-xl bg-blue-600/30 text-blue-400 flex items-center justify-center text-lg border border-blue-500/40">
+                  ⚡
+                </span>
+                <div>
+                  <h2 className="text-base font-bold text-white">Smart Dynamic Dispatch & Reassignment Center</h2>
+                  <p className="text-xs text-slate-400">Integrated Live Operations Command & Autonomous SLA Protection</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSmartDispatchModal(false)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-950">
+              <SmartDispatchLiveOpsPanel />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── URGENT SOS EMERGENCY NOTIFICATION MODAL BANNER ─────────────── */}
       {sosNotification?.open && (
         <div className="fixed top-18 right-6 z-50 w-96 rounded-2xl border-2 border-red-500/80 bg-slate-950/95 text-white shadow-2xl p-4 backdrop-blur-2xl ring-4 ring-red-500/20 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -999,6 +1030,17 @@ export default function LiveOpsView() {
               </div>
             )}
           </div>
+
+          {/* Smart Dynamic Dispatch Reassignment Center Button */}
+          <button
+            onClick={() => setShowSmartDispatchModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold transition-all shadow-md cursor-pointer border border-blue-400/40">
+            <span>⚡</span>
+            <span>Smart Dispatch</span>
+            <span className="text-[9px] bg-emerald-400 text-slate-900 px-1.5 py-0.2 rounded font-black font-mono">
+              SLA
+            </span>
+          </button>
         </div>
       </header>
 
@@ -1016,19 +1058,23 @@ export default function LiveOpsView() {
             {PUNE_MAP_TILES.map((t) => (
               <div key={`${t.x}-${t.y}`} className="relative w-full h-full bg-slate-950 overflow-hidden">
                 <img
-                  src={
-                    mapStyle === 'satellite-contrast'
-                      ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/12/${t.y}/${t.x}`
-                      : `https://basemaps.cartocdn.com/rastertiles/dark_all/12/${t.x}/${t.y}.png`
-                  }
-                  alt={`Pune Map ${t.x},${t.y}`}
+                  src={getMapboxRasterTileUrl(
+                    mapStyle === 'satellite-contrast' ? 'satellite-streets' : 'dark',
+                    12,
+                    t.x,
+                    t.y
+                  )}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://basemaps.cartocdn.com/rastertiles/dark_all/12/${t.x}/${t.y}.png`;
+                  }}
+                  alt={`Mapbox Pune ${t.x},${t.y}`}
                   className="w-full h-full object-cover transition-opacity duration-500"
                   style={{
                     filter:
                       mapStyle === 'satellite-contrast'
-                        ? 'contrast(1.15) brightness(0.8)'
-                        : 'contrast(1.08) brightness(0.88)',
-                    opacity: mapStyle === 'satellite-contrast' ? 0.78 : 0.82,
+                        ? 'contrast(1.15) brightness(0.85)'
+                        : 'contrast(1.08) brightness(0.92)',
+                    opacity: mapStyle === 'satellite-contrast' ? 0.85 : 0.88,
                   }}
                   loading="eager"
                 />
@@ -1376,6 +1422,18 @@ export default function LiveOpsView() {
             style={glassPanel(0.85)}>
             {mapStyle === 'satellite-contrast' ? '🛰️' : '🗺️'}
           </button>
+        </div>
+
+        {/* Mapbox Live GIS Attribution */}
+        <div className="absolute bottom-4 left-[345px] z-20 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-700/60 shadow-lg pointer-events-auto select-none">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-white tracking-wide">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            <span className="text-blue-400 font-mono tracking-tight font-extrabold">mapbox</span>
+          </div>
+          <span className="text-[10px] text-slate-400 font-medium">© Mapbox © OpenStreetMap</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-950/80 text-blue-300 font-mono border border-blue-800/40">
+            GIS Tiles Active
+          </span>
         </div>
 
         {/* ─── LEFT PANEL: ACTIVE TRIPS & REAL-TIME ACTIVITY FEED ─────────── */}

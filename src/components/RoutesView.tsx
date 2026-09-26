@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
+import { useDispatchStore } from '../services/dispatch/useDispatchStore';
+import { getMapboxRasterTileUrl } from '../services/mapbox/mapboxService';
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 export interface Passenger {
@@ -52,14 +54,8 @@ const PUNE_MAP_TILES = [
 ];
 
 const getMapTileUrl = (x: number, y: number, style: 'dark' | 'satellite' | 'streets') => {
-  if (style === 'satellite') {
-    return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/12/${y}/${x}`;
-  }
-  if (style === 'streets') {
-    return `https://basemaps.cartocdn.com/rastertiles/voyager/12/${x}/${y}.png`;
-  }
-  // CartoDB Dark Matter (High-contrast dark GIS cartography with Pune arterial roads, highways & local labels)
-  return `https://basemaps.cartocdn.com/rastertiles/dark_all/12/${x}/${y}.png`;
+  const mapboxStyle = style === 'satellite' ? 'satellite-streets' : style === 'streets' ? 'streets' : 'dark';
+  return getMapboxRasterTileUrl(mapboxStyle, 12, x, y);
 };
 
 // ─── SEED CORPORATE CAB ROUTES (Realistic 2, 3, 4 passengers) ──────────────
@@ -290,6 +286,12 @@ const SEED_CAB_ROUTES: RouteRow[] = [
 ];
 
 export default function RoutesView() {
+  const dispatchState = useDispatchStore();
+  const isRT001Reassigned = Boolean(
+    dispatchState.currentReassignment &&
+    ['ACCEPTED', 'IN_PROGRESS', 'COMPLETED'].includes(dispatchState.currentReassignment.status)
+  );
+
   const [routes, setRoutes] = useState<RouteRow[]>(SEED_CAB_ROUTES);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [search, setSearch] = useState('');
@@ -534,6 +536,11 @@ export default function RoutesView() {
               <span className="font-mono text-xs text-slate-500 font-semibold bg-slate-100 px-2 py-0.5 rounded-md">
                 {activeRoute.id}
               </span>
+              {activeRoute.id === 'RT-001' && isRT001Reassigned && (
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-white flex items-center gap-1 shadow-xs animate-pulse">
+                  ⚡ Stop C Reassigned to Mohan Singh (DRV-208)
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
               <span className="text-blue-600 font-semibold">{activeRoute.organization}</span>
@@ -571,7 +578,10 @@ export default function RoutesView() {
               <div key={`${t.x}-${t.y}`} className="relative w-full h-full bg-slate-950 overflow-hidden">
                 <img
                   src={getMapTileUrl(t.x, t.y, mapStyle)}
-                  alt={`Pune Map ${t.x},${t.y}`}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://basemaps.cartocdn.com/rastertiles/dark_all/12/${t.x}/${t.y}.png`;
+                  }}
+                  alt={`Mapbox Pune ${t.x},${t.y}`}
                   className="w-full h-full object-cover transition-opacity duration-500"
                   style={{
                     filter:
@@ -897,11 +907,18 @@ export default function RoutesView() {
               </div>
             </div>
 
-            <button
-              onClick={() => showToast(`SMS sent to ${activeRoute.employees} passengers: "Cab is 4 mins away"`)}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors shadow-xs">
-              📲 Notify Passengers
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/60 border border-slate-700/60 text-[10px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="font-bold text-white tracking-wide">mapbox</span>
+                <span className="text-slate-400">© Mapbox</span>
+              </div>
+              <button
+                onClick={() => showToast(`SMS sent to ${activeRoute.employees} passengers: "Cab is 4 mins away"`)}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors shadow-xs">
+                📲 Notify Passengers
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -959,20 +976,31 @@ export default function RoutesView() {
                   </div>
 
                   {/* Pickup Status Tag */}
-                  <span
-                    className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                      isPicked
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        : isNext
-                        ? 'bg-amber-100 text-amber-800 border border-amber-200 animate-pulse'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}>
-                    {isPicked ? '✓ Onboard' : isNext ? 'Next Pickup' : 'Scheduled'}
-                  </span>
+                  {activeRoute.id === 'RT-001' && p.id === 'EMP-10495' && isRT001Reassigned ? (
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                      ⚡ Reassigned to Mohan Singh
+                    </span>
+                  ) : (
+                    <span
+                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                        isPicked
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          : isNext
+                          ? 'bg-amber-100 text-amber-800 border border-amber-200 animate-pulse'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}>
+                      {isPicked ? '✓ Onboard' : isNext ? 'Next Pickup' : 'Scheduled'}
+                    </span>
+                  )}
                 </div>
 
                 {/* Pickup details */}
                 <div className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100 mt-2 space-y-1">
+                  {activeRoute.id === 'RT-001' && p.id === 'EMP-10495' && isRT001Reassigned && (
+                    <div className="p-1.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 font-semibold mb-1 text-[10px]">
+                      ⚡ Dispatched to Backup Cab #DRV-208 Mohan Singh (Tata Tigor EV MH14GH4321) · ETA 6m · TrustPass Handshake Active
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-slate-400">Stop:</span>
                     <span className="font-semibold text-slate-700">{p.address}</span>

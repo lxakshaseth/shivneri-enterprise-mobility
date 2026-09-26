@@ -29,11 +29,18 @@ import {
   DriverTrustPassFlow,
   TrustPassControlTower,
 } from './components/trustpass';
+import {
+  SmartDispatchLiveOpsPanel,
+  ReassignmentBanner,
+  DriverAssignmentOffer,
+} from './components/dispatch';
+import { useDispatchStore } from './services/dispatch/useDispatchStore';
+import { getMapboxStaticMapUrl } from './services/mapbox/mapboxService';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type View =
   | 'dashboard' | 'organizations' | 'employees' | 'drivers' | 'vehicles'
-  | 'rides' | 'live-ops' | 'routes' | 'safety' | 'billing' | 'analytics'
+  | 'rides' | 'live-ops' | 'smart-dispatch' | 'routes' | 'safety' | 'billing' | 'analytics'
   | 'access-control' | 'policy-engine' | 'policy-simulator' | 'approvals'
   | 'security-audit' | 'settings' | 'employee-mobile' | 'driver-mobile'
   | 'trustpass-control';
@@ -266,6 +273,7 @@ const NAV_PERMISSIONS: Partial<Record<View, string>> = {
   'vehicles':       'vehicle.read',
   'rides':          'ride.read',
   'live-ops':       'tracking.view',
+  'smart-dispatch': 'tracking.view',
   'routes':         'route.read',
   'safety':         'safety.view',
   'billing':        'billing.view',
@@ -296,7 +304,7 @@ const NAV_ITEMS: { icon: string; label: string; view: View; group?: string }[] =
   { icon: '🚌', label: 'Vehicles', view: 'vehicles' },
   { icon: '🎫', label: 'Rides', view: 'rides' },
   { icon: '📡', label: 'Live Operations', view: 'live-ops', group: 'Operations' },
-  { icon: '🛡', label: 'Pickup Verification', view: 'trustpass-control' },
+  { icon: '⚡', label: 'Smart Dispatch', view: 'smart-dispatch' },
   { icon: '🗺', label: 'Routes', view: 'routes' },
   { icon: '🛡', label: 'Safety & Incidents', view: 'safety' },
   { icon: '💳', label: 'Billing', view: 'billing', group: 'Finance' },
@@ -656,7 +664,6 @@ function Sidebar({ active, onNav }: { active: View; onNav: (v: View) => void }) 
               >
                 <span className="text-base leading-none">{item.icon}</span>
                 <span className="font-medium">{item.label}</span>
-                {isActive && <span className="ml-auto w-1 h-4 rounded-full bg-blue-400 flex-shrink-0" />}
               </button>
             </div>
           );
@@ -8588,10 +8595,11 @@ function SettingsView() {
   // ── API Keys
   type ApiKey = { id: string; name: string; prefix: string; created: string; lastUsed: string; expiry: string; status: string; ip: string; rateLimit: string; revokeConfirm?: boolean };
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([
-    { id: '1', name: 'Production API Key',    prefix: 'shv_prod_xK9mZ…', created: '2024-01-15', lastUsed: '2024-09-23', expiry: '2025-01-15', status: 'Active',  ip: '10.0.0.0/8',       rateLimit: '10,000/hr' },
-    { id: '2', name: 'Webhook Signing Key',   prefix: 'shv_whk_aB3qR…', created: '2024-03-01', lastUsed: '2024-09-22', expiry: 'Never',      status: 'Active',  ip: 'Any',              rateLimit: 'Unlimited' },
-    { id: '3', name: 'Reporting Integration', prefix: 'shv_rpt_yL7nW…', created: '2024-06-10', lastUsed: '2024-09-20', expiry: '2024-12-10', status: 'Active',  ip: '192.168.1.0/24',   rateLimit: '1,000/hr' },
-    { id: '4', name: 'Legacy Mobile Key',     prefix: 'shv_mob_cD5xP…', created: '2023-08-01', lastUsed: '2024-07-30', expiry: '2024-08-01', status: 'Expired', ip: 'Any',              rateLimit: '500/hr' },
+    { id: '1', name: 'Mapbox Public Access Token', prefix: 'pk.eyJ1IjoibHhha3No…', created: '2024-09-26', lastUsed: 'Just now', expiry: 'Never', status: 'Active',  ip: 'Web & Mobile',     rateLimit: 'Unlimited' },
+    { id: '2', name: 'Production API Key',    prefix: 'shv_prod_xK9mZ…', created: '2024-01-15', lastUsed: '2024-09-23', expiry: '2025-01-15', status: 'Active',  ip: '10.0.0.0/8',       rateLimit: '10,000/hr' },
+    { id: '3', name: 'Webhook Signing Key',   prefix: 'shv_whk_aB3qR…', created: '2024-03-01', lastUsed: '2024-09-22', expiry: 'Never',      status: 'Active',  ip: 'Any',              rateLimit: 'Unlimited' },
+    { id: '4', name: 'Reporting Integration', prefix: 'shv_rpt_yL7nW…', created: '2024-06-10', lastUsed: '2024-09-20', expiry: '2024-12-10', status: 'Active',  ip: '192.168.1.0/24',   rateLimit: '1,000/hr' },
+    { id: '5', name: 'Legacy Mobile Key',     prefix: 'shv_mob_cD5xP…', created: '2023-08-01', lastUsed: '2024-07-30', expiry: '2024-08-01', status: 'Expired', ip: 'Any',              rateLimit: '500/hr' },
   ]);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showGenKey, setShowGenKey] = useState(false);
@@ -8625,14 +8633,15 @@ function SettingsView() {
 
   // ── Integrations
   const [integrations, setIntegrations] = useState([
-    { id: '1', name: 'Google Workspace', desc: 'Sync employees and calendar events', icon: '🔷', status: 'Connected', category: 'Identity' },
-    { id: '2', name: 'Slack',            desc: 'SOS and incident alerts to channels',  icon: '💬', status: 'Connected', category: 'Communication' },
-    { id: '3', name: 'Jira',             desc: 'Auto-create tickets from incidents',    icon: '🔵', status: 'Disconnected', category: 'Ticketing' },
-    { id: '4', name: 'AWS S3',           desc: 'Archive trip recordings and reports',   icon: '☁', status: 'Connected', category: 'Storage' },
-    { id: '5', name: 'Razorpay',         desc: 'Payment gateway for billing',           icon: '💳', status: 'Connected', category: 'Payments' },
-    { id: '6', name: 'Twilio',           desc: 'SMS notifications and driver OTP',      icon: '📱', status: 'Disconnected', category: 'Communication' },
-    { id: '7', name: 'PagerDuty',        desc: 'On-call escalation for SOS events',     icon: '🚨', status: 'Disconnected', category: 'Alerting' },
-    { id: '8', name: 'Datadog',          desc: 'Infrastructure and performance metrics', icon: '📊', status: 'Connected', category: 'Observability' },
+    { id: '1', name: 'Mapbox GIS & Navigation', desc: 'Real-time vector/raster cartography, dynamic ETAs & routing', icon: '🗺️', status: 'Connected', category: 'Geospatial' },
+    { id: '2', name: 'Google Workspace', desc: 'Sync employees and calendar events', icon: '🔷', status: 'Connected', category: 'Identity' },
+    { id: '3', name: 'Slack',            desc: 'SOS and incident alerts to channels',  icon: '💬', status: 'Connected', category: 'Communication' },
+    { id: '4', name: 'Jira',             desc: 'Auto-create tickets from incidents',    icon: '🔵', status: 'Disconnected', category: 'Ticketing' },
+    { id: '5', name: 'AWS S3',           desc: 'Archive trip recordings and reports',   icon: '☁', status: 'Connected', category: 'Storage' },
+    { id: '6', name: 'Razorpay',         desc: 'Payment gateway for billing',           icon: '💳', status: 'Connected', category: 'Payments' },
+    { id: '7', name: 'Twilio',           desc: 'SMS notifications and driver OTP',      icon: '📱', status: 'Disconnected', category: 'Communication' },
+    { id: '8', name: 'PagerDuty',        desc: 'On-call escalation for SOS events',     icon: '🚨', status: 'Disconnected', category: 'Alerting' },
+    { id: '9', name: 'Datadog',          desc: 'Infrastructure and performance metrics', icon: '📊', status: 'Connected', category: 'Observability' },
   ]);
 
   const toggleIntegration = (id: string) =>
@@ -9152,6 +9161,9 @@ function SettingsView() {
 function EmployeeMobileView() {
   const [screen, setScreen] = useState('home');
   const [isRideVerified, setIsRideVerified] = useState(false);
+  const { currentReassignment } = useDispatchStore();
+  const isReassigned = currentReassignment && (currentReassignment.status === 'REASSIGNED' || currentReassignment.status === 'ACCEPTED');
+
   const screens = ['home', 'verify-pickup', 'ride-details', 'track', 'sos', 'history', 'profile'];
   const screenLabels: Record<string, string> = {
     home: 'Home',
@@ -9216,16 +9228,28 @@ function EmployeeMobileView() {
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">AG</div>
                 </div>
 
+                {/* DYNAMIC REASSIGNMENT NOTIFICATION BANNER (Part 8) */}
+                {currentReassignment && (
+                  <div className="mb-4">
+                    <ReassignmentBanner
+                      reassignment={currentReassignment}
+                      userType="employee"
+                      onTrackNewDriver={() => setScreen('track')}
+                      onVerifyTrustPass={() => setScreen('verify-pickup')}
+                    />
+                  </div>
+                )}
+
                 {/* 1. EMPLOYEE HOME: Active Pickup Approaching TRUSTPASS Card */}
                 <div className="mb-4">
                   <TrustPassCard
-                    rideId="RID-10421"
-                    driverName="Raj Kumar"
-                    driverRating={4.8}
-                    vehiclePlate="MH12AB1234"
-                    vehicleModel="Toyota Innova"
-                    pickupLocation="Kothrud, Pune"
-                    eta="12 min"
+                    rideId={currentReassignment?.rideId || "RID-10421"}
+                    driverName={isReassigned ? (currentReassignment?.newDriverName || 'Mohan Singh') : "Raj Kumar"}
+                    driverRating={isReassigned ? (currentReassignment?.selectedDriver?.driverRating || 4.9) : 4.8}
+                    vehiclePlate={isReassigned ? (currentReassignment?.newVehiclePlate || 'MH12EF9012') : "MH12AB1234"}
+                    vehicleModel={isReassigned ? (currentReassignment?.newVehicleModel || 'Toyota Etios') : "Toyota Innova"}
+                    pickupLocation={isReassigned ? "Chandani Chowk, Pune" : "Kothrud, Pune"}
+                    eta={isReassigned ? `${currentReassignment?.newEtaMinutes || 6} min` : "12 min"}
                     status={isRideVerified ? 'verified' : 'pending'}
                     onVerifyPickup={() => setScreen('verify-pickup')}
                   />
@@ -9297,22 +9321,35 @@ function EmployeeMobileView() {
 
             {screen === 'track' && (
               <div>
-                <div className="relative" style={{ height: 200, background: '#1a2533' }}>
-                  <svg className="absolute inset-0 w-full h-full opacity-10">
-                    {Array.from({ length: 10 }).map((_, i) => (
-                      <line key={`h${i}`} x1="0" y1={`${i * 10}%`} x2="100%" y2={`${i * 10}%`} stroke="#4a90d9" strokeWidth="0.5" />
-                    ))}
-                    {Array.from({ length: 10 }).map((_, i) => (
-                      <line key={`v${i}`} x1={`${i * 10}%`} y1="0" x2={`${i * 10}%`} y2="100%" stroke="#4a90d9" strokeWidth="0.5" />
-                    ))}
-                  </svg>
+                <div className="relative overflow-hidden" style={{ height: 210, background: '#0f172a' }}>
+                  {/* Real-World Mapbox Static Map Background */}
+                  <img
+                    src={getMapboxStaticMapUrl({
+                      lng: 73.785,
+                      lat: 18.545,
+                      zoom: 12,
+                      width: 480,
+                      height: 210,
+                      style: 'dark',
+                    })}
+                    alt="Mapbox Live Tracking Route"
+                    className="absolute inset-0 w-full h-full object-cover opacity-60"
+                  />
                   <svg className="absolute inset-0 w-full h-full">
-                    <polyline points="10%,80% 35%,55% 60%,35% 80%,20%" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeDasharray="6 3" />
-                    <circle cx="10%" cy="80%" r="6" fill="#22c55e" stroke="white" strokeWidth="2" />
-                    <circle cx="80%" cy="20%" r="6" fill="#ef4444" stroke="white" strokeWidth="2" />
-                    <circle cx="55%" cy="38%" r="7" fill="#3b82f6" stroke="white" strokeWidth="2" />
+                    <polyline points="15%,82% 38%,58% 62%,38% 85%,22%" fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="5 3" />
+                    <circle cx="15%" cy="82%" r="6" fill="#22c55e" stroke="white" strokeWidth="2" />
+                    <circle cx="85%" cy="22%" r="6" fill="#ef4444" stroke="white" strokeWidth="2" />
+                    <circle cx="58%" cy="40%" r="8" fill="#3b82f6" stroke="white" strokeWidth="2" className="animate-pulse" />
                   </svg>
-                  <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[9px] mono px-2 py-1 rounded">📡 LIVE</div>
+                  <div className="absolute top-2 left-2 bg-emerald-600/90 text-white text-[9px] mono px-2 py-0.5 rounded font-bold flex items-center gap-1 shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                    <span>📡 LIVE TELEMETRY</span>
+                  </div>
+                  {/* Mapbox Branding Badge */}
+                  <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-xs text-white text-[9px] px-2 py-0.5 rounded flex items-center gap-1">
+                    <span className="font-bold text-blue-400">mapbox</span>
+                    <span className="text-slate-400">© Mapbox</span>
+                  </div>
                 </div>
                 <div className="p-4 bg-white flex-1">
                   {isRideVerified && (
@@ -9330,15 +9367,17 @@ function EmployeeMobileView() {
                     </div>
                   )}
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-sm font-bold text-slate-900">Raj Kumar</div>
-                    <Badge label={isRideVerified ? "Boarded" : "On Route"} color="green" />
+                    <div className="text-sm font-bold text-slate-900">
+                      {isReassigned ? (currentReassignment?.newDriverName || 'Mohan Singh') : 'Raj Kumar'}
+                    </div>
+                    <Badge label={isRideVerified ? "Boarded" : isReassigned ? "Reassigned Driver" : "On Route"} color={isReassigned ? "blue" : "green"} />
                   </div>
                   {[
-                    { label: 'TrustPass', value: isRideVerified ? '🟢 Verified & Boarded' : '🟡 Verification Pending' },
-                    { label: 'ETA', value: '12 min' },
-                    { label: 'Speed', value: '42 km/h' },
-                    { label: 'Passengers', value: '4 / 7' },
-                    { label: 'Vehicle', value: 'MH12AB1234' },
+                    { label: 'TrustPass', value: currentReassignment?.trustPassStatus === 'VERIFIED' || isRideVerified ? '🟢 Verified & Boarded' : '🟡 Verification Required' },
+                    { label: 'ETA', value: isReassigned ? `${currentReassignment?.newEtaMinutes || 6} min` : '12 min' },
+                    { label: 'Speed', value: isReassigned ? '38 km/h' : '42 km/h' },
+                    { label: 'Pickup Point', value: isReassigned ? 'Chandani Chowk' : 'Kothrud' },
+                    { label: 'Vehicle', value: isReassigned ? (currentReassignment?.newVehiclePlate || 'MH12EF9012') : 'MH12AB1234' },
                   ].map(f => (
                     <div key={f.label} className="flex justify-between py-1.5 border-b border-slate-100 last:border-0 text-xs">
                       <span className="text-slate-500">{f.label}</span>
@@ -9504,6 +9543,9 @@ function EmployeeMobileView() {
 // ─── Driver Mobile App ────────────────────────────────────────────────────────
 function DriverMobileView() {
   const [screen, setScreen] = useState('dashboard');
+  const { currentReassignment, acceptReassignment, declineReassignment } = useDispatchStore();
+  const isReassigned = currentReassignment && (currentReassignment.status === 'REASSIGNED' || currentReassignment.status === 'ACCEPTED');
+
   const screens = ['dashboard', 'verify-passenger', 'trip-request', 'active-ride', 'earnings', 'sos'];
   const screenLabels: Record<string, string> = {
     dashboard: 'Dashboard',
@@ -9516,6 +9558,20 @@ function DriverMobileView() {
 
   return (
     <div className="p-6 slide-in overflow-y-auto h-full">
+      {/* INCOMING DRIVER REASSIGNMENT OFFER POPUP (Part 7) */}
+      {currentReassignment && currentReassignment.status === 'OFFERED_TO_DRIVER' && (
+        <DriverAssignmentOffer
+          reassignment={currentReassignment}
+          onAccept={() => {
+            acceptReassignment(currentReassignment.id, currentReassignment.selectedDriver?.driverId || 'DRV-208');
+            setScreen('active-ride');
+          }}
+          onDecline={() => {
+            declineReassignment(currentReassignment.id, currentReassignment.selectedDriver?.driverId || 'DRV-208');
+          }}
+        />
+      )}
+
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         {screens.map(s => (
           <button
@@ -9553,6 +9609,29 @@ function DriverMobileView() {
 
             {screen === 'dashboard' && (
               <div className="p-4">
+                {/* Active Reassigned Banner if Driver has accepted Stop C */}
+                {isReassigned && (
+                  <div className="bg-gradient-to-r from-emerald-900 to-teal-900 text-white rounded-xl p-3 mb-3 border border-emerald-600 shadow-sm">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-bold text-emerald-300 flex items-center gap-1">
+                        <span>⚡</span>
+                        <span>PRIORITY REASSIGNED PICKUP</span>
+                      </span>
+                      <span className="bg-emerald-500 text-white px-1.5 py-0.2 rounded font-mono text-[9px] font-bold">
+                        ETA: {currentReassignment?.newEtaMinutes || 6}m
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-emerald-100">
+                      Stop C: Chandani Chowk · Rohan Joshi
+                    </div>
+                    <button
+                      onClick={() => setScreen('active-ride')}
+                      className="mt-2 w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg cursor-pointer"
+                    >
+                      Navigate to Pickup →
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <div className="text-xs text-slate-500">Good Morning</div>
@@ -9641,20 +9720,34 @@ function DriverMobileView() {
 
             {screen === 'active-ride' && (
               <div>
-                <div className="relative" style={{ height: 180, background: '#1a2533' }}>
-                  <svg className="absolute inset-0 w-full h-full opacity-10">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <line key={i} x1="0" y1={`${i * 12.5}%`} x2="100%" y2={`${i * 12.5}%`} stroke="#4a90d9" strokeWidth="0.5" />
-                    ))}
-                  </svg>
+                <div className="relative overflow-hidden" style={{ height: 190, background: '#0f172a' }}>
+                  {/* Real-World Mapbox Static Navigation Background */}
+                  <img
+                    src={getMapboxStaticMapUrl({
+                      lng: 73.785,
+                      lat: 18.545,
+                      zoom: 12,
+                      width: 480,
+                      height: 190,
+                      style: 'navigation-night',
+                    })}
+                    alt="Mapbox Driver Navigation Route"
+                    className="absolute inset-0 w-full h-full object-cover opacity-65"
+                  />
                   <svg className="absolute inset-0 w-full h-full">
-                    <polyline points="20%,80% 50%,50% 75%,25%" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="5 3" />
+                    <polyline points="20%,80% 50%,50% 75%,25%" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="5 3" />
                     <circle cx="20%" cy="80%" r="5" fill="#22c55e" stroke="white" strokeWidth="2" />
                     <circle cx="75%" cy="25%" r="5" fill="#ef4444" stroke="white" strokeWidth="2" />
-                    <circle cx="45%" cy="54%" r="8" fill="#3b82f6" stroke="white" strokeWidth="2" />
+                    <circle cx="45%" cy="54%" r="8" fill="#10b981" stroke="white" strokeWidth="2" className="animate-pulse" />
                   </svg>
-                  <div className="absolute top-2 left-2 bg-green-600 text-white text-[9px] mono px-2 py-1 rounded">● RIDE ACTIVE</div>
-                  <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[9px] px-2 py-1 rounded">42 km/h</div>
+                  <div className="absolute top-2 left-2 bg-emerald-600/90 text-white text-[9px] mono px-2 py-0.5 rounded font-bold flex items-center gap-1 shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                    <span>● LIVE TURN-BY-TURN</span>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-xs text-white text-[9px] px-2 py-0.5 rounded flex items-center gap-1">
+                    <span className="font-bold text-blue-400">mapbox</span>
+                    <span className="text-slate-400">42 km/h</span>
+                  </div>
                 </div>
                 <div className="p-4 bg-white">
                   <div className="flex items-center justify-between mb-3">
@@ -9793,6 +9886,7 @@ const VIEW_META: Record<View, { title: string; subtitle?: string }> = {
   vehicles: { title: 'Fleet Vehicles', subtitle: 'Vehicle registry, compliance, and utilization' },
   rides: { title: 'Rides', subtitle: 'Ride lifecycle and history' },
   'live-ops': { title: 'Live Operations Center', subtitle: 'Real-time vehicle tracking and incident response' },
+  'smart-dispatch': { title: 'Smart Dynamic Dispatch & Reassignment', subtitle: 'Autonomous traffic delay detection, pickup SLA protection & driver reassignment' },
   routes: { title: 'Routes', subtitle: 'Route planning and optimization' },
   safety: { title: 'Safety & Incidents', subtitle: 'SOS management, incidents, and emergency access' },
   billing: { title: 'Billing & Finance', subtitle: 'Invoices, cost analytics, and payment management' },
@@ -9825,6 +9919,11 @@ export default function App() {
       case 'vehicles': return <VehiclesView />;
       case 'rides': return <RidesView />;
       case 'live-ops': return <LiveOpsView />;
+      case 'smart-dispatch': return (
+        <div className="p-6 slide-in overflow-y-auto h-full">
+          <SmartDispatchLiveOpsPanel />
+        </div>
+      );
       case 'routes': return <RoutesView />;
       case 'access-control': return <AccessControlView />;
       case 'policy-engine': return <PolicyEngineView policies={sharedPolicies} setPolicies={setSharedPolicies} />;
