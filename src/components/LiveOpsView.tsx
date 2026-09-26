@@ -548,8 +548,58 @@ export default function LiveOpsView() {
   
   // SOS Incident state
   const [sosIncident, setSosIncident] = useState<SosIncident>(INITIAL_SOS_INCIDENT);
-  const [showSosModal, setShowSosModal] = useState(false);
+  const [showSosIncident, setShowSosIncident] = useState(false);
+  const [sosNotification, setSosNotification] = useState<{
+    open: boolean;
+    title: string;
+    desc: string;
+    time: string;
+    vehicle: string;
+    location: string;
+  } | null>(null);
   const [callModal, setCallModal] = useState<{ open: boolean; type: 'driver' | 'employee'; name: string; phone: string; title: string } | null>(null);
+
+  // Audio alert chime using Web Audio API
+  const playSosChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      }
+    } catch {
+      // Audio might be muted or unpermitted by browser policy
+    }
+  };
+
+  // Handler triggered ONLY when Active SOS is clicked
+  const handleOpenActiveSos = (source = 'Active SOS Click') => {
+    playSosChime();
+    setShowSosIncident(true);
+    setSelectedId('TRIP-10438');
+    setTracking('TRIP-10438');
+    setZoomLevel(1.75);
+    setPanOffset({ x: 240, y: 120 });
+    setSosNotification({
+      open: true,
+      title: 'Active SOS Emergency Notification',
+      desc: `Priya Sharma (${sosIncident.company}) reported an emergency on ${sosIncident.vehicleModel} (${sosIncident.vehicle})`,
+      time: sosIncident.alertTime,
+      vehicle: sosIncident.vehicle,
+      location: sosIncident.location,
+    });
+    showToast(`🚨 Active SOS Notification: Priya Sharma at Hinjewadi Phase 1`);
+  };
 
   // Activity Feed state
   const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>(INITIAL_ACTIVITY_FEED);
@@ -655,6 +705,7 @@ export default function LiveOpsView() {
       status: 'Resolved',
       resolvedAt: resolvedTime,
     }));
+    setSosNotification(null);
 
     // Append resolution log event to the Real-Time Activity Feed
     const resolutionEvent: ActivityEvent = {
@@ -724,6 +775,96 @@ export default function LiveOpsView() {
         </div>
       )}
 
+      {/* ─── URGENT SOS EMERGENCY NOTIFICATION MODAL BANNER ─────────────── */}
+      {sosNotification?.open && (
+        <div className="fixed top-18 right-6 z-50 w-96 rounded-2xl border-2 border-red-500/80 bg-slate-950/95 text-white shadow-2xl p-4 backdrop-blur-2xl ring-4 ring-red-500/20 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-start justify-between gap-2 mb-2 pb-2.5 border-b border-red-500/30">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-red-600/30 border border-red-500/50 flex items-center justify-center text-lg animate-pulse flex-shrink-0">
+                🚨
+              </div>
+              <div>
+                <div className="text-xs font-black text-red-400 tracking-wider uppercase flex items-center gap-1.5">
+                  <span>Critical SOS Notification</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                </div>
+                <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                  Time: {sosNotification.time} · Severity: CRITICAL HIGH
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setSosNotification(null)}
+              className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors"
+              title="Dismiss Notification">
+              ✕
+            </button>
+          </div>
+
+          <p className="text-xs text-red-100 font-medium mb-3">
+            {sosNotification.desc}
+          </p>
+
+          <div className="space-y-1.5 text-xs mb-3 bg-red-950/40 p-2.5 rounded-xl border border-red-500/25">
+            <div className="flex justify-between items-center">
+              <span className="text-red-200/70 text-[11px]">Passenger:</span>
+              <span className="text-white font-bold">{sosIncident.employee}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-red-200/70 text-[11px]">Organization:</span>
+              <span className="text-white font-medium">{sosIncident.company}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-red-200/70 text-[11px]">Vehicle:</span>
+              <span className="text-cyan-300 font-mono font-bold">{sosIncident.vehicle}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-red-200/70 text-[11px]">Location:</span>
+              <span className="text-amber-300 font-semibold">{sosIncident.location}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-1.5 text-xs">
+            <button
+              onClick={() => {
+                handleTrackLiveIncident();
+                setSosNotification(null);
+              }}
+              className="py-2 px-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-center text-[11px] transition-colors shadow-sm">
+              🎯 Track Live
+            </button>
+            <button
+              onClick={() => {
+                setCallModal({
+                  open: true,
+                  type: 'driver',
+                  name: sosIncident.driver,
+                  phone: sosIncident.driverPhone,
+                  title: `SOS Emergency Call: Driver`,
+                });
+                setSosNotification(null);
+              }}
+              className="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-center text-[11px] border border-white/10 transition-colors">
+              📞 Call Driver
+            </button>
+            <button
+              onClick={() => {
+                setCallModal({
+                  open: true,
+                  type: 'employee',
+                  name: sosIncident.employee,
+                  phone: sosIncident.employeePhone,
+                  title: `SOS Emergency Call: Passenger`,
+                });
+                setSosNotification(null);
+              }}
+              className="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-center text-[11px] border border-white/10 transition-colors">
+              📱 Passenger
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ─── TOP KPI DISPATCH BAR (Directly from Suggested Layout) ─────── */}
       <header
         className="flex items-center gap-3 px-5 py-2.5 z-30 flex-shrink-0"
@@ -750,23 +891,46 @@ export default function LiveOpsView() {
               color: sosIncident.status === 'Active' ? '#ef4444' : '#22c55e',
               icon: '🚨',
               pulse: sosIncident.status === 'Active',
+              isSos: true,
             },
             { label: 'Fleet Utilization', val: '91%', color: '#38bdf8', icon: '📊' },
             { label: 'ETA Accuracy', val: '96%', color: '#22c55e', icon: '🎯' },
-          ].map((kpi) => (
-            <div key={kpi.label} className="flex items-center gap-2 bg-white/4 px-3 py-1.5 rounded-xl border border-white/5 flex-shrink-0">
-              <span className="text-sm">{kpi.icon}</span>
-              <div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-xs font-bold font-mono" style={{ color: kpi.color }}>
-                    {kpi.val}
-                  </span>
-                  {kpi.pulse && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />}
+          ].map((kpi) => {
+            const isSosCard = (kpi as { isSos?: boolean }).isSos;
+            return (
+              <div
+                key={kpi.label}
+                onClick={() => {
+                  if (isSosCard) {
+                    handleOpenActiveSos('Active SOS KPI Card');
+                  }
+                }}
+                title={isSosCard ? 'Click to open Active SOS Emergency Notification & Response Center' : undefined}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border flex-shrink-0 transition-all ${
+                  isSosCard
+                    ? sosIncident.status === 'Active'
+                      ? 'bg-red-950/40 border-red-500/50 hover:bg-red-900/50 hover:border-red-400 cursor-pointer shadow-lg shadow-red-950/50 ring-1 ring-red-500/40 hover:scale-105 active:scale-95'
+                      : 'bg-emerald-950/20 border-emerald-500/30 hover:bg-emerald-900/30 cursor-pointer'
+                    : 'bg-white/4 border-white/5'
+                }`}>
+                <span className="text-sm">{kpi.icon}</span>
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xs font-bold font-mono" style={{ color: kpi.color }}>
+                      {kpi.val}
+                    </span>
+                    {kpi.pulse && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />}
+                    {isSosCard && sosIncident.status === 'Active' && (
+                      <span className="text-[8px] font-black tracking-widest text-red-200 uppercase px-1 py-0.2 bg-red-600/60 rounded border border-red-400/50 animate-pulse">
+                        CLICK
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[9px] text-slate-400 uppercase tracking-wider">{kpi.label}</div>
                 </div>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider">{kpi.label}</div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Filter controls */}
@@ -778,7 +942,12 @@ export default function LiveOpsView() {
             {['All', 'On Route', 'Delayed', 'SOS'].map((s) => (
               <button
                 key={s}
-                onClick={() => setFilterStatus(s)}
+                onClick={() => {
+                  setFilterStatus(s);
+                  if (s === 'SOS') {
+                    handleOpenActiveSos('Status Filter: SOS');
+                  }
+                }}
                 className="px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all"
                 style={
                   filterStatus === s
@@ -1056,7 +1225,12 @@ export default function LiveOpsView() {
                 key={ride.id}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedId(isSel ? null : ride.id);
+                  if (isSos) {
+                    handleOpenActiveSos('Map SOS Marker');
+                  } else {
+                    setShowSosIncident(false);
+                    setSelectedId(isSel ? null : ride.id);
+                  }
                 }}
                 className="absolute pointer-events-auto cursor-pointer group transition-all duration-700 ease-out"
                 style={{
@@ -1256,8 +1430,13 @@ export default function LiveOpsView() {
                   <div
                     key={ride.id}
                     onClick={() => {
-                      setSelectedId(isSel ? null : ride.id);
-                      if (!isSel) setTracking(ride.id);
+                      if (ride.status === 'SOS') {
+                        handleOpenActiveSos('Active Trips Stream');
+                      } else {
+                        setShowSosIncident(false);
+                        setSelectedId(isSel ? null : ride.id);
+                        if (!isSel) setTracking(ride.id);
+                      }
                     }}
                     className={`p-3 rounded-xl border transition-all cursor-pointer ${
                       isSel
@@ -1336,7 +1515,10 @@ export default function LiveOpsView() {
                   <div
                     key={evt.id}
                     onClick={() => {
-                      if (evt.tripId) {
+                      if (evt.type === 'sos') {
+                        handleOpenActiveSos('Activity Feed Event');
+                      } else if (evt.tripId) {
+                        setShowSosIncident(false);
                         setSelectedId(evt.tripId);
                         setTracking(evt.tripId);
                       }
@@ -1363,8 +1545,108 @@ export default function LiveOpsView() {
           className="absolute right-4 top-4 bottom-4 w-80 flex flex-col gap-3 overflow-y-auto pr-1 z-20"
           style={{ scrollbarWidth: 'none' }}>
 
-          {/* ─── CASE A: ACTIVE TRIP DETAILS PANEL (Document Page 3) ─────── */}
-          {selectedRide ? (
+          {/* Conditional Display:
+              1. If showSosIncident is true -> CASE B: SOS INCIDENT CENTER (with close button ✕)
+              2. Else if selectedRide is truthy -> CASE A: ACTIVE TRIP DETAILS (with close button ✕)
+              3. Else -> CASE C: OPERATIONS HUB OVERVIEW (Default state when no ride selected & SOS not clicked)
+          */}
+          {showSosIncident ? (
+            /* ─── CASE B: SOS INCIDENT CENTER (Document Pages 5-6) ────────── */
+            <div
+              className="rounded-2xl overflow-hidden border border-red-500/40 shadow-2xl flex-shrink-0 animate-in fade-in duration-300"
+              style={{
+                background: 'linear-gradient(180deg, rgba(80, 15, 15, 0.9), rgba(40, 10, 10, 0.95))',
+                backdropFilter: 'blur(20px)',
+              }}>
+              <div className="px-4 py-3 bg-red-600/30 border-b border-red-500/30 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${sosIncident.status === 'Active' ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
+                  <span className="text-xs font-bold text-red-200 uppercase tracking-wider">
+                    SOS Incident Center
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      sosIncident.status === 'Active' ? 'bg-red-600 text-white animate-pulse' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                    }`}>
+                    {sosIncident.status === 'Active' ? 'CRITICAL HIGH' : 'RESOLVED'}
+                  </span>
+                  <button
+                    onClick={() => setShowSosIncident(false)}
+                    className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-red-200 hover:text-white flex items-center justify-center text-xs transition-colors"
+                    title="Close SOS Center">
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Exact Fields Specified in Document Pages 5-6 */}
+              <div className="p-4 space-y-2 text-xs">
+                {[
+                  { label: 'Employee', val: sosIncident.employee },
+                  { label: 'Company', val: sosIncident.company },
+                  { label: 'Driver', val: sosIncident.driver },
+                  { label: 'Vehicle', val: sosIncident.vehicle, isMono: true },
+                  { label: 'Location', val: sosIncident.location },
+                  { label: 'Alert Time', val: sosIncident.alertTime, isMono: true },
+                  { label: 'Severity', val: sosIncident.severity, isRed: sosIncident.status === 'Active' },
+                  { label: 'Status', val: sosIncident.status, isGreen: sosIncident.status === 'Resolved' },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center justify-between py-0.5">
+                    <span className="text-red-200/70 text-[11px]">{row.label}:</span>
+                    <span
+                      className={`text-[11px] font-semibold ${
+                        row.isMono ? 'font-mono' : ''
+                      } ${row.isRed ? 'text-red-400 font-bold' : row.isGreen ? 'text-emerald-400 font-bold' : 'text-white'}`}>
+                      {row.val}
+                    </span>
+                  </div>
+                ))}
+
+                {/* Four Required Actions from Document Page 6 */}
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <button
+                    onClick={handleTrackLiveIncident}
+                    className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-red-600 hover:bg-red-700 transition-colors shadow-sm text-center">
+                    🎯 Track Live
+                  </button>
+                  <button
+                    onClick={() =>
+                      setCallModal({
+                        open: true,
+                        type: 'driver',
+                        name: sosIncident.driver,
+                        phone: sosIncident.driverPhone,
+                        title: `SOS Emergency Call: Driver`,
+                      })
+                    }
+                    className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center">
+                    📞 Call Driver
+                  </button>
+                  <button
+                    onClick={() =>
+                      setCallModal({
+                        open: true,
+                        type: 'employee',
+                        name: sosIncident.employee,
+                        phone: sosIncident.employeePhone,
+                        title: `SOS Emergency Call: Passenger`,
+                      })
+                    }
+                    className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center">
+                    📱 Call Employee
+                  </button>
+                  <button
+                    onClick={handleResolveIncident}
+                    className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm text-center">
+                    ✓ Resolve
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : selectedRide ? (
+            /* ─── CASE A: ACTIVE TRIP DETAILS PANEL (Document Page 3) ─────── */
             <div
               className="rounded-2xl p-4 border border-cyan-500/40 shadow-2xl flex-shrink-0 dialog-in"
               style={{
@@ -1473,90 +1755,68 @@ export default function LiveOpsView() {
               </div>
             </div>
           ) : (
-            /* ─── CASE B: SOS INCIDENT CENTER (Document Pages 5-6) ────────── */
+            /* ─── CASE C: OPERATIONS HUB OVERVIEW (Default State) ─────── */
             <div
-              className="rounded-2xl overflow-hidden border border-red-500/40 shadow-2xl flex-shrink-0"
-              style={{
-                background: 'linear-gradient(180deg, rgba(80, 15, 15, 0.85), rgba(40, 10, 10, 0.9))',
-                backdropFilter: 'blur(20px)',
-              }}>
-              <div className="px-4 py-3 bg-red-600/30 border-b border-red-500/30 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${sosIncident.status === 'Active' ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
-                  <span className="text-xs font-bold text-red-200 uppercase tracking-wider">
-                    SOS Incident Center
+              className="rounded-2xl p-4 border border-white/10 shadow-2xl flex-shrink-0 animate-in fade-in duration-300"
+              style={glassPanel(0.92)}>
+              <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+                <div>
+                  <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">
+                    Operations Overview
                   </span>
+                  <h3 className="text-sm font-bold text-white mt-0.5">
+                    Pune Central Dispatch
+                  </h3>
                 </div>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    sosIncident.status === 'Active' ? 'bg-red-600 text-white animate-pulse' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
-                  }`}>
-                  {sosIncident.status === 'Active' ? 'CRITICAL HIGH' : 'RESOLVED'}
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  ONLINE
                 </span>
               </div>
 
-              {/* Exact Fields Specified in Document Pages 5-6 */}
-              <div className="p-4 space-y-2 text-xs">
-                {[
-                  { label: 'Employee', val: sosIncident.employee },
-                  { label: 'Company', val: sosIncident.company },
-                  { label: 'Driver', val: sosIncident.driver },
-                  { label: 'Vehicle', val: sosIncident.vehicle, isMono: true },
-                  { label: 'Location', val: sosIncident.location },
-                  { label: 'Alert Time', val: sosIncident.alertTime, isMono: true },
-                  { label: 'Severity', val: sosIncident.severity, isRed: sosIncident.status === 'Active' },
-                  { label: 'Status', val: sosIncident.status, isGreen: sosIncident.status === 'Resolved' },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between py-0.5">
-                    <span className="text-red-200/70 text-[11px]">{row.label}:</span>
-                    <span
-                      className={`text-[11px] font-semibold ${
-                        row.isMono ? 'font-mono' : ''
-                      } ${row.isRed ? 'text-red-400 font-bold' : row.isGreen ? 'text-emerald-400 font-bold' : 'text-white'}`}>
-                      {row.val}
+              {/* Interactive Banner: Only when Active SOS exists */}
+              {sosIncident.status === 'Active' ? (
+                <div
+                  onClick={() => handleOpenActiveSos('Overview SOS Banner')}
+                  className="p-3 mb-3 rounded-xl bg-gradient-to-r from-red-950/80 to-red-900/60 border border-red-500/40 hover:border-red-400 cursor-pointer transition-all shadow-md group">
+                  <div className="flex items-center justify-between text-xs font-bold text-red-200">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                      🚨 1 Active SOS Incident
+                    </span>
+                    <span className="text-[10px] text-red-300 group-hover:text-white underline">
+                      View Alert →
                     </span>
                   </div>
-                ))}
-
-                {/* Four Required Actions from Document Page 6 */}
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <button
-                    onClick={handleTrackLiveIncident}
-                    className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-red-600 hover:bg-red-700 transition-colors shadow-sm text-center">
-                    🎯 Track Live
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCallModal({
-                        open: true,
-                        type: 'driver',
-                        name: sosIncident.driver,
-                        phone: sosIncident.driverPhone,
-                        title: `SOS Emergency Call: Driver`,
-                      })
-                    }
-                    className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center">
-                    📞 Call Driver
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCallModal({
-                        open: true,
-                        type: 'employee',
-                        name: sosIncident.employee,
-                        phone: sosIncident.employeePhone,
-                        title: `SOS Emergency Call: Passenger`,
-                      })
-                    }
-                    className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center">
-                    📱 Call Employee
-                  </button>
-                  <button
-                    onClick={handleResolveIncident}
-                    className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm text-center">
-                    ✓ Resolve
-                  </button>
+                  <p className="text-[11px] text-red-200/80 mt-1">
+                    {sosIncident.employee} ({sosIncident.company}) · {sosIncident.location}
+                  </p>
                 </div>
+              ) : (
+                <div className="p-2.5 mb-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
+                  <span>✅</span>
+                  <span className="text-[11px]">All emergency channels normal. 0 active SOS.</span>
+                </div>
+              )}
+
+              {/* Quick Fleet Highlights */}
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between py-1 border-b border-white/5">
+                  <span className="text-slate-400 text-[11px]">Active Cabs Stream:</span>
+                  <span className="text-white font-mono font-bold">8 Vehicles Active</span>
+                </div>
+                <div className="flex items-center justify-between py-1 border-b border-white/5">
+                  <span className="text-slate-400 text-[11px]">Primary Corridor:</span>
+                  <span className="text-cyan-300 font-semibold">Hinjewadi IT Park</span>
+                </div>
+                <div className="flex items-center justify-between py-1 border-b border-white/5">
+                  <span className="text-slate-400 text-[11px]">Standby Fleet:</span>
+                  <span className="text-emerald-400 font-mono font-semibold">2 Available</span>
+                </div>
+              </div>
+
+              <div className="mt-3 p-2 bg-slate-900/60 rounded-xl border border-white/5 text-[11px] text-slate-400">
+                💡 <strong className="text-slate-300">Notice:</strong> Click on any vehicle marker or trip card to inspect telemetry, or click on <span className="text-red-400 font-semibold cursor-pointer underline" onClick={() => handleOpenActiveSos('Guide Text')}>🚨 1 Active SOS</span> to view emergency notification.
               </div>
             </div>
           )}
