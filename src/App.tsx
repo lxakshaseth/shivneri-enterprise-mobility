@@ -304,7 +304,6 @@ const NAV_ITEMS: { icon: string; label: string; view: View; group?: string }[] =
   { icon: '🚌', label: 'Vehicles', view: 'vehicles' },
   { icon: '🎫', label: 'Rides', view: 'rides' },
   { icon: '📡', label: 'Live Operations', view: 'live-ops', group: 'Operations' },
-  { icon: '⚡', label: 'Smart Dispatch', view: 'smart-dispatch' },
   { icon: '🗺', label: 'Routes', view: 'routes' },
   { icon: '🛡', label: 'Safety & Incidents', view: 'safety' },
   { icon: '💳', label: 'Billing', view: 'billing', group: 'Finance' },
