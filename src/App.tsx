@@ -9917,12 +9917,8 @@ export default function App() {
       case 'drivers': return <DriversView />;
       case 'vehicles': return <VehiclesView />;
       case 'rides': return <RidesView />;
-      case 'live-ops': return <LiveOpsView />;
-      case 'smart-dispatch': return (
-        <div className="p-6 slide-in overflow-y-auto h-full">
-          <SmartDispatchLiveOpsPanel />
-        </div>
-      );
+      case 'live-ops':
+      case 'smart-dispatch': return <LiveOpsView />;
       case 'routes': return <RoutesView />;
       case 'access-control': return <AccessControlView />;
       case 'policy-engine': return <PolicyEngineView policies={sharedPolicies} setPolicies={setSharedPolicies} />;
