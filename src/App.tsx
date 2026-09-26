@@ -6,13 +6,37 @@ import {
 import AIChatbot from './components/AIChatbot';
 import LiveOpsView from './components/LiveOpsView';
 import RoutesView from './components/RoutesView';
+import {
+  TrustPassCard,
+  DriverIdentityCard,
+  VehicleIdentityCard,
+  VerificationStatus,
+  VerificationChecklist,
+  VerificationMethodCard,
+  DynamicQRCode,
+  VerificationResult,
+  SecurityErrorState,
+  VerificationDetails,
+  TrustPassFlow,
+  PassengerVerificationCard,
+  QRScanner,
+  OTPVerification,
+  MutualHandshake,
+  PassengerResult,
+  MismatchAlert,
+  BoardingConfirmation,
+  SafeDropVerification,
+  DriverTrustPassFlow,
+  TrustPassControlTower,
+} from './components/trustpass';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type View =
   | 'dashboard' | 'organizations' | 'employees' | 'drivers' | 'vehicles'
   | 'rides' | 'live-ops' | 'routes' | 'safety' | 'billing' | 'analytics'
   | 'access-control' | 'policy-engine' | 'policy-simulator' | 'approvals'
-  | 'security-audit' | 'settings' | 'employee-mobile' | 'driver-mobile';
+  | 'security-audit' | 'settings' | 'employee-mobile' | 'driver-mobile'
+  | 'trustpass-control';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const NAVY = '#0f172a';
@@ -254,6 +278,7 @@ const NAV_PERMISSIONS: Partial<Record<View, string>> = {
   'settings':       'settings.view',
   'employee-mobile':'ride.read-own',
   'driver-mobile':  'ride.accept',
+  'trustpass-control':'tracking.view',
 };
 
 function canAccess(user: AuthUser, view: View): boolean {
@@ -271,6 +296,7 @@ const NAV_ITEMS: { icon: string; label: string; view: View; group?: string }[] =
   { icon: '🚌', label: 'Vehicles', view: 'vehicles' },
   { icon: '🎫', label: 'Rides', view: 'rides' },
   { icon: '📡', label: 'Live Operations', view: 'live-ops', group: 'Operations' },
+  { icon: '🛡', label: 'Pickup Verification', view: 'trustpass-control' },
   { icon: '🗺', label: 'Routes', view: 'routes' },
   { icon: '🛡', label: 'Safety & Incidents', view: 'safety' },
   { icon: '💳', label: 'Billing', view: 'billing', group: 'Finance' },
@@ -2124,6 +2150,7 @@ function DashboardView({ onNav }: { onNav: (v: View) => void }) {
   const NEEDS = [
     { count: data.delayedTrips, label:'Delayed Trips',                sub:'Require attention',          view:'rides' as View,    color:'amber' },
     { count: 2,                  label:'Active SOS Alerts',            sub:'Immediate response needed',  view:'safety' as View,   color:'red'   },
+    { count: 5,                  label:'TrustPass Security Alerts',    sub:'Wrong passenger/OTP mismatch', view:'trustpass-control' as View, color:'red' },
     { count: 12,                 label:'Vehicles Due for Renewal',     sub:'Insurance / RC pending',     view:'vehicles' as View, color:'blue'  },
     { count: 5,                  label:'Driver Verifications Pending', sub:'Documents awaiting review',  view:'drivers' as View,  color:'slate' },
   ];
@@ -5058,7 +5085,7 @@ function SafetyView() {
 }
 
 // Security Audit
-function SecurityAuditView() {
+function SecurityAuditView({ onNav }: { onNav?: (v: View) => void }) {
   const events = [
     { ts: '18:42:11', actor: 'Akshat Gupta', org: 'Platform', action: 'role.permissions.modify', resource: 'Transport Manager', result: 'SUCCESS', ip: '10.0.2.41', device: 'Chrome/Mac', risk: 'Medium' },
     { ts: '18:39:02', actor: 'Priya Sharma', org: 'TCS Pune', action: 'employee.data.export', resource: 'EMP-10423', result: 'DENIED', ip: '10.0.1.82', device: 'Safari/iOS', risk: 'High' },
@@ -5083,7 +5110,33 @@ function SecurityAuditView() {
   };
 
   return (
-    <div className="p-6 slide-in overflow-y-auto h-full">
+    <div className="p-6 slide-in overflow-y-auto h-full space-y-4">
+      {/* TrustPass Integration Banner */}
+      <div className="bg-slate-900 text-white rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 border border-slate-800 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-lg">
+            🛡
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm">TrustPass Pickup Verification Center</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-slate-950">LIVE ZERO-TRUST</span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              1,249 rides verified today with 8-point bilateral context validation, real-time security alerts, and HSM ledger seals.
+            </p>
+          </div>
+        </div>
+        {onNav && (
+          <button
+            onClick={() => onNav('trustpass-control')}
+            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5"
+          >
+            <span>Launch Control Tower</span> <span>→</span>
+          </button>
+        )}
+      </div>
+
       {/* Filters */}
       <div className="flex gap-2 mb-4 flex-wrap">
         {['All Events', 'Login', 'Data Access', 'Role Changes', 'Policy Changes', 'SOS Access', 'Exports'].map(f => (
@@ -9098,9 +9151,16 @@ function SettingsView() {
 // ─── Employee Mobile App ──────────────────────────────────────────────────────
 function EmployeeMobileView() {
   const [screen, setScreen] = useState('home');
-  const screens = ['home', 'ride-details', 'track', 'sos', 'history', 'profile'];
+  const [isRideVerified, setIsRideVerified] = useState(false);
+  const screens = ['home', 'verify-pickup', 'ride-details', 'track', 'sos', 'history', 'profile'];
   const screenLabels: Record<string, string> = {
-    home: 'Home', 'ride-details': 'Ride Details', track: 'Live Tracking', sos: 'SOS', history: 'Ride History', profile: 'Profile',
+    home: 'Home',
+    'verify-pickup': '🛡 Verify Pickup',
+    'ride-details': 'Ride Details',
+    track: 'Live Tracking',
+    sos: 'SOS',
+    history: 'Ride History',
+    profile: 'Profile',
   };
 
   return (
@@ -9135,6 +9195,16 @@ function EmployeeMobileView() {
 
           {/* Screen content */}
           <div className="h-full overflow-y-auto" style={{ background: screen === 'sos' ? '#7f1d1d' : '#f8fafc' }}>
+            {screen === 'verify-pickup' && (
+              <TrustPassFlow
+                onBoardSuccess={() => {
+                  setIsRideVerified(true);
+                  setScreen('track');
+                }}
+                onGoHome={() => setScreen('home')}
+              />
+            )}
+
             {screen === 'home' && (
               <div className="p-4">
                 {/* Header */}
@@ -9144,6 +9214,21 @@ function EmployeeMobileView() {
                     <div className="text-lg font-bold text-slate-900">Akshat Gupta</div>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">AG</div>
+                </div>
+
+                {/* 1. EMPLOYEE HOME: Active Pickup Approaching TRUSTPASS Card */}
+                <div className="mb-4">
+                  <TrustPassCard
+                    rideId="RID-10421"
+                    driverName="Raj Kumar"
+                    driverRating={4.8}
+                    vehiclePlate="MH12AB1234"
+                    vehicleModel="Toyota Innova"
+                    pickupLocation="Kothrud, Pune"
+                    eta="12 min"
+                    status={isRideVerified ? 'verified' : 'pending'}
+                    onVerifyPickup={() => setScreen('verify-pickup')}
+                  />
                 </div>
 
                 {/* Today's ride card */}
@@ -9230,11 +9315,26 @@ function EmployeeMobileView() {
                   <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[9px] mono px-2 py-1 rounded">📡 LIVE</div>
                 </div>
                 <div className="p-4 bg-white flex-1">
+                  {isRideVerified && (
+                    <div className="mb-3 bg-emerald-50 border border-emerald-200 rounded-xl p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
+                        <span>🟢</span>
+                        <span>TrustPass Verified Boarding</span>
+                      </div>
+                      <button
+                        onClick={() => setScreen('verify-pickup')}
+                        className="text-[10px] mono text-emerald-700 underline font-semibold cursor-pointer"
+                      >
+                        Audit Details →
+                      </button>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-sm font-bold text-slate-900">Raj Kumar</div>
-                    <Badge label="On Route" color="green" />
+                    <Badge label={isRideVerified ? "Boarded" : "On Route"} color="green" />
                   </div>
                   {[
+                    { label: 'TrustPass', value: isRideVerified ? '🟢 Verified & Boarded' : '🟡 Verification Pending' },
                     { label: 'ETA', value: '12 min' },
                     { label: 'Speed', value: '42 km/h' },
                     { label: 'Passengers', value: '4 / 7' },
@@ -9355,6 +9455,23 @@ function EmployeeMobileView() {
                     </div>
                   ))}
                 </div>
+                <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-xl p-3 mb-3 border border-indigo-500/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🛡️</span>
+                    <div>
+                      <div className="text-[11px] font-bold text-blue-300">SHIVNERI TRUSTPASS</div>
+                      <div className="text-[10px] text-slate-300">
+                        {isRideVerified ? '🟢 Verified · Safe to board' : '🟡 Verification pending before boarding'}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setScreen('verify-pickup')}
+                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shrink-0 cursor-pointer"
+                  >
+                    {isRideVerified ? 'View Pass' : 'Verify →'}
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button onClick={() => setScreen('track')} className="py-2 bg-blue-600 text-white text-xs font-bold rounded-xl">Track Live</button>
                   <button onClick={() => setScreen('sos')} className="py-2 bg-red-600 text-white text-xs font-bold rounded-xl">🚨 SOS</button>
@@ -9367,13 +9484,14 @@ function EmployeeMobileView() {
           <div className="absolute bottom-0 left-0 right-0 h-14 flex items-center justify-around bg-white border-t border-slate-200" style={{ background: screen === 'sos' ? '#111827' : undefined }}>
             {[
               { icon: '🏠', label: 'Home', s: 'home' },
+              { icon: '🛡️', label: 'Verify', s: 'verify-pickup' },
               { icon: '🎫', label: 'Ride', s: 'ride-details' },
               { icon: '📋', label: 'History', s: 'history' },
               { icon: '👤', label: 'Profile', s: 'profile' },
             ].map(n => (
               <button key={n.s} onClick={() => setScreen(n.s)} className="flex flex-col items-center gap-0.5">
                 <span className="text-base">{n.icon}</span>
-                <span className={`text-[9px] font-medium ${screen === n.s ? 'text-blue-600' : screen === 'sos' ? 'text-slate-400' : 'text-slate-400'}`}>{n.label}</span>
+                <span className={`text-[9px] font-medium ${screen === n.s ? 'text-blue-600 font-bold' : screen === 'sos' ? 'text-slate-400' : 'text-slate-400'}`}>{n.label}</span>
               </button>
             ))}
           </div>
@@ -9386,9 +9504,14 @@ function EmployeeMobileView() {
 // ─── Driver Mobile App ────────────────────────────────────────────────────────
 function DriverMobileView() {
   const [screen, setScreen] = useState('dashboard');
-  const screens = ['dashboard', 'trip-request', 'active-ride', 'earnings', 'sos'];
+  const screens = ['dashboard', 'verify-passenger', 'trip-request', 'active-ride', 'earnings', 'sos'];
   const screenLabels: Record<string, string> = {
-    dashboard: 'Dashboard', 'trip-request': 'Trip Request', 'active-ride': 'Active Ride', earnings: 'Earnings', sos: 'SOS / Accident',
+    dashboard: 'Dashboard',
+    'verify-passenger': '🛡 Verify Passenger',
+    'trip-request': 'Trip Request',
+    'active-ride': 'Active Ride',
+    earnings: 'Earnings',
+    sos: 'SOS / Accident',
   };
 
   return (
@@ -9420,6 +9543,14 @@ function DriverMobileView() {
           </div>
 
           <div className="overflow-y-auto" style={{ height: 560, background: '#f8fafc' }}>
+            {screen === 'verify-passenger' && (
+              <DriverTrustPassFlow
+                onBoardingComplete={() => setScreen('active-ride')}
+                onTripCompleted={() => setScreen('earnings')}
+                onBackToDashboard={() => setScreen('dashboard')}
+              />
+            )}
+
             {screen === 'dashboard' && (
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -9432,6 +9563,21 @@ function DriverMobileView() {
                     <div className="text-[10px] text-slate-400">Rating</div>
                     <div className="text-lg font-bold text-amber-500">★ 4.8</div>
                   </div>
+                </div>
+
+                {/* 1. DRIVER VERIFICATION: Next Pickup Approaching */}
+                <div className="mb-4">
+                  <PassengerVerificationCard
+                    rideId="RID-10421"
+                    pickup="Kothrud"
+                    expectedPassenger="Akshat G."
+                    passengerId="EMP-10481"
+                    vehicle="MH12AB1234"
+                    vehicleModel="Toyota Innova"
+                    status="pending"
+                    onScanQR={() => setScreen('verify-passenger')}
+                    onEnterOTP={() => setScreen('verify-passenger')}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mb-4">
@@ -9487,8 +9633,8 @@ function DriverMobileView() {
                 </div>
                 <div className="text-[10px] text-amber-600 text-center mb-3">⏳ Expires in 45 seconds</div>
                 <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => setScreen('active-ride')} className="py-3 bg-green-600 text-white font-bold rounded-2xl text-sm">✓ Accept</button>
-                  <button onClick={() => setScreen('dashboard')} className="py-3 bg-red-100 text-red-700 font-bold rounded-2xl text-sm border border-red-200">✗ Reject</button>
+                  <button onClick={() => setScreen('active-ride')} className="py-3 bg-green-600 text-white font-bold rounded-2xl text-sm cursor-pointer">✓ Accept</button>
+                  <button onClick={() => setScreen('dashboard')} className="py-3 bg-red-100 text-red-700 font-bold rounded-2xl text-sm border border-red-200 cursor-pointer">✗ Reject</button>
                 </div>
               </div>
             )}
@@ -9513,8 +9659,8 @@ function DriverMobileView() {
                 <div className="p-4 bg-white">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="mono text-xs text-blue-600 font-bold">RIDE-10439</div>
-                      <div className="text-xs text-slate-500">5 passengers · 8 km remaining</div>
+                      <div className="mono text-xs text-blue-600 font-bold">RIDE-10421</div>
+                      <div className="text-xs text-slate-500">Akshat G. · Dropping Hinjewadi Ph1</div>
                     </div>
                     <Badge label="On Route" color="green" />
                   </div>
@@ -9530,11 +9676,35 @@ function DriverMobileView() {
                       </div>
                     ))}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <button className="py-2 bg-blue-600 text-white text-xs font-bold rounded-xl">Navigate</button>
-                    <button className="py-2 bg-green-600 text-white text-xs font-bold rounded-xl">Complete Trip ✓</button>
+
+                  {/* TrustPass Verified Boarding Status & Safe Drop Trigger */}
+                  <div className="bg-slate-900 text-white rounded-xl p-3 mb-3 border border-slate-700 shadow-sm space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                        <span>🛡️</span>
+                        <span>TRUSTPASS BOARDED</span>
+                      </div>
+                      <span className="text-[10px] text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded font-mono">
+                        Mutual Verified ✓
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-300">
+                      Passenger: <span className="font-bold text-white">Akshat G.</span> · Drop: <span className="text-blue-300">Hinjewadi Ph1</span>
+                    </div>
+                    <button
+                      onClick={() => setScreen('verify-passenger')}
+                      className="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      <span>🏁</span>
+                      <span>Arrived at Drop · Verify Safe Drop (OTP)</span>
+                    </button>
                   </div>
-                  <button onClick={() => setScreen('sos')} className="w-full py-2 bg-red-600 text-white text-xs font-bold rounded-xl">
+
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <button className="py-2 bg-blue-600 text-white text-xs font-bold rounded-xl cursor-pointer">Navigate</button>
+                    <button onClick={() => setScreen('verify-passenger')} className="py-2 bg-green-600 text-white text-xs font-bold rounded-xl cursor-pointer">Complete Trip ✓</button>
+                  </div>
+                  <button onClick={() => setScreen('sos')} className="w-full py-2 bg-red-600 text-white text-xs font-bold rounded-xl cursor-pointer">
                     🚨 Report SOS / Incident
                   </button>
                 </div>
@@ -9546,12 +9716,12 @@ function DriverMobileView() {
                 <div className="text-sm font-bold text-slate-900 mb-3">Earnings</div>
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-2xl p-4 mb-4">
                   <div className="text-xs text-slate-400 mb-1">Total Earnings — September</div>
-                  <div className="text-3xl font-black mb-1">₹18,420</div>
-                  <div className="text-xs text-green-400">+12% vs last month</div>
+                  <div className="text-3xl font-black mb-1">₹18,610</div>
+                  <div className="text-xs text-green-400">+14% vs last month · +₹190 Safe Drop Added</div>
                 </div>
                 {[
-                  { label: 'Today', value: '₹840', trips: 5 },
-                  { label: 'This Week', value: '₹4,210', trips: 24 },
+                  { label: 'Today (incl. RID-10421)', value: '₹1,030', trips: 6 },
+                  { label: 'This Week', value: '₹4,400', trips: 25 },
                   { label: 'Last Week', value: '₹3,980', trips: 22 },
                 ].map(e => (
                   <div key={e.label} className="flex items-center justify-between bg-white rounded-xl border border-slate-200 p-3 mb-2">
@@ -9586,7 +9756,7 @@ function DriverMobileView() {
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setScreen('dashboard')} className="w-full py-2 bg-white/20 text-white text-xs rounded-xl border border-red-600">
+                <button onClick={() => setScreen('dashboard')} className="w-full py-2 bg-white/20 text-white text-xs rounded-xl border border-red-600 cursor-pointer">
                   ← Back to Dashboard
                 </button>
               </div>
@@ -9597,13 +9767,14 @@ function DriverMobileView() {
           <div className="absolute bottom-0 left-0 right-0 h-14 flex items-center justify-around bg-gray-900 border-t border-gray-700">
             {[
               { icon: '🏠', label: 'Home', s: 'dashboard' },
+              { icon: '🛡️', label: 'Verify', s: 'verify-passenger' },
               { icon: '🎫', label: 'Trips', s: 'trip-request' },
               { icon: '💰', label: 'Earnings', s: 'earnings' },
               { icon: '🚨', label: 'SOS', s: 'sos' },
             ].map(n => (
-              <button key={n.s} onClick={() => setScreen(n.s)} className="flex flex-col items-center gap-0.5">
+              <button key={n.s} onClick={() => setScreen(n.s)} className="flex flex-col items-center gap-0.5 cursor-pointer">
                 <span className="text-base">{n.icon}</span>
-                <span className={`text-[9px] font-medium ${screen === n.s ? 'text-blue-400' : 'text-gray-400'}`}>{n.label}</span>
+                <span className={`text-[9px] font-medium ${screen === n.s ? 'text-blue-400 font-bold' : 'text-gray-400'}`}>{n.label}</span>
               </button>
             ))}
           </div>
@@ -9634,6 +9805,7 @@ const VIEW_META: Record<View, { title: string; subtitle?: string }> = {
   settings: { title: 'Settings', subtitle: 'Platform configuration, integrations, and API keys' },
   'employee-mobile': { title: 'Employee Mobile App', subtitle: 'iOS/Android app preview — employee experience' },
   'driver-mobile': { title: 'Driver Mobile App', subtitle: 'iOS/Android app preview — driver experience' },
+  'trustpass-control': { title: 'Pickup Verification Center', subtitle: 'TrustPass Control Tower, audit stream, security alerts & policy engine' },
 };
 
 // Note: AIChatbot component is imported from ./components/AIChatbot
@@ -9658,13 +9830,14 @@ export default function App() {
       case 'policy-engine': return <PolicyEngineView policies={sharedPolicies} setPolicies={setSharedPolicies} />;
       case 'policy-simulator': return <PolicySimulatorView policies={sharedPolicies} />;
       case 'safety': return <SafetyView />;
-      case 'security-audit': return <SecurityAuditView />;
+      case 'security-audit': return <SecurityAuditView onNav={setView} />;
       case 'billing': return <BillingView />;
       case 'analytics': return <AnalyticsView />;
       case 'approvals': return <ApprovalsView />;
       case 'settings': return <SettingsView />;
       case 'employee-mobile': return <EmployeeMobileView />;
       case 'driver-mobile': return <DriverMobileView />;
+      case 'trustpass-control': return <TrustPassControlTower />;
       default: return null;
     }
   };
