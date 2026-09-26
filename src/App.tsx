@@ -276,7 +276,6 @@ const NAV_ITEMS: { icon: string; label: string; view: View; group?: string }[] =
   { icon: '💳', label: 'Billing', view: 'billing', group: 'Finance' },
   { icon: '📊', label: 'Analytics', view: 'analytics' },
   { icon: '🔐', label: 'Access Control', view: 'access-control', group: 'Security' },
-  { icon: '⚙', label: 'Policy Engine', view: 'policy-engine' },
   { icon: '🔬', label: 'Policy Simulator', view: 'policy-simulator' },
   { icon: '✅', label: 'Approvals', view: 'approvals' },
   { icon: '🔒', label: 'Security & Audit', view: 'security-audit' },
