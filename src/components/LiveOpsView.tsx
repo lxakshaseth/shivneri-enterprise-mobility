@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Fragment } from 'react';
+import React, { useState, useEffect, useRef, Fragment, useCallback } from 'react';
 import { SmartDispatchLiveOpsPanel } from './dispatch';
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
@@ -65,6 +65,10 @@ export interface ActivityEvent {
   tripId?: string;
   vehicle?: string;
 }
+
+// ─── WORLD DIMENSIONS (Locked 1:1 Pixel Coordinate Space) ──────────────────
+const WORLD_WIDTH = 1200;
+const WORLD_HEIGHT = 800;
 
 // ─── SEED ACTIVE TRIPS (21 Enterprise Vehicles across Pune Corridors) ──────
 const SEED_RIDES: LiveRide[] = [
@@ -312,7 +316,7 @@ const SEED_RIDES: LiveRide[] = [
     heading: 340,
     vehicleType: 'cab',
     progressStage: 'on_route',
-    progressPct: 85,
+    progressPct: 65,
   },
   // 8. TCS PUNE - Pashan Sus to TCS Sahyadri Park Hinjewadi
   {
@@ -834,7 +838,7 @@ const INITIAL_SOS_INCIDENT: SosIncident = {
   notes: 'Panic button triggered by passenger. Vehicle stationary on Hinjewadi Phase 1 bypass.',
 };
 
-// ─── REAL-TIME ACTIVITY FEED STREAM (Directly from Document Pages 4-5) ──────
+// ─── REAL-TIME ACTIVITY FEED STREAM ────────────────────────────────────────
 const INITIAL_ACTIVITY_FEED: ActivityEvent[] = [
   {
     id: 'act-1',
@@ -968,45 +972,9 @@ const INITIAL_ACTIVITY_FEED: ActivityEvent[] = [
     tripId: 'TRIP-10421',
     vehicle: 'MH12AB1234',
   },
-  {
-    id: 'act-12',
-    time: '10:10 PM',
-    type: 'trip',
-    color: 'text-blue-400',
-    bg: 'rgba(96,165,250,0.10)',
-    icon: '🚘',
-    msg: 'Trip started successfully',
-    sub: 'Driver Ajay Patil started route for Infosys commute',
-    tripId: 'TRIP-10421',
-    vehicle: 'MH12AB1234',
-  },
-  {
-    id: 'act-13',
-    time: '10:08 PM',
-    type: 'trip',
-    color: 'text-emerald-400',
-    bg: 'rgba(34,197,94,0.10)',
-    icon: '👥',
-    msg: 'Employee boarded vehicle',
-    sub: 'Raj Kumar + 3 passengers onboard at Baner pickup',
-    tripId: 'TRIP-10421',
-    vehicle: 'MH12AB1234',
-  },
-  {
-    id: 'act-14',
-    time: '10:05 PM',
-    type: 'trip',
-    color: 'text-cyan-400',
-    bg: 'rgba(34,211,238,0.10)',
-    icon: '📍',
-    msg: 'Driver reached pickup location',
-    sub: 'Ajay Patil arrived at Baner High Street pickup gate',
-    tripId: 'TRIP-10421',
-    vehicle: 'MH12AB1234',
-  },
 ];
 
-// ─── OPERATIONS HEALTH SUMMARY METRICS (Directly from Document Page 7) ──────
+// ─── OPERATIONS HEALTH SUMMARY METRICS ─────────────────────────────────────
 const OPS_HEALTH_METRICS = {
   activeTrips: 18,
   onTimeTrips: 229,
@@ -1054,10 +1022,10 @@ function buildPolylinePath(points: { x: number; y: number }[]): string {
 }
 
 export default function LiveOpsView() {
-  const [selectedId, setSelectedId] = useState<string | null>('TRIP-10421'); // Default select recommended demo trip
-  const [tracking, setTracking] = useState<string | null>('TRIP-10421');
+  const [selectedId, setSelectedId] = useState<string | null>('TRIP-10441'); // Selected ride showing Kothrud -> Baner route
+  const [tracking, setTracking] = useState<string | null>('TRIP-10441');
   const [tick, setTick] = useState(0);
-  const [activeTab, setActiveTab] = useState<'trips' | 'feed'>('trips'); // 'trips' or 'feed'
+  const [activeTab, setActiveTab] = useState<'trips' | 'feed'>('trips');
   const [feedFilter, setFeedFilter] = useState<'all' | 'trip' | 'traffic' | 'sos'>('all');
   const [showSmartDispatchModal, setShowSmartDispatchModal] = useState(false);
 
@@ -1093,7 +1061,7 @@ export default function LiveOpsView() {
         osc.stop(ctx.currentTime + 0.3);
       }
     } catch {
-      // Audio might be muted or unpermitted by browser policy
+      // Browser audio restriction fallback
     }
   };
 
@@ -1104,8 +1072,8 @@ export default function LiveOpsView() {
     setShowSosIncident(true);
     setSelectedId('TRIP-10438');
     setTracking('TRIP-10438');
-    setZoomLevel(1.75);
-    setPanOffset({ x: 240, y: 120 });
+    setZoomLevel(1.6);
+    setPanOffset({ x: 260, y: 110 });
     setSosNotification({
       open: true,
       title: 'Active SOS Emergency Notification',
@@ -1130,11 +1098,11 @@ export default function LiveOpsView() {
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [showLeftPanel, setShowLeftPanel] = useState(true);
 
-  // Map Navigation & Layers State
-  const [zoomLevel, setZoomLevel] = useState(1);
+  // Map Navigation & Layers State (Smooth Zoom & Zero-Lag Pan)
+  const [zoomLevel, setZoomLevel] = useState(1.15); // Default zoom level perfectly fits widescreen
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const startPanRef = useRef({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef({ x: 0, y: 0, initialPanX: 0, initialPanY: 0 });
 
   // Map Feature Layer Toggles
   const [showTraffic, setShowTraffic] = useState(true);
@@ -1147,7 +1115,7 @@ export default function LiveOpsView() {
     setTimeout(() => setToast(''), 3400);
   };
 
-  // Simulation loop for live vehicle movement (Gentle 800ms heartbeat)
+  // Simulation loop for live vehicle movement (Smooth 800ms heartbeat)
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 800);
     return () => clearInterval(id);
@@ -1241,18 +1209,16 @@ export default function LiveOpsView() {
     }
   };
 
-  // ─── ACCURATE REAL-TIME VEHICLE TELEMETRY POSITIONING ──────────────────────
-  // Advances each moving vehicle forward along its actual road waypoints across Pune
-  const getVehiclePosition = (ride: LiveRide) => {
+  // ─── MATHEMATICALLY ACCURATE ROUTE-LOCKED VEHICLE POSITIONING ─────────────
+  // Calculates exact (x, y) coordinates along the vehicle's road polyline
+  const getVehiclePosition = useCallback((ride: LiveRide) => {
     // SOS vehicle is stationary at its incident coordinates
     if (ride.status === 'SOS') {
-      const sx = (ride.mapX / 100) * 1200;
-      const sy = (ride.mapY / 100) * 800;
+      const sx = ride.pickupCoords.x * 0.3 + ride.dropCoords.x * 0.7;
+      const sy = ride.pickupCoords.y * 0.3 + ride.dropCoords.y * 0.7;
       return {
         x: sx,
         y: sy,
-        pctX: ride.mapX,
-        pctY: ride.mapY,
         progressPct: ride.progressPct,
         speed: 0,
         heading: ride.heading,
@@ -1264,7 +1230,7 @@ export default function LiveOpsView() {
       };
     }
 
-    // Build route points: pickup -> waypoints -> drop
+    // Build route polyline: pickup -> waypoints -> drop
     const routePoints: { x: number; y: number }[] = [
       ride.pickupCoords,
       ...(ride.waypoints && ride.waypoints.length > 0
@@ -1291,7 +1257,7 @@ export default function LiveOpsView() {
 
     if (totalLength === 0) totalLength = 1;
 
-    // Movement speed progression
+    // Movement progress along the polyline
     const speedFactor = ride.status === 'Delayed' ? 0.16 : ride.status === 'Assigned' ? 0.22 : 0.45;
     const initialOffset = (ride.progressPct / 100) * totalLength;
     const currentDistance = (initialOffset + tick * speedFactor * 3.6) % totalLength;
@@ -1338,8 +1304,6 @@ export default function LiveOpsView() {
     return {
       x: currX,
       y: currY,
-      pctX: (currX / 1200) * 100,
-      pctY: (currY / 800) * 100,
       progressPct: currentPct,
       speed: liveSpeed,
       heading,
@@ -1349,30 +1313,79 @@ export default function LiveOpsView() {
       completedPoints,
       remainingPoints,
     };
-  };
+  }, [tick]);
 
-  // Zoom handlers
+  // Zoom handlers (Smooth zoom clamping between 0.65x and 3.0x)
   const handleZoom = (delta: number) => {
-    setZoomLevel((prev) => Math.min(2.5, Math.max(0.75, +(prev + delta).toFixed(2))));
+    setZoomLevel((prev) => Math.min(3.0, Math.max(0.65, +(prev + delta).toFixed(2))));
   };
 
   const handleResetView = () => {
-    setZoomLevel(1);
+    setZoomLevel(1.15);
     setPanOffset({ x: 0, y: 0 });
     setSelectedId(null);
     setTracking(null);
+    showToast('Reset map to default overview');
   };
 
-  // Track Live GPS action (centers map on incident or selected vehicle)
+  // Center on Selected Cab
+  const handleCenterOnSelected = () => {
+    if (!selectedRide) return;
+    const vPos = getVehiclePosition(selectedRide);
+    // Pan offset to center vPos.x, vPos.y in view
+    const targetPanX = -(vPos.x - WORLD_WIDTH / 2) * zoomLevel * 0.7;
+    const targetPanY = -(vPos.y - WORLD_HEIGHT / 2) * zoomLevel * 0.7;
+    setPanOffset({ x: Math.round(targetPanX), y: Math.round(targetPanY) });
+    setZoomLevel(1.4);
+    showToast(`Centered on ${selectedRide.vehicle} (${selectedRide.pickup} → ${selectedRide.drop})`);
+  };
+
+  // Mouse Wheel Zoom Handler
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.12 : -0.12;
+    setZoomLevel((prev) => Math.min(3.0, Math.max(0.65, +(prev + delta).toFixed(2))));
+  };
+
+  // Zero-Lag Drag Pan Handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Prevent dragging when clicking on control buttons or dropdowns
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('.pointer-events-auto')) {
+      return;
+    }
+    setIsDragging(true);
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      initialPanX: panOffset.x,
+      initialPanY: panOffset.y,
+    };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    setPanOffset({
+      x: dragStartRef.current.initialPanX + dx,
+      y: dragStartRef.current.initialPanY + dy,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Track Live GPS action
   const handleTrackLiveIncident = () => {
     setSelectedId('TRIP-10438');
     setTracking('TRIP-10438');
     setZoomLevel(1.75);
-    setPanOffset({ x: 240, y: 120 });
+    setPanOffset({ x: 260, y: 120 });
     showToast('🚨 Live GPS locked on SOS Incident: Hinjewadi Phase 1');
   };
 
-  // Resolve SOS Incident workflow action
+  // Resolve SOS Incident action
   const handleResolveIncident = () => {
     if (sosIncident.status === 'Resolved') {
       showToast('Incident is already marked as Resolved');
@@ -1386,7 +1399,6 @@ export default function LiveOpsView() {
     }));
     setSosNotification(null);
 
-    // Append resolution log event to the Real-Time Activity Feed
     const resolutionEvent: ActivityEvent = {
       id: `act-${Date.now()}`,
       time: resolvedTime,
@@ -1401,26 +1413,6 @@ export default function LiveOpsView() {
     };
     setActivityFeed((prev) => [resolutionEvent, ...prev]);
     showToast('✓ Emergency Incident marked Resolved. Activity log updated.');
-  };
-
-  // Drag pan handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).tagName === 'svg' || (e.target as HTMLElement).id === 'map-canvas-container') {
-      setIsPanning(true);
-      startPanRef.current = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isPanning) return;
-    setPanOffset({
-      x: e.clientX - startPanRef.current.x,
-      y: e.clientY - startPanRef.current.y,
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsPanning(false);
   };
 
   // Glass style generator
@@ -1440,11 +1432,7 @@ export default function LiveOpsView() {
   return (
     <div
       className="flex flex-col h-full w-full select-none overflow-hidden relative"
-      style={{ background: '#040914' }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}>
+      style={{ background: '#040914' }}>
 
       {/* ─── TOAST NOTIFICATION ─── */}
       {toast && (
@@ -1502,7 +1490,7 @@ export default function LiveOpsView() {
             </div>
             <button
               onClick={() => setSosNotification(null)}
-              className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors"
+              className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
               title="Dismiss Notification">
               ✕
             </button>
@@ -1739,17 +1727,34 @@ export default function LiveOpsView() {
         </div>
       </header>
 
-      {/* ─── MAIN WORKSPACE: MAP CANVAS + PANELS ─────────────────────────── */}
-      <div id="map-canvas-container" className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing">
+      {/* ─── MAIN WORKSPACE: MAP VIEWPORT + PANELS ───────────────────────── */}
+      <div
+        id="map-canvas-container"
+        className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}>
 
-        {/* ─── MAP CANVAS WITH REAL-WORLD TILES & ROUTE VISUALIZATION ─────── */}
+        {/* ─── LOCKED WORLD CONTAINER (Tiles + SVG Routes + Vehicles Locked 1:1) ─ */}
         <div
-          className="absolute inset-0 transition-transform duration-200 ease-out origin-center pointer-events-none"
+          id="map-world-container"
           style={{
+            width: `${WORLD_WIDTH}px`,
+            height: `${WORLD_HEIGHT}px`,
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            marginLeft: `-${WORLD_WIDTH / 2}px`,
+            marginTop: `-${WORLD_HEIGHT / 2}px`,
             transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+            transformOrigin: '50% 50%',
+            transition: isDragging ? 'none' : 'transform 0.22s ease-out',
           }}>
-          {/* Real-World Pune Base Map Tiles */}
-          <div className="absolute inset-0 grid grid-cols-4 grid-rows-3 select-none pointer-events-none min-w-[1200px] min-h-[800px] overflow-hidden">
+
+          {/* 1. Real-World Pune Base Map Tiles */}
+          <div className="absolute inset-0 grid grid-cols-4 grid-rows-3 select-none pointer-events-none w-[1200px] h-[800px] overflow-hidden">
             {PUNE_MAP_TILES.map((t) => (
               <div key={`${t.x}-${t.y}`} className="relative w-full h-full bg-slate-950 overflow-hidden">
                 <img
@@ -1758,7 +1763,7 @@ export default function LiveOpsView() {
                     (e.target as HTMLImageElement).src = `https://tile.openstreetmap.org/12/${t.x}/${t.y}.png`;
                   }}
                   alt={`OpenStreetMap Pune ${t.x},${t.y}`}
-                  className="w-full h-full object-cover transition-opacity duration-500"
+                  className="w-full h-full object-cover transition-opacity duration-500 pointer-events-none"
                   style={{
                     filter:
                       mapStyle === 'satellite-contrast'
@@ -1772,11 +1777,11 @@ export default function LiveOpsView() {
             ))}
           </div>
 
-          {/* SVG Vector Cartography Layer */}
+          {/* 2. SVG Vector Cartography Layer (River, Traffic, Corridors & Dynamic Cabs) */}
           <svg
-            className="w-full h-full min-w-[1200px] min-h-[800px] relative z-10"
+            className="w-[1200px] h-[800px] absolute inset-0 z-10 overflow-visible pointer-events-none"
             viewBox="0 0 1200 800"
-            preserveAspectRatio="xMidYMid slice">
+            preserveAspectRatio="none">
             <defs>
               <linearGradient id="mulaMuthaRiverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#083344" />
@@ -1806,7 +1811,7 @@ export default function LiveOpsView() {
               </filter>
             </defs>
 
-            {/* Base Translucent Layer to let Real-World Tiles shine through */}
+            {/* Base Translucent Layer */}
             <rect width="1200" height="800" fill="rgba(4, 9, 20, 0.42)" />
 
             {/* Metro Center Ambient Light */}
@@ -1835,13 +1840,11 @@ export default function LiveOpsView() {
               </g>
             )}
 
-            {/* ─── ROUTE VISUALIZATION (ENHANCED GIS POLYLINE CORRIDORS) ────── */}
+            {/* ─── ROUTE CORRIDORS (POLYLINES) ─────────────────────────────── */}
             {showRoutes &&
               filteredVehicles.map((ride) => {
                 const isSelected = selectedId === ride.id;
                 const vPos = getVehiclePosition(ride);
-
-                // Origin / Destination points
                 const pickupPt = ride.pickupCoords;
                 const dropPt = ride.dropCoords;
 
@@ -1898,24 +1901,22 @@ export default function LiveOpsView() {
                       filter="url(#highwayGlow)"
                     />
 
-                    {/* 4. PICKUP POINT NODE */}
+                    {/* 4. PICKUP POINT NODE (Always shown clearly when selected) */}
                     <g transform={`translate(${pickupPt.x}, ${pickupPt.y})`}>
                       <circle r="14" fill="#22c55e" opacity="0.3" className="pulse-dot" />
                       <circle r="7" fill="#22c55e" stroke="#ffffff" strokeWidth="2.5" />
-                      {/* Label Badge */}
                       <g transform="translate(0, -18)">
-                        <rect x="-55" y="-12" width="110" height="20" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="#22c55e" strokeWidth="1" />
+                        <rect x="-60" y="-12" width="120" height="20" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="#22c55e" strokeWidth="1" />
                         <text textAnchor="middle" dy="2" fill="#22c55e" fontSize="9" fontWeight="bold" fontFamily="sans-serif">
                           📍 Pickup: {ride.pickup}
                         </text>
                       </g>
                     </g>
 
-                    {/* 5. DROP DESTINATION NODE */}
+                    {/* 5. DROP DESTINATION NODE (Always shown clearly when selected) */}
                     <g transform={`translate(${dropPt.x}, ${dropPt.y})`}>
                       <circle r="16" fill="#3b82f6" opacity="0.3" className="pulse-dot" />
                       <circle r="8" fill="#1d4ed8" stroke="#ffffff" strokeWidth="2.5" />
-                      {/* Label Badge */}
                       <g transform="translate(0, -20)">
                         <rect x="-65" y="-12" width="130" height="20" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="#38bdf8" strokeWidth="1" />
                         <text textAnchor="middle" dy="2" fill="#38bdf8" fontSize="9" fontWeight="bold" fontFamily="sans-serif">
@@ -1942,107 +1943,104 @@ export default function LiveOpsView() {
               })}
             </g>
           </svg>
-        </div>
 
-        {/* ─── MOVING VEHICLE MARKERS (HTML OVERLAY) ────────────────────── */}
-        <div
-          className="absolute inset-0 transition-transform duration-200 ease-out origin-center pointer-events-none"
-          style={{
-            transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
-          }}>
-          {filteredVehicles.map((ride) => {
-            const vPos = getVehiclePosition(ride);
-            const isSel = selectedId === ride.id;
-            const isSos = ride.status === 'SOS';
-            const color = getStatusColor(ride.status);
+          {/* 3. Vehicle Markers Layer (Strictly 1:1 Pixel Locked to Route Polyline) */}
+          <div className="absolute inset-0 w-[1200px] h-[800px] pointer-events-none z-20">
+            {filteredVehicles.map((ride) => {
+              const vPos = getVehiclePosition(ride);
+              const isSel = selectedId === ride.id;
+              const isSos = ride.status === 'SOS';
+              const color = getStatusColor(ride.status);
 
-            return (
-              <div
-                key={ride.id}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isSos) {
-                    handleOpenActiveSos('Map SOS Marker');
-                  } else {
-                    setShowSosIncident(false);
-                    setSelectedId(isSel ? null : ride.id);
-                    if (!isSel) {
-                      setShowRightPanel(true);
-                      setTracking(ride.id);
+              return (
+                <div
+                  key={ride.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isSos) {
+                      handleOpenActiveSos('Map SOS Marker');
+                    } else {
+                      setShowSosIncident(false);
+                      setSelectedId(isSel ? null : ride.id);
+                      if (!isSel) {
+                        setShowRightPanel(true);
+                        setTracking(ride.id);
+                        showToast(`Selected ${ride.vehicle} (${ride.pickup} → ${ride.drop})`);
+                      }
                     }
-                  }
-                }}
-                className="absolute pointer-events-auto cursor-pointer group"
-                style={{
-                  left: `${vPos.pctX}%`,
-                  top: `${vPos.pctY}%`,
-                  transform: 'translate(-50%, -50%)',
-                  zIndex: isSos ? 35 : isSel ? 32 : 20,
-                  transition: 'left 800ms linear, top 800ms linear',
-                }}>
-                {/* Radar pulse for moving or SOS vehicle */}
-                {(isSos || isSel) && (
-                  <div
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      width: isSos ? 48 : 36,
-                      height: isSos ? 48 : 36,
-                      top: isSos ? -14 : -8,
-                      left: isSos ? -14 : -8,
-                      border: `2px solid ${isSos ? '#ef4444' : '#38bdf8'}`,
-                      animation: 'ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite',
-                      opacity: 0.6,
-                    }}
-                  />
-                )}
-
-                {/* Vehicle Badge Icon */}
-                <div
-                  className={`w-9 h-9 rounded-2xl flex items-center justify-center text-sm font-bold shadow-2xl transition-transform ${
-                    isSel ? 'scale-115 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : 'hover:scale-110'
-                  }`}
+                  }}
+                  className="absolute pointer-events-auto cursor-pointer group"
                   style={{
-                    background:
-                      isSos
-                        ? 'linear-gradient(135deg, #ef4444, #991b1b)'
-                        : isSel
-                        ? 'linear-gradient(135deg, #0284c7, #2563eb)'
-                        : 'linear-gradient(135deg, #1e293b, #0f172a)',
-                    border: `1.5px solid ${color}`,
-                    boxShadow: `0 0 16px ${color}88`,
+                    left: `${vPos.x}px`,
+                    top: `${vPos.y}px`,
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: isSos ? 40 : isSel ? 35 : 25,
+                    transition: 'left 800ms linear, top 800ms linear',
                   }}>
-                  {isSos ? '🚨' : ride.vehicleType === 'shuttle' ? '🚐' : ride.vehicleType === 'suv' ? '🚙' : '🚗'}
-
-                  {/* Compass heading arrow pointing in travel direction */}
-                  {!isSos && (
+                  {/* Radar pulse for moving or SOS vehicle */}
+                  {(isSos || isSel) && (
                     <div
-                      className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 border border-cyan-400 flex items-center justify-center text-[7px] text-cyan-300 font-bold transition-transform duration-300 pointer-events-none"
-                      style={{ transform: `rotate(${vPos.heading}deg)` }}>
-                      ▲
-                    </div>
+                      className="absolute rounded-full pointer-events-none"
+                      style={{
+                        width: isSos ? 48 : 36,
+                        height: isSos ? 48 : 36,
+                        top: isSos ? -14 : -8,
+                        left: isSos ? -14 : -8,
+                        border: `2px solid ${isSos ? '#ef4444' : '#38bdf8'}`,
+                        animation: 'ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite',
+                        opacity: 0.6,
+                      }}
+                    />
                   )}
-                </div>
 
-                {/* Floating Cab Tooltip HUD with Plate, Driver & Live Telemetry */}
-                <div
-                  className={`absolute left-10 -top-2 px-2.5 py-1.5 rounded-xl border whitespace-nowrap z-50 transition-opacity pointer-events-none ${
-                    isSel ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                  }`}
-                  style={glassPanel(0.95)}>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                    <span className="font-mono font-bold text-white text-[11px]">{ride.vehicle}</span>
-                    <span className="text-[10px] text-slate-400">· {ride.driver} ({ride.company})</span>
+                  {/* Vehicle Badge Icon */}
+                  <div
+                    className={`w-9 h-9 rounded-2xl flex items-center justify-center text-sm font-bold shadow-2xl transition-transform ${
+                      isSel ? 'scale-115 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : 'hover:scale-110'
+                    }`}
+                    style={{
+                      background:
+                        isSos
+                          ? 'linear-gradient(135deg, #ef4444, #991b1b)'
+                          : isSel
+                          ? 'linear-gradient(135deg, #0284c7, #2563eb)'
+                          : 'linear-gradient(135deg, #1e293b, #0f172a)',
+                      border: `1.5px solid ${color}`,
+                      boxShadow: `0 0 16px ${color}88`,
+                    }}>
+                    {isSos ? '🚨' : ride.vehicleType === 'shuttle' ? '🚐' : ride.vehicleType === 'suv' ? '🚙' : '🚗'}
+
+                    {/* Compass heading arrow pointing in travel direction */}
+                    {!isSos && (
+                      <div
+                        className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 border border-cyan-400 flex items-center justify-center text-[7px] text-cyan-300 font-bold transition-transform duration-300 pointer-events-none"
+                        style={{ transform: `rotate(${vPos.heading}deg)` }}>
+                        ▲
+                      </div>
+                    )}
                   </div>
-                  <div className="text-[9px] text-slate-300 mt-0.5 flex items-center gap-2">
-                    <span>{ride.pickup} → {ride.drop}</span>
-                    <span className="font-mono text-cyan-300">{vPos.speed} km/h</span>
-                    <strong className="text-emerald-400 font-mono">{vPos.eta}</strong>
+
+                  {/* Floating Cab Tooltip HUD with Plate, Driver & Live Telemetry */}
+                  <div
+                    className={`absolute left-10 -top-2 px-2.5 py-1.5 rounded-xl border whitespace-nowrap z-50 transition-opacity pointer-events-none ${
+                      isSel ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    }`}
+                    style={glassPanel(0.95)}>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                      <span className="font-mono font-bold text-white text-[11px]">{ride.vehicle}</span>
+                      <span className="text-[10px] text-slate-400">· {ride.driver} ({ride.company})</span>
+                    </div>
+                    <div className="text-[9px] text-slate-300 mt-0.5 flex items-center gap-2">
+                      <span>{ride.pickup} → {ride.drop}</span>
+                      <span className="font-mono text-cyan-300">{vPos.speed} km/h</span>
+                      <strong className="text-emerald-400 font-mono">{vPos.eta}</strong>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* ─── ROUTE PROGRESS INDICATOR HUD (ENHANCEMENT #1 STEPPER) ──────── */}
@@ -2091,31 +2089,40 @@ export default function LiveOpsView() {
           );
         })()}
 
-        {/* ─── FLOATING ZOOM & MAP LAYER CONTROLS ─────────────────────────── */}
+        {/* ─── FLOATING ZOOM & MAP CONTROLS ───────────────────────────────── */}
         <div className={`absolute flex flex-col gap-1.5 z-20 transition-all duration-300 ${
           showRightPanel ? 'top-4 right-[345px]' : 'top-14 right-4'
         }`}>
           <button
             onClick={() => handleZoom(0.25)}
-            title="Zoom In"
+            title="Zoom In (+)"
             className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
             style={glassPanel(0.85)}>
             +
           </button>
           <button
             onClick={() => handleZoom(-0.25)}
-            title="Zoom Out"
+            title="Zoom Out (−)"
             className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
             style={glassPanel(0.85)}>
             −
           </button>
           <button
             onClick={handleResetView}
-            title="Reset Centered View"
+            title="Reset Centered Overview (⊙)"
             className="w-8 h-8 rounded-xl text-slate-300 hover:text-cyan-400 flex items-center justify-center text-xs transition-colors cursor-pointer"
             style={glassPanel(0.85)}>
             ⊙
           </button>
+          {selectedRide && (
+            <button
+              onClick={handleCenterOnSelected}
+              title="Center on Selected Cab (🎯)"
+              className="w-8 h-8 rounded-xl text-cyan-300 hover:text-white ring-1 ring-cyan-400/60 bg-blue-600/30 flex items-center justify-center text-xs transition-colors cursor-pointer"
+              style={glassPanel(0.85)}>
+              🎯
+            </button>
+          )}
           <button
             onClick={() => setShowTraffic((t) => !t)}
             title="Toggle Live Traffic Heatmap"
@@ -2134,7 +2141,6 @@ export default function LiveOpsView() {
             style={glassPanel(0.85)}>
             {mapStyle === 'satellite-contrast' ? '🛰️' : '🗺️'}
           </button>
-          {/* Full Map Mode Toggle (Hide / Restore Overlays) */}
           <button
             onClick={() => {
               if (!showRightPanel && !showLeftPanel) {
@@ -2239,7 +2245,6 @@ export default function LiveOpsView() {
             {/* List Content */}
             <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
               {activeTab === 'trips' ? (
-                /* ─── ACTIVE TRIPS CARDS (Enhanced with Route Indicators & Live Telemetry) ─── */
                 filteredVehicles.map((ride) => {
                   const isSel = selectedId === ride.id;
                   const color = getStatusColor(ride.status);
@@ -2290,7 +2295,6 @@ export default function LiveOpsView() {
                           <span className="text-slate-500">→</span>
                           <span>🏢 {ride.drop}</span>
                         </div>
-                        {/* Mini progress bar */}
                         <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full transition-all duration-700"
@@ -2311,9 +2315,7 @@ export default function LiveOpsView() {
                   );
                 })
               ) : (
-                /* ─── REAL-TIME ACTIVITY FEED STREAM (Document Page 4-5) ─── */
                 <div className="space-y-2">
-                  {/* Filter tags for Activity Feed */}
                   <div className="flex items-center gap-1 pb-2 border-b border-white/5 overflow-x-auto text-[10px]">
                     {(['all', 'trip', 'traffic', 'sos'] as const).map((cat) => (
                       <button
@@ -2381,13 +2383,8 @@ export default function LiveOpsView() {
             className="absolute right-4 top-4 bottom-4 w-80 flex flex-col gap-3 overflow-y-auto pr-1 z-20 animate-in slide-in-from-right duration-200"
             style={{ scrollbarWidth: 'none' }}>
 
-            {/* Conditional Display:
-                1. If showSosIncident is true -> CASE B: SOS INCIDENT CENTER
-                2. Else if selectedRide is truthy -> CASE A: ACTIVE TRIP DETAILS
-                3. Else -> CASE C: OPERATIONS HUB OVERVIEW
-            */}
             {showSosIncident ? (
-              /* ─── CASE B: SOS INCIDENT CENTER (Document Pages 5-6) ────────── */
+              /* ─── CASE B: SOS INCIDENT CENTER ────────── */
               <div
                 className="rounded-2xl overflow-hidden border border-red-500/40 shadow-2xl flex-shrink-0 animate-in fade-in duration-300"
                 style={{
@@ -2417,7 +2414,6 @@ export default function LiveOpsView() {
                   </div>
                 </div>
 
-                {/* Exact Fields Specified in Document Pages 5-6 */}
                 <div className="p-4 space-y-2 text-xs">
                   {[
                     { label: 'Employee', val: sosIncident.employee },
@@ -2440,7 +2436,6 @@ export default function LiveOpsView() {
                     </div>
                   ))}
 
-                  {/* Four Required Actions from Document Page 6 */}
                   <div className="grid grid-cols-2 gap-2 pt-2">
                     <button
                       onClick={handleTrackLiveIncident}
@@ -2484,7 +2479,7 @@ export default function LiveOpsView() {
             ) : selectedRide ? (() => {
               const liveSelected = getVehiclePosition(selectedRide);
               return (
-                /* ─── CASE A: ACTIVE TRIP DETAILS PANEL (Document Page 3) ─────── */
+                /* ─── CASE A: ACTIVE TRIP DETAILS PANEL ─────── */
                 <div
                   className="rounded-2xl p-4 border border-cyan-500/40 shadow-2xl flex-shrink-0 dialog-in"
                   style={{
@@ -2522,7 +2517,6 @@ export default function LiveOpsView() {
                     </div>
                   </div>
 
-                  {/* Exact Fields Specified in Document Page 3 */}
                   <div className="space-y-2 text-xs">
                     {[
                       { label: 'Trip ID', val: selectedRide.tripId, isMono: true, highlight: true },
@@ -2550,15 +2544,15 @@ export default function LiveOpsView() {
                     ))}
                   </div>
 
-                  {/* Route Progress Visual Stepper */}
+                  {/* Route Progress Stepper */}
                   <div className="mt-3 p-2.5 bg-slate-900/80 rounded-xl border border-white/5">
                     <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                       Route Stage Progress
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-slate-300 font-semibold mb-1">
-                      <span className="text-emerald-400">Pickup</span>
+                      <span className="text-emerald-400">📍 {selectedRide.pickup}</span>
                       <span className="text-cyan-300">On Route ({liveSelected.progressPct}%)</span>
-                      <span className="text-slate-500">Destination</span>
+                      <span className="text-slate-400">🏢 {selectedRide.drop}</span>
                     </div>
                     <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
                       <div
@@ -2568,7 +2562,6 @@ export default function LiveOpsView() {
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="grid grid-cols-2 gap-2 pt-3">
                     <button
                       onClick={() =>
@@ -2600,7 +2593,7 @@ export default function LiveOpsView() {
                 </div>
               );
             })() : (
-              /* ─── CASE C: OPERATIONS HUB OVERVIEW (Default State) ─────── */
+              /* ─── CASE C: OPERATIONS HUB OVERVIEW ─────── */
               <div
                 className="rounded-2xl p-4 border border-white/10 shadow-2xl flex-shrink-0 animate-in fade-in duration-300"
                 style={glassPanel(0.92)}>
@@ -2627,7 +2620,6 @@ export default function LiveOpsView() {
                   </div>
                 </div>
 
-                {/* Interactive Banner: Only when Active SOS exists */}
                 {sosIncident.status === 'Active' ? (
                   <div
                     onClick={() => handleOpenActiveSos('Overview SOS Banner')}
@@ -2652,7 +2644,6 @@ export default function LiveOpsView() {
                   </div>
                 )}
 
-                {/* Quick Fleet Highlights */}
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between py-1 border-b border-white/5">
                     <span className="text-slate-400 text-[11px]">Active Cabs Stream:</span>
@@ -2669,12 +2660,12 @@ export default function LiveOpsView() {
                 </div>
 
                 <div className="mt-3 p-2 bg-slate-900/60 rounded-xl border border-white/5 text-[11px] text-slate-400">
-                  💡 <strong className="text-slate-300">Notice:</strong> Click on any vehicle marker or trip card to inspect telemetry, or click on <span className="text-red-400 font-semibold cursor-pointer underline" onClick={() => handleOpenActiveSos('Guide Text')}>🚨 1 Active SOS</span> to view emergency notification.
+                  💡 <strong className="text-slate-300">Notice:</strong> Tap any moving cab on the map to display its route, pickup, and drop destination. Scroll mouse wheel to zoom in/out.
                 </div>
               </div>
             )}
 
-            {/* ─── OPERATIONS HEALTH SUMMARY (Document Page 7) ─────────────── */}
+            {/* ─── OPERATIONS HEALTH SUMMARY ─────────────── */}
             <div className="rounded-2xl p-4 flex-shrink-0" style={glassPanel(0.88)}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
@@ -2685,7 +2676,6 @@ export default function LiveOpsView() {
                 </span>
               </div>
 
-              {/* Exactly Specified Metrics from Document Page 7 */}
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between items-center py-0.5 border-b border-white/5">
                   <span className="text-slate-300">Active Trips</span>
@@ -2706,7 +2696,6 @@ export default function LiveOpsView() {
                   </span>
                 </div>
 
-                {/* Fleet Utilization Progress */}
                 <div className="pt-1">
                   <div className="flex justify-between items-center text-[11px] mb-1">
                     <span className="text-slate-300">Fleet Utilization</span>
@@ -2720,7 +2709,6 @@ export default function LiveOpsView() {
                   </div>
                 </div>
 
-                {/* Average ETA Accuracy Progress */}
                 <div className="pt-1">
                   <div className="flex justify-between items-center text-[11px] mb-1">
                     <span className="text-slate-300">Average ETA Accuracy</span>
@@ -2736,7 +2724,6 @@ export default function LiveOpsView() {
               </div>
             </div>
 
-            {/* Quick Hide Button at bottom of right panel */}
             <button
               onClick={() => setShowRightPanel(false)}
               className="w-full py-2 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-white/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs flex-shrink-0"
@@ -2746,7 +2733,7 @@ export default function LiveOpsView() {
           </div>
         )}
 
-        {/* ─── MAP BOTTOM LEGEND (When no trip is inspected) ──────────────── */}
+        {/* ─── MAP BOTTOM LEGEND ─────────────────────────────────────────── */}
         {!selectedRide && (
           <div
             className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-5 px-5 py-2 rounded-full z-20"
@@ -2803,7 +2790,7 @@ export default function LiveOpsView() {
                 <a
                   href={`tel:${callModal.phone}`}
                   onClick={() => showToast(`Calling ${callModal.name} at ${callModal.phone}…`)}
-                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl text-center shadow-md transition-colors">
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl text-center shadow-md transition-colors cursor-pointer">
                   Direct Dial
                 </a>
                 <button
