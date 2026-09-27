@@ -1113,6 +1113,7 @@ export default function LiveOpsView() {
   const handleOpenActiveSos = (source = 'Active SOS Click') => {
     playSosChime();
     setShowSosIncident(true);
+    setShowRightPanel(true);
     setSelectedId('TRIP-10438');
     setTracking('TRIP-10438');
     setZoomLevel(1.6);
@@ -1128,6 +1129,45 @@ export default function LiveOpsView() {
     showToast(`🚨 Active SOS Notification: Priya Sharma at Hinjewadi Phase 1`);
   };
 
+  // Track Live GPS action
+  const handleTrackLiveIncident = () => {
+    setSelectedId('TRIP-10438');
+    setTracking('TRIP-10438');
+    setZoomLevel(1.75);
+    setPanOffset({ x: 260, y: 120 });
+    showToast('🚨 Live GPS locked on SOS Incident: Hinjewadi Phase 1');
+  };
+
+  // Resolve SOS Incident action
+  const handleResolveIncident = () => {
+    if (sosIncident.status === 'Resolved') {
+      showToast('Incident is already marked as Resolved');
+      return;
+    }
+    const resolvedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setSosIncident((prev) => ({
+      ...prev,
+      status: 'Resolved',
+      resolvedAt: resolvedTime,
+    }));
+    setSosNotification(null);
+
+    const resolutionEvent: ActivityEvent = {
+      id: `act-${Date.now()}`,
+      time: resolvedTime,
+      type: 'sos',
+      color: 'text-emerald-400',
+      bg: 'rgba(34,197,94,0.12)',
+      icon: '✅',
+      msg: 'SOS Incident Marked Resolved',
+      sub: 'Driver & employee confirmed safety with Hinjewadi PCR Unit 4',
+      tripId: 'TRIP-10438',
+      vehicle: 'MH12XY4567',
+    };
+    setActivityFeed((prev) => [resolutionEvent, ...prev]);
+    showToast('✅ SOS Incident marked as Resolved. Incident log updated.');
+  };
+
   // Activity Feed state
   const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>(INITIAL_ACTIVITY_FEED);
 
@@ -1138,8 +1178,8 @@ export default function LiveOpsView() {
   const [toast, setToast] = useState('');
 
   // Overlay Panels Visibility (DEFAULT FALSE so the map view is wide open and unobstructed!)
-  const [showRightPanel, setShowRightPanel] = useState(false);
-  const [showLeftPanel, setShowLeftPanel] = useState(false);
+  const [showRightPanel, setShowRightPanel] = useState(true);
+  const [showLeftPanel, setShowLeftPanel] = useState(true);
 
   // Map Navigation & Layers State (Smooth Zoom & Zero-Lag Pan)
   const [zoomLevel, setZoomLevel] = useState(1.15);
@@ -1484,6 +1524,11 @@ export default function LiveOpsView() {
                       {kpi.val}
                     </span>
                     {kpi.pulse && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />}
+                    {isSosCard && sosIncident.status === 'Active' && (
+                      <span className="text-[8px] font-black tracking-widest text-red-200 uppercase px-1 py-0.2 bg-red-600/60 rounded border border-red-400/50 animate-pulse">
+                        CLICK
+                      </span>
+                    )}
                   </div>
                   <div className="text-[9px] text-slate-400 uppercase tracking-wider">{kpi.label}</div>
                 </div>
@@ -1976,6 +2021,22 @@ export default function LiveOpsView() {
                 ETA: {vPos.eta}
               </div>
 
+              {/* Details Toggle Button */}
+              <button
+                onClick={() => {
+                  setShowSosIncident(false);
+                  setShowRightPanel((prev) => !prev);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
+                  showRightPanel && !showSosIncident
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                    : 'bg-white/10 hover:bg-white/20 text-slate-200'
+                }`}
+                title="Toggle Trip Details Panel">
+                <span>📊</span>
+                <span>${showRightPanel && !showSosIncident ? 'Hide Details' : 'Details'}</span>
+              </button>
+
               {/* Close / Deselect Button */}
               <button
                 onClick={() => setSelectedId(null)}
@@ -1988,7 +2049,7 @@ export default function LiveOpsView() {
         })()}
 
         {/* ─── FLOATING ZOOM & MAP CONTROLS ───────────────────────────────── */}
-        <div className="absolute top-4 right-4 flex flex-col gap-1.5 z-20 transition-all duration-300">
+        <div className="absolute top-4 flex flex-col gap-1.5 z-20 transition-all duration-300" style={{ right: showRightPanel ? '340px' : '16px' }}>
           <button
             onClick={() => handleZoom(0.25)}
             title="Zoom In (+)"
@@ -2221,46 +2282,191 @@ export default function LiveOpsView() {
           </div>
         )}
 
-        {/* ─── OPTIONAL RIGHT PANEL: DETAILS (Only shown if user explicitly clicks 📊 button) ─ */}
+        {/* ─── DOCKED FLOATING RESTORE BUTTONS (WHEN PANELS ARE HIDDEN) ──── */}
+        {!showLeftPanel && (
+          <button
+            onClick={() => setShowLeftPanel(true)}
+            className="absolute left-4 top-4 z-20 px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold text-white shadow-2xl transition-all hover:scale-105 cursor-pointer border border-cyan-500/40 hover:border-cyan-400"
+            style={glassPanel(0.95)}
+            title="Open Live Dispatch Stream">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>📋 Live Dispatch ({filteredVehicles.length})</span>
+            <span className="text-[10px] text-cyan-300">▶</span>
+          </button>
+        )}
+
+        {!showRightPanel && (
+          <div className="absolute right-4 top-4 z-20 flex flex-col gap-2 items-end">
+            {sosIncident.status === 'Active' && (
+              <button
+                onClick={() => handleOpenActiveSos('Floating SOS Alert')}
+                className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs shadow-2xl flex items-center gap-2 border border-red-400/80 animate-pulse cursor-pointer">
+                <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                <span>🚨 Active SOS Alert</span>
+              </button>
+            )}
+            <button
+              onClick={() => setShowRightPanel(true)}
+              className="px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold text-white shadow-2xl transition-all hover:scale-105 cursor-pointer border border-cyan-500/40 hover:border-cyan-400"
+              style={glassPanel(0.95)}
+              title="Open Trip Details & Stats">
+              <span>📊</span>
+              <span>{selectedRide ? `Trip: ${selectedRide.tripId}` : 'Fleet Summary'}</span>
+              <span className="text-[10px] text-cyan-300">◀</span>
+            </button>
+          </div>
+        )}
+
+        {/* ─── RIGHT PANEL: SOS CENTER / TRIP DETAILS / OPERATIONS OVERVIEW ─ */}
         {showRightPanel && (
           <div
             className="absolute right-4 top-4 bottom-4 w-80 flex flex-col gap-3 overflow-y-auto pr-1 z-20 animate-in slide-in-from-right duration-200"
             style={{ scrollbarWidth: 'none' }}>
 
-            {selectedRide && (() => {
+            {showSosIncident ? (
+              /* ─── CASE A: SOS EMERGENCY RESPONSE CENTER ────────── */
+              <div
+                className="rounded-2xl overflow-hidden border border-red-500/40 shadow-2xl flex-shrink-0 animate-in fade-in duration-300"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(69, 10, 10, 0.96), rgba(24, 7, 7, 0.96))',
+                  backdropFilter: 'blur(20px)',
+                }}>
+                <div className="px-4 py-3 bg-red-600/30 border-b border-red-500/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${sosIncident.status === 'Active' ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
+                    <span className="text-xs font-bold text-red-200 uppercase tracking-wider">
+                      SOS Incident Center
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        sosIncident.status === 'Active'
+                          ? 'bg-red-600 text-white animate-pulse'
+                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                      }`}>
+                      {sosIncident.status === 'Active' ? 'CRITICAL HIGH' : 'RESOLVED'}
+                    </span>
+                    <button
+                      onClick={() => setShowSosIncident(false)}
+                      className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-red-200 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                      title="Close SOS Center">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 space-y-2 text-xs">
+                  {[
+                    { label: 'Employee', val: sosIncident.employee },
+                    { label: 'Company', val: sosIncident.company },
+                    { label: 'Driver', val: sosIncident.driver },
+                    { label: 'Vehicle', val: sosIncident.vehicle, isMono: true },
+                    { label: 'Location', val: sosIncident.location },
+                    { label: 'Alert Time', val: sosIncident.alertTime, isMono: true },
+                    { label: 'Severity', val: sosIncident.severity, isRed: sosIncident.status === 'Active' },
+                    { label: 'Status', val: sosIncident.status, isGreen: sosIncident.status === 'Resolved' },
+                  ].map((row) => (
+                    <div key={row.label} className="flex items-center justify-between py-0.5">
+                      <span className="text-red-200/70 text-[11px]">{row.label}:</span>
+                      <span
+                        className={`text-[11px] font-semibold ${
+                          row.isMono ? 'font-mono' : ''
+                        } ${row.isRed ? 'text-red-400 font-bold' : row.isGreen ? 'text-emerald-400 font-bold' : 'text-white'}`}>
+                        {row.val}
+                      </span>
+                    </div>
+                  ))}
+
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <button
+                      onClick={handleTrackLiveIncident}
+                      className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-red-600 hover:bg-red-700 transition-colors shadow-sm text-center cursor-pointer">
+                      🎯 Track Live
+                    </button>
+                    <button
+                      onClick={() =>
+                        setCallModal({
+                          open: true,
+                          type: 'driver',
+                          name: sosIncident.driver,
+                          phone: sosIncident.driverPhone,
+                          title: `SOS Emergency Call: Driver`,
+                        })
+                      }
+                      className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center cursor-pointer">
+                      📞 Call Driver
+                    </button>
+                    <button
+                      onClick={() =>
+                        setCallModal({
+                          open: true,
+                          type: 'employee',
+                          name: sosIncident.employee,
+                          phone: sosIncident.employeePhone,
+                          title: `SOS Emergency Call: Passenger`,
+                        })
+                      }
+                      className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center cursor-pointer">
+                      📱 Call Employee
+                    </button>
+                    <button
+                      onClick={handleResolveIncident}
+                      className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm text-center cursor-pointer">
+                      ✓ Resolve
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : selectedRide ? (() => {
               const liveSelected = getVehiclePosition(selectedRide);
               return (
+                /* ─── CASE B: ACTIVE TRIP DETAILS ────────── */
                 <div
                   className="rounded-2xl p-4 border border-cyan-500/40 shadow-2xl flex-shrink-0 dialog-in"
                   style={glassPanel(0.96)}>
                   <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
                     <div>
                       <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">
-                        Active Trip Telemetry
+                        Active Trip Details
                       </span>
                       <h3 className="text-sm font-bold text-white font-mono mt-0.5">
                         {selectedRide.tripId}
                       </h3>
                     </div>
-                    <button
-                      onClick={() => setShowRightPanel(false)}
-                      className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
-                      title="Close Panel">
-                      ✕
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{
+                          background: `${getStatusColor(selectedRide.status)}22`,
+                          color: getStatusColor(selectedRide.status),
+                          border: `1px solid ${getStatusColor(selectedRide.status)}44`,
+                        }}>
+                        ● {selectedRide.status}
+                      </span>
+                      <button
+                        onClick={() => setShowRightPanel(false)}
+                        className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                        title="Hide Trip Details">
+                        ✕
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-2 text-xs">
                     {[
-                      { label: 'Vehicle Plate', val: selectedRide.vehicle, isMono: true, highlight: true },
-                      { label: 'Vehicle Model', val: selectedRide.vehicleModel },
+                      { label: 'Trip ID', val: selectedRide.tripId, isMono: true, highlight: true },
+                      { label: 'Employee', val: selectedRide.employee },
+                      { label: 'Company', val: selectedRide.company },
                       { label: 'Driver', val: selectedRide.driver },
-                      { label: 'Lead Employee', val: selectedRide.employee },
-                      { label: 'Organization', val: selectedRide.company },
+                      { label: 'Vehicle Plate', val: selectedRide.vehicle, isMono: true },
+                      { label: 'Vehicle Model', val: selectedRide.vehicleModel },
                       { label: 'Passengers', val: `${selectedRide.passengers} / ${selectedRide.capacity}` },
                       { label: 'Live Speed', val: `${liveSelected.speed} km/h (Cruising)`, isMono: true },
+                      { label: 'Current Location', val: selectedRide.currentLocation },
                       { label: 'Destination', val: selectedRide.drop },
                       { label: 'Live ETA', val: liveSelected.eta, isMono: true, isGreen: true },
+                      { label: 'Status', val: selectedRide.status },
                     ].map((row) => (
                       <div key={row.label} className="flex items-center justify-between py-1 border-b border-white/5">
                         <span className="text-slate-400 text-[11px]">{row.label}:</span>
@@ -2272,6 +2478,24 @@ export default function LiveOpsView() {
                         </span>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Route Stage Progress */}
+                  <div className="mt-3 p-2.5 bg-slate-900/80 rounded-xl border border-white/5">
+                    <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                      Route Stage Progress
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-300 mb-1">
+                      <span>Pickup: {selectedRide.pickup}</span>
+                      <span className="text-cyan-300 font-bold font-mono">{liveSelected.progressPct}%</span>
+                      <span>{selectedRide.drop}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 rounded-full transition-all duration-700"
+                        style={{ width: `${liveSelected.progressPct}%` }}
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 pt-3">
@@ -2304,7 +2528,72 @@ export default function LiveOpsView() {
                   </div>
                 </div>
               );
-            })()}
+            })() : (
+              /* ─── CASE C: OPERATIONS OVERVIEW ────────── */
+              <div className="rounded-2xl p-4 flex-shrink-0" style={glassPanel(0.92)}>
+                <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+                  <div>
+                    <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">
+                      Operations Overview
+                    </span>
+                    <h3 className="text-sm font-bold text-white mt-0.5">
+                      Pune Central Dispatch
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      ONLINE
+                    </span>
+                    <button
+                      onClick={() => setShowRightPanel(false)}
+                      className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                      title="Hide Overview">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {sosIncident.status === 'Active' ? (
+                  <div
+                    onClick={() => handleOpenActiveSos('Overview SOS Banner')}
+                    className="p-3 mb-3 rounded-xl bg-gradient-to-r from-red-950/80 to-red-900/60 border border-red-500/40 hover:border-red-400 cursor-pointer transition-all shadow-md group">
+                    <div className="flex items-center justify-between text-xs font-bold text-red-200">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                        🚨 1 Active SOS Incident
+                      </span>
+                      <span className="text-[10px] text-red-300 group-hover:text-white underline">
+                        View Alert →
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-red-200/80 mt-1">
+                      {sosIncident.employee} ({sosIncident.company}) · {sosIncident.location}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-2.5 mb-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
+                    <span>✅</span>
+                    <span className="text-[11px]">All emergency channels normal. 0 active SOS.</span>
+                  </div>
+                )}
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400 text-[11px]">Active Cabs Stream:</span>
+                    <span className="text-white font-mono font-bold">18 Vehicles Active</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400 text-[11px]">Primary Corridor:</span>
+                    <span className="text-cyan-300 font-semibold">Hinjewadi - Hadapsar - Kharadi</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400 text-[11px]">Standby Fleet:</span>
+                    <span className="text-emerald-400 font-mono font-semibold">3 Staged & Ready</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Operations Health Summary */}
             <div className="rounded-2xl p-4 flex-shrink-0" style={glassPanel(0.90)}>
@@ -2331,11 +2620,28 @@ export default function LiveOpsView() {
                   <span className="text-amber-400 font-mono font-bold">{OPS_HEALTH_METRICS.delayedTrips}</span>
                 </div>
                 <div className="flex justify-between items-center py-0.5 border-b border-white/5">
+                  <span className="text-slate-300">SOS Incidents</span>
+                  <span className="text-red-400 font-mono font-bold">
+                    {sosIncident.status === 'Active' ? '2 (1 Active)' : '2 (Resolved)'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-0.5 border-b border-white/5">
                   <span className="text-slate-300">Fleet Utilization</span>
                   <span className="text-cyan-300 font-mono font-bold">{OPS_HEALTH_METRICS.fleetUtilization}%</span>
                 </div>
               </div>
             </div>
+
+            {/* Hide Panel Button */}
+            <button
+              onClick={() => {
+                setShowRightPanel(false);
+                setShowSosIncident(false);
+              }}
+              className="w-full py-2 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-white/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs flex-shrink-0"
+              title="Hide panel to clearly see the full map">
+              <span>🗺️</span> Hide Details · Full Map View
+            </button>
           </div>
         )}
 
@@ -2361,6 +2667,91 @@ export default function LiveOpsView() {
           </div>
         )}
       </div>
+
+      {/* ─── URGENT SOS EMERGENCY NOTIFICATION MODAL BANNER ─────────────── */}
+      {sosNotification?.open && (
+        <div className="fixed top-18 right-6 z-50 w-96 rounded-2xl border-2 border-red-500/80 bg-slate-950/95 text-white shadow-2xl p-4 backdrop-blur-2xl ring-4 ring-red-500/20 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-start justify-between gap-2 mb-2 pb-2.5 border-b border-red-500/30">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-red-600/30 border border-red-500/50 flex items-center justify-center text-lg animate-pulse flex-shrink-0">
+                🚨
+              </div>
+              <div>
+                <div className="text-xs font-black text-red-400 tracking-wider uppercase flex items-center gap-1.5">
+                  <span>Critical SOS Notification</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                </div>
+                <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                  Time: {sosNotification.time} · Severity: CRITICAL HIGH
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setSosNotification(null)}
+              className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+              title="Dismiss Notification">
+              ✕
+            </button>
+          </div>
+
+          <p className="text-xs text-red-100 font-medium mb-3">
+            {sosNotification.desc}
+          </p>
+
+          <div className="space-y-1.5 text-xs mb-3 bg-red-950/40 p-2.5 rounded-xl border border-red-500/25">
+            <div className="flex justify-between items-center">
+              <span className="text-red-200/70 text-[11px]">Passenger:</span>
+              <span className="text-white font-bold">{sosIncident.employee}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-red-200/70 text-[11px]">Organization:</span>
+              <span className="text-white font-medium">{sosIncident.company}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-red-200/70 text-[11px]">Vehicle:</span>
+              <span className="text-cyan-300 font-mono font-bold">{sosIncident.vehicle}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-red-200/70 text-[11px]">Location:</span>
+              <span className="text-amber-300 font-semibold">{sosIncident.location}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-1.5 text-xs">
+            <button
+              onClick={() => {
+                handleTrackLiveIncident();
+                setSosNotification(null);
+              }}
+              className="py-2 px-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-center text-[11px] transition-colors shadow-sm cursor-pointer">
+              🎯 Track Live
+            </button>
+            <button
+              onClick={() => {
+                setCallModal({
+                  open: true,
+                  type: 'driver',
+                  name: sosIncident.driver,
+                  phone: sosIncident.driverPhone,
+                  title: `SOS Emergency Call: Driver`,
+                });
+                setSosNotification(null);
+              }}
+              className="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-center text-[11px] border border-slate-700 transition-colors cursor-pointer">
+              📞 Driver
+            </button>
+            <button
+              onClick={() => {
+                setShowSosIncident(true);
+                setShowRightPanel(true);
+                setSosNotification(null);
+              }}
+              className="py-2 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-center text-[11px] transition-colors shadow-sm cursor-pointer">
+              Open Center →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ─── INTERACTIVE CALL MODAL (DIALER SIMULATOR) ───────────────────── */}
       {callModal && callModal.open && (
