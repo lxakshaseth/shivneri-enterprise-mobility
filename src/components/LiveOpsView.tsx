@@ -587,6 +587,7 @@ export default function LiveOpsView() {
   // Handler triggered ONLY when Active SOS is clicked
   const handleOpenActiveSos = (source = 'Active SOS Click') => {
     playSosChime();
+    setShowRightPanel(true);
     setShowSosIncident(true);
     setSelectedId('TRIP-10438');
     setTracking('TRIP-10438');
@@ -611,6 +612,10 @@ export default function LiveOpsView() {
   const [filterStatus, setFilterStatus] = useState('All');
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [toast, setToast] = useState('');
+
+  // Overlay Panels Visibility (Hide / Show for Clear Map View)
+  const [showRightPanel, setShowRightPanel] = useState(true);
+  const [showLeftPanel, setShowLeftPanel] = useState(true);
 
   // Map Navigation & Layers State
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -1270,6 +1275,7 @@ export default function LiveOpsView() {
                   } else {
                     setShowSosIncident(false);
                     setSelectedId(isSel ? null : ride.id);
+                    if (!isSel) setShowRightPanel(true);
                   }
                 }}
                 className="absolute pointer-events-auto cursor-pointer group transition-all duration-700 ease-out"
@@ -1376,32 +1382,34 @@ export default function LiveOpsView() {
         )}
 
         {/* ─── FLOATING ZOOM & MAP LAYER CONTROLS ─────────────────────────── */}
-        <div className="absolute top-4 right-[345px] flex flex-col gap-1.5 z-20">
+        <div className={`absolute flex flex-col gap-1.5 z-20 transition-all duration-300 ${
+          showRightPanel ? 'top-4 right-[345px]' : 'top-14 right-4'
+        }`}>
           <button
             onClick={() => handleZoom(0.25)}
             title="Zoom In"
-            className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors"
+            className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
             style={glassPanel(0.85)}>
             +
           </button>
           <button
             onClick={() => handleZoom(-0.25)}
             title="Zoom Out"
-            className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors"
+            className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
             style={glassPanel(0.85)}>
             −
           </button>
           <button
             onClick={handleResetView}
             title="Reset Centered View"
-            className="w-8 h-8 rounded-xl text-slate-300 hover:text-cyan-400 flex items-center justify-center text-xs transition-colors"
+            className="w-8 h-8 rounded-xl text-slate-300 hover:text-cyan-400 flex items-center justify-center text-xs transition-colors cursor-pointer"
             style={glassPanel(0.85)}>
             ⊙
           </button>
           <button
             onClick={() => setShowTraffic((t) => !t)}
             title="Toggle Live Traffic Heatmap"
-            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors ${
+            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors cursor-pointer ${
               showTraffic ? 'text-amber-400 ring-1 ring-amber-400/50' : 'text-slate-400'
             }`}
             style={glassPanel(0.85)}>
@@ -1410,16 +1418,38 @@ export default function LiveOpsView() {
           <button
             onClick={() => setMapStyle((s) => (s === 'dark-ops' ? 'satellite-contrast' : 'dark-ops'))}
             title={mapStyle === 'dark-ops' ? 'Switch to Real-World Satellite' : 'Switch to Real-World Dark GIS'}
-            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors ${
+            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors cursor-pointer ${
               mapStyle === 'satellite-contrast' ? 'text-cyan-400 ring-1 ring-cyan-400/50' : 'text-slate-400 hover:text-white'
             }`}
             style={glassPanel(0.85)}>
             {mapStyle === 'satellite-contrast' ? '🛰️' : '🗺️'}
           </button>
+          {/* Full Map Mode Toggle (Hide / Restore Overlays) */}
+          <button
+            onClick={() => {
+              if (!showRightPanel && !showLeftPanel) {
+                setShowRightPanel(true);
+                setShowLeftPanel(true);
+              } else {
+                setShowRightPanel(false);
+                setShowLeftPanel(false);
+              }
+            }}
+            title={!showRightPanel && !showLeftPanel ? 'Restore Side Panels' : 'Full Map Mode (Hide All Overlays)'}
+            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors cursor-pointer ${
+              !showRightPanel && !showLeftPanel
+                ? 'text-emerald-400 ring-1 ring-emerald-400/60 bg-emerald-500/20'
+                : 'text-slate-300 hover:text-white'
+            }`}
+            style={glassPanel(0.85)}>
+            {!showRightPanel && !showLeftPanel ? '◱' : '⛶'}
+          </button>
         </div>
 
         {/* Mapbox Live GIS Attribution */}
-        <div className="absolute bottom-4 left-[345px] z-20 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-700/60 shadow-lg pointer-events-auto select-none">
+        <div className={`absolute bottom-4 z-20 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-700/60 shadow-lg pointer-events-auto select-none transition-all duration-300 ${
+          showLeftPanel ? 'left-[345px]' : 'left-4'
+        }`}>
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-white tracking-wide">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-emerald-400 font-mono tracking-tight font-extrabold">OpenStreetMap</span>
@@ -1430,23 +1460,48 @@ export default function LiveOpsView() {
           </span>
         </div>
 
+        {/* Floating trigger to restore left panel when hidden */}
+        {!showLeftPanel && (
+          <button
+            onClick={() => setShowLeftPanel(true)}
+            className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-950/90 hover:bg-slate-900 text-white text-xs font-semibold border border-emerald-500/40 hover:border-emerald-400 shadow-xl backdrop-blur-md transition-all cursor-pointer group animate-in fade-in"
+            title="Open Live Dispatch Stream">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-slate-200 group-hover:text-white">
+              Dispatch Stream ({filteredVehicles.length})
+            </span>
+            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-400/30">
+              Show ▸
+            </span>
+          </button>
+        )}
+
         {/* ─── LEFT PANEL: ACTIVE TRIPS & REAL-TIME ACTIVITY FEED ─────────── */}
-        <div
-          className="absolute left-4 top-4 bottom-4 w-80 flex flex-col overflow-hidden rounded-2xl z-20"
-          style={glassPanel(0.94)}>
-          {/* Header with Switcher Tabs */}
-          <div className="p-3.5 border-b border-white/10 flex-shrink-0">
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                  Live Dispatch Stream
-                </h3>
+        {showLeftPanel && (
+          <div
+            className="absolute left-4 top-4 bottom-4 w-80 flex flex-col overflow-hidden rounded-2xl z-20 animate-in slide-in-from-left duration-200"
+            style={glassPanel(0.94)}>
+            {/* Header with Switcher Tabs */}
+            <div className="p-3.5 border-b border-white/10 flex-shrink-0">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Live Dispatch Stream
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                    AUTO SYNC
+                  </span>
+                  <button
+                    onClick={() => setShowLeftPanel(false)}
+                    className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                    title="Hide Dispatch Stream / View Map">
+                    ✕
+                  </button>
+                </div>
               </div>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                AUTO SYNC
-              </span>
-            </div>
 
             {/* Tab switchers: Active Trips vs Real-Time Activity Feed */}
             <div className="flex gap-1 p-1 bg-slate-900/80 rounded-xl border border-slate-800">
@@ -1591,10 +1646,28 @@ export default function LiveOpsView() {
             )}
           </div>
         </div>
+      )}
 
-        {/* ─── RIGHT PANEL: TRIP DETAILS / SOS / HEALTH SUMMARY ──────────── */}
+      {/* Floating trigger to restore right panel / popup when hidden */}
+      {!showRightPanel && (
+        <button
+          onClick={() => setShowRightPanel(true)}
+          className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-950/90 hover:bg-slate-900 text-white text-xs font-semibold border border-cyan-500/40 hover:border-cyan-400 shadow-xl backdrop-blur-md transition-all cursor-pointer group animate-in fade-in"
+          title="Open Operations Overview & Trip Details Popup">
+          <span>📊</span>
+          <span className="text-slate-200 group-hover:text-white">
+            {selectedRide ? `Trip ${selectedRide.tripId}` : 'Operations Overview'}
+          </span>
+          <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-400/30">
+            Open ▾
+          </span>
+        </button>
+      )}
+
+      {/* ─── RIGHT PANEL: TRIP DETAILS / SOS / HEALTH SUMMARY ──────────── */}
+      {showRightPanel && (
         <div
-          className="absolute right-4 top-4 bottom-4 w-80 flex flex-col gap-3 overflow-y-auto pr-1 z-20"
+          className="absolute right-4 top-4 bottom-4 w-80 flex flex-col gap-3 overflow-y-auto pr-1 z-20 animate-in slide-in-from-right duration-200"
           style={{ scrollbarWidth: 'none' }}>
 
           {/* Conditional Display:
@@ -1725,8 +1798,12 @@ export default function LiveOpsView() {
                     ● {selectedRide.status}
                   </span>
                   <button
-                    onClick={() => setSelectedId(null)}
-                    className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs">
+                    onClick={() => {
+                      setSelectedId(null);
+                      setShowRightPanel(false);
+                    }}
+                    className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                    title="Close Trip & Hide Panel">
                     ✕
                   </button>
                 </div>
@@ -1788,7 +1865,7 @@ export default function LiveOpsView() {
                       title: `Driver Call — ${selectedRide.vehicle}`,
                     })
                   }
-                  className="py-2 px-3 text-xs font-bold text-white rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors shadow-xs text-center">
+                  className="py-2 px-3 text-xs font-bold text-white rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors shadow-xs text-center cursor-pointer">
                   📞 Call Driver
                 </button>
                 <button
@@ -1801,7 +1878,7 @@ export default function LiveOpsView() {
                       title: `Employee Comms — ${selectedRide.company}`,
                     })
                   }
-                  className="py-2 px-3 text-xs font-semibold text-cyan-200 hover:text-white rounded-xl border border-cyan-500/30 hover:bg-cyan-600/20 transition-colors text-center">
+                  className="py-2 px-3 text-xs font-semibold text-cyan-200 hover:text-white rounded-xl border border-cyan-500/30 hover:bg-cyan-600/20 transition-colors text-center cursor-pointer">
                   📱 Call Employee
                 </button>
               </div>
@@ -1820,10 +1897,18 @@ export default function LiveOpsView() {
                     Pune Central Dispatch
                   </h3>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  ONLINE
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    ONLINE
+                  </span>
+                  <button
+                    onClick={() => setShowRightPanel(false)}
+                    className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                    title="Hide Overview / View Clear Map">
+                    ✕
+                  </button>
+                </div>
               </div>
 
               {/* Interactive Banner: Only when Active SOS exists */}
@@ -1934,7 +2019,16 @@ export default function LiveOpsView() {
               </div>
             </div>
           </div>
+
+          {/* Quick Hide Button at bottom of right panel */}
+          <button
+            onClick={() => setShowRightPanel(false)}
+            className="w-full py-2 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-white/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs flex-shrink-0"
+            title="Hide panel to clearly see the full map">
+            <span>🗺️</span> Hide Panel · Clear Map View
+          </button>
         </div>
+      )}
 
         {/* ─── MAP BOTTOM LEGEND (When no trip is inspected) ──────────────── */}
         {!selectedRide && (
