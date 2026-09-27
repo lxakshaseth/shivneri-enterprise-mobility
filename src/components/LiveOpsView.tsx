@@ -1050,12 +1050,14 @@ const PUNE_ZONES = [
   { id: 'hadapsar', name: 'HADAPSAR', sub: 'Industrial Belt', x: 840, y: 640, type: 'industrial' },
 ];
 
-// ─── REAL-WORLD PUNE GIS MAP TILES ─────────────────────────────────────────
-const PUNE_MAP_TILES = [
-  { x: 2886, y: 1832 }, { x: 2887, y: 1832 }, { x: 2888, y: 1832 }, { x: 2889, y: 1832 },
-  { x: 2886, y: 1833 }, { x: 2887, y: 1833 }, { x: 2888, y: 1833 }, { x: 2889, y: 1833 },
-  { x: 2886, y: 1834 }, { x: 2887, y: 1834 }, { x: 2888, y: 1834 }, { x: 2889, y: 1834 },
-];
+// ─── EXTENDED REAL-WORLD PUNE METROPOLITAN GIS MAP TILES (8 cols x 7 rows = 56 tiles) ───
+// Covers entire Pune, Pimpri-Chinchwad, Hinjewadi, Talegaon, Chakan, Hadapsar, Kharadi, Katraj seamlessly
+const PUNE_MAP_TILES: { x: number; y: number }[] = [];
+for (let y = 1830; y <= 1836; y++) {
+  for (let x = 2884; x <= 2891; x++) {
+    PUNE_MAP_TILES.push({ x, y });
+  }
+}
 
 // ─── HELPER: BUILD SVG POLYLINE PATH ──────────────────────────────────────
 function buildPolylinePath(points: { x: number; y: number }[]): string {
@@ -1347,17 +1349,17 @@ export default function LiveOpsView() {
     };
   }, [tick]);
 
-  // Zoom handlers
+  // Zoom handlers with smooth clamping
   const handleZoom = (delta: number) => {
-    setZoomLevel((prev) => Math.min(3.0, Math.max(0.65, +(prev + delta).toFixed(2))));
+    setZoomLevel((prev) => Math.min(2.8, Math.max(0.80, +(prev + delta).toFixed(2))));
   };
 
   const handleResetView = () => {
-    setZoomLevel(1.15);
+    setZoomLevel(1.10);
     setPanOffset({ x: 0, y: 0 });
     setSelectedId(null);
     setTracking(null);
-    showToast('Reset map to default overview');
+    showToast('Reset map to default Pune overview');
   };
 
   // Center on Selected Cab
@@ -1366,19 +1368,44 @@ export default function LiveOpsView() {
     const vPos = getVehiclePosition(selectedRide);
     const targetPanX = -(vPos.x - WORLD_WIDTH / 2) * zoomLevel * 0.7;
     const targetPanY = -(vPos.y - WORLD_HEIGHT / 2) * zoomLevel * 0.7;
-    setPanOffset({ x: Math.round(targetPanX), y: Math.round(targetPanY) });
+    setPanOffset({
+      x: Math.max(-800, Math.min(800, Math.round(targetPanX))),
+      y: Math.max(-600, Math.min(600, Math.round(targetPanY))),
+    });
     setZoomLevel(1.4);
     showToast(`Centered on ${selectedRide.vehicle} (${selectedRide.pickup} → ${selectedRide.drop})`);
   };
 
-  // Mouse Wheel Zoom Handler
+  // Smooth Cursor-Relative Mouse Wheel Zoom Handler (Zero-lag Google Maps feel)
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.12 : -0.12;
-    setZoomLevel((prev) => Math.min(3.0, Math.max(0.65, +(prev + delta).toFixed(2))));
+    const container = document.getElementById('map-canvas-container');
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - (rect.left + rect.width / 2);
+    const mouseY = e.clientY - (rect.top + rect.height / 2);
+
+    const delta = e.deltaY < 0 ? 0.10 : -0.10;
+    setZoomLevel((prevZoom) => {
+      const nextZoom = Math.min(2.8, Math.max(0.80, +(prevZoom + delta).toFixed(2)));
+      if (nextZoom === prevZoom) return prevZoom;
+
+      const factor = nextZoom / prevZoom;
+      setPanOffset((prevPan) => {
+        const newPanX = Math.round(mouseX - (mouseX - prevPan.x) * factor);
+        const newPanY = Math.round(mouseY - (mouseY - prevPan.y) * factor);
+        return {
+          x: Math.max(-800, Math.min(800, newPanX)),
+          y: Math.max(-600, Math.min(600, newPanY)),
+        };
+      });
+
+      return nextZoom;
+    });
   };
 
-  // Drag Pan Handlers
+  // Drag Pan Handlers with boundary protection
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('.pointer-events-auto')) {
       return;
@@ -1397,8 +1424,8 @@ export default function LiveOpsView() {
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
     setPanOffset({
-      x: dragStartRef.current.initialPanX + dx,
-      y: dragStartRef.current.initialPanY + dy,
+      x: Math.max(-800, Math.min(800, dragStartRef.current.initialPanX + dx)),
+      y: Math.max(-600, Math.min(600, dragStartRef.current.initialPanY + dy)),
     });
   };
 
@@ -1626,6 +1653,15 @@ export default function LiveOpsView() {
       <div
         id="map-canvas-container"
         className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
+        style={{
+          background: '#040914',
+          backgroundImage: `
+            linear-gradient(to right, rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+            radial-gradient(circle at 50% 50%, #0d1e3d 0%, #061023 60%, #030712 100%)
+          `,
+          backgroundSize: '100px 100px, 100px 100px, 100% 100%',
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -1648,28 +1684,43 @@ export default function LiveOpsView() {
             transition: isDragging ? 'none' : 'transform 0.22s ease-out',
           }}>
 
-          {/* 1. Real-World Pune Base Map Tiles */}
-          <div className="absolute inset-0 grid grid-cols-4 grid-rows-3 select-none pointer-events-none w-[1200px] h-[800px] overflow-hidden">
-            {PUNE_MAP_TILES.map((t) => (
-              <div key={`${t.x}-${t.y}`} className="relative w-full h-full bg-slate-950 overflow-hidden">
-                <img
-                  src={`https://tile.openstreetmap.org/12/${t.x}/${t.y}.png`}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://tile.openstreetmap.org/12/${t.x}/${t.y}.png`;
-                  }}
-                  alt={`OpenStreetMap Pune ${t.x},${t.y}`}
-                  className="w-full h-full object-cover transition-opacity duration-500 pointer-events-none"
+          {/* 1. Real-World Pune Extended Base Map Tiles (Full-Bleed 2400x1867 Span) */}
+          <div className="absolute inset-0 select-none pointer-events-none">
+            {PUNE_MAP_TILES.map((t) => {
+              const leftPx = (t.x - 2886) * 300;
+              const topPx = (t.y - 1832) * (800 / 3);
+              const tileW = 300.5;
+              const tileH = 267.2;
+
+              return (
+                <div
+                  key={`${t.x}-${t.y}`}
+                  className="absolute bg-slate-950 overflow-hidden"
                   style={{
-                    filter:
-                      mapStyle === 'satellite-contrast'
-                        ? 'contrast(1.15) brightness(0.85)'
-                        : 'contrast(1.08) brightness(0.92)',
-                    opacity: mapStyle === 'satellite-contrast' ? 0.85 : 0.88,
-                  }}
-                  loading="eager"
-                />
-              </div>
-            ))}
+                    left: `${leftPx}px`,
+                    top: `${topPx}px`,
+                    width: `${tileW}px`,
+                    height: `${tileH}px`,
+                  }}>
+                  <img
+                    src={`https://tile.openstreetmap.org/12/${t.x}/${t.y}.png`}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://a.basemaps.cartocdn.com/dark_all/12/${t.x}/${t.y}.png`;
+                    }}
+                    alt={`Pune Tile ${t.x},${t.y}`}
+                    className="w-full h-full object-cover transition-opacity duration-300 pointer-events-none"
+                    style={{
+                      filter:
+                        mapStyle === 'satellite-contrast'
+                          ? 'contrast(1.15) brightness(0.85)'
+                          : 'contrast(1.08) brightness(0.92)',
+                      opacity: mapStyle === 'satellite-contrast' ? 0.85 : 0.88,
+                    }}
+                    loading="lazy"
+                  />
+                </div>
+              );
+            })}
           </div>
 
           {/* 2. SVG Vector Cartography Layer (River, Traffic, Corridors & Stops) */}
@@ -1707,17 +1758,26 @@ export default function LiveOpsView() {
             </defs>
 
             {/* Base Translucent Layer */}
-            <rect width="1200" height="800" fill="rgba(4, 9, 20, 0.42)" />
+            <rect x="-700" y="-600" width="2600" height="2000" fill="rgba(4, 9, 20, 0.42)" />
 
             {/* Metro Center Ambient Light */}
-            <circle cx="560" cy="440" r="420" fill="url(#puneNightGlow)" />
+            <circle cx="600" cy="400" r="900" fill="url(#puneNightGlow)" />
 
             {/* ─── REAL MULA-MUTHA RIVER NETWORK ─── */}
             <g id="pune-rivers">
-              <path d="M 160,80 Q 240,110 320,130 Q 380,150 430,220" fill="none" stroke="url(#mulaMuthaRiverGrad)" strokeWidth="6" strokeLinecap="round" opacity="0.7" />
-              <path d="M 120,290 Q 180,270 240,310 Q 300,350 380,310 Q 430,270 490,320 Q 530,360 580,390" fill="none" stroke="url(#mulaMuthaRiverGrad)" strokeWidth="11" strokeLinecap="round" opacity="0.85" />
-              <path d="M 380,680 Q 460,590 520,530 Q 560,480 580,390" fill="none" stroke="url(#mulaMuthaRiverGrad)" strokeWidth="9" strokeLinecap="round" opacity="0.8" />
-              <path d="M 580,390 Q 640,380 700,430 Q 760,460 840,410 Q 920,380 1060,390" fill="none" stroke="url(#mulaMuthaRiverGrad)" strokeWidth="14" strokeLinecap="round" opacity="0.9" />
+              {/* Extended Pavana River (North) */}
+              <path d="M -300,30 Q -50,60 160,80 Q 240,110 320,130 Q 380,150 430,220" fill="none" stroke="url(#mulaMuthaRiverGrad)" strokeWidth="7" strokeLinecap="round" opacity="0.7" />
+              {/* Extended Mula River (West - Mulshi / Hinjewadi) */}
+              <path d="M -450,280 Q -250,290 -100,270 Q 10,290 120,290 Q 180,270 240,310 Q 300,350 380,310 Q 430,270 490,320 Q 530,360 580,390" fill="none" stroke="url(#mulaMuthaRiverGrad)" strokeWidth="11" strokeLinecap="round" opacity="0.85" />
+              {/* Extended Mutha River (South - Khadakwasla / Sinhagad) */}
+              <path d="M 180,1100 Q 240,900 320,780 Q 360,720 380,680 Q 460,590 520,530 Q 560,480 580,390" fill="none" stroke="url(#mulaMuthaRiverGrad)" strokeWidth="9" strokeLinecap="round" opacity="0.8" />
+              {/* Extended Mula-Mutha River (East - Kharadi / Theur) */}
+              <path d="M 580,390 Q 640,380 700,430 Q 760,460 840,410 Q 920,380 1060,390 Q 1250,410 1450,430 Q 1650,410 1850,430" fill="none" stroke="url(#mulaMuthaRiverGrad)" strokeWidth="14" strokeLinecap="round" opacity="0.9" />
+              
+              {/* Major Regional Expressways */}
+              <path d="M -550,40 L -200,120 L 60,190 L 220,260" fill="none" stroke="#0ea5e9" strokeWidth="2.5" opacity="0.35" strokeDasharray="6 3" />
+              <path d="M 840,640 L 1150,680 L 1450,710 L 1800,750" fill="none" stroke="#0ea5e9" strokeWidth="2.5" opacity="0.35" strokeDasharray="6 3" />
+              <path d="M 220,260 Q 360,400 400,550 Q 440,700 520,850 Q 600,1050 680,1250" fill="none" stroke="#0ea5e9" strokeWidth="2.5" opacity="0.35" strokeDasharray="6 3" />
             </g>
 
             {/* ─── LIVE TRAFFIC HEATMAP OVERLAY ─── */}
