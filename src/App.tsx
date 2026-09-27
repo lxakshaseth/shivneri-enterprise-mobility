@@ -3551,81 +3551,529 @@ function AddEmpModal({ onClose, onAdd, defaultOrg }: { onClose: () => void; onAd
 }
 
 // ─── Employee Profile Drawer ──────────────────────────────────────────────────
-function EmpProfileDrawer({ emp, onClose }: { emp: EmpRow; onClose: () => void }) {
-  const initials = emp.name.split(' ').map(n => n[0]).join('');
+function EmpProfileDrawer({
+  emp,
+  onClose,
+  onUpdateEmp,
+}: {
+  emp: EmpRow;
+  onClose: () => void;
+  onUpdateEmp: (updated: EmpRow) => void;
+}) {
+  const [currentEmp, setCurrentEmp] = useState<EmpRow>(emp);
+  const [viewMode, setViewMode] = useState<'profile' | 'edit' | 'history'>('profile');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+
+  // Edit form state
+  const [editForm, setEditForm] = useState({
+    name: emp.name,
+    org: emp.org,
+    dept: emp.dept,
+    shift: emp.shift,
+    pickup: emp.pickup,
+    drop: emp.drop,
+    email: emp.email,
+    phone: emp.phone,
+  });
+  const [editError, setEditError] = useState('');
+
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleToggleEligibility = () => {
+    const nextEligible = !currentEmp.eligible;
+    const updated: EmpRow = { ...currentEmp, eligible: nextEligible };
+    setCurrentEmp(updated);
+    onUpdateEmp(updated);
+    triggerToast(
+      nextEligible
+        ? `✓ Transport eligibility granted for ${updated.name}`
+        : `⚠ Transport eligibility disabled for ${updated.name}`
+    );
+  };
+
+  const handleToggleStatus = () => {
+    if (currentEmp.status === 'Active') {
+      const updated: EmpRow = { ...currentEmp, status: 'Inactive', eligible: false };
+      setCurrentEmp(updated);
+      onUpdateEmp(updated);
+      setConfirmDeactivate(false);
+      triggerToast(`⚠ Employee ${updated.name} deactivated`);
+    } else {
+      const updated: EmpRow = { ...currentEmp, status: 'Active', eligible: true };
+      setCurrentEmp(updated);
+      onUpdateEmp(updated);
+      triggerToast(`✓ Employee ${updated.name} reactivated to Active`);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!editForm.name.trim()) { setEditError('Name is required.'); return; }
+    if (!editForm.email.trim()) { setEditError('Work email is required.'); return; }
+    if (!editForm.pickup.trim() || !editForm.drop.trim()) { setEditError('Pickup and drop locations are required.'); return; }
+
+    const updated: EmpRow = {
+      ...currentEmp,
+      name: editForm.name.trim(),
+      org: editForm.org,
+      dept: editForm.dept,
+      shift: editForm.shift,
+      pickup: editForm.pickup.trim(),
+      drop: editForm.drop.trim(),
+      email: editForm.email.trim(),
+      phone: editForm.phone.trim() || currentEmp.phone,
+    };
+    setCurrentEmp(updated);
+    onUpdateEmp(updated);
+    setViewMode('profile');
+    setEditError('');
+    triggerToast(`✓ Profile updated successfully for ${updated.name}`);
+  };
+
+  const initials = currentEmp.name.split(' ').map(n => n[0]).join('');
+
+  const mockRides = [
+    {
+      id: currentEmp.ride !== '—' ? currentEmp.ride : 'TRP-98421',
+      date: 'Today, 08:30 AM',
+      type: 'Morning Pickup',
+      from: currentEmp.pickup,
+      to: currentEmp.drop,
+      driver: 'Ramesh Patil',
+      vehicle: 'MH-12-RN-4821 (Tata Winger)',
+      status: 'Completed',
+      safeDrop: 'Mutual Verified ✓',
+      rating: '5.0 ★',
+    },
+    {
+      id: 'TRP-98310',
+      date: 'Yesterday, 06:15 PM',
+      type: 'Evening Drop',
+      from: currentEmp.drop,
+      to: currentEmp.pickup,
+      driver: 'Suresh More',
+      vehicle: 'MH-12-Q-9912 (Force Traveller)',
+      status: 'Completed',
+      safeDrop: 'Mutual Verified ✓',
+      rating: '5.0 ★',
+    },
+    {
+      id: 'TRP-98188',
+      date: '25 Sep, 08:25 AM',
+      type: 'Morning Pickup',
+      from: currentEmp.pickup,
+      to: currentEmp.drop,
+      driver: 'Ramesh Patil',
+      vehicle: 'MH-12-RN-4821 (Tata Winger)',
+      status: 'Completed',
+      safeDrop: 'Mutual Verified ✓',
+      rating: '4.8 ★',
+    },
+    {
+      id: 'TRP-98042',
+      date: '24 Sep, 06:20 PM',
+      type: 'Evening Drop',
+      from: currentEmp.drop,
+      to: currentEmp.pickup,
+      driver: 'Mahesh Shinde',
+      vehicle: 'MH-14-EA-3420 (Toyota Innova)',
+      status: 'Completed',
+      safeDrop: 'Mutual Verified ✓',
+      rating: '5.0 ★',
+    },
+    {
+      id: 'TRP-97915',
+      date: '23 Sep, 08:35 AM',
+      type: 'Morning Pickup',
+      from: currentEmp.pickup,
+      to: currentEmp.drop,
+      driver: 'Ganesh Kadam',
+      vehicle: 'MH-12-AB-1102 (Tata Winger)',
+      status: 'Completed',
+      safeDrop: 'Mutual Verified ✓',
+      rating: '5.0 ★',
+    },
+  ];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(12px)' }}
       onClick={onClose}>
-      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden"
-        style={{ maxHeight: '85vh' }}
+      
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden relative"
+        style={{ maxHeight: '88vh' }}
         onClick={e => e.stopPropagation()}>
 
+        {/* Floating Toast Notification */}
+        {toastMessage && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-xl border border-slate-700 flex items-center gap-2 pointer-events-none">
+            <span>{toastMessage}</span>
+          </div>
+        )}
+
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
-          <h3 className="text-sm font-semibold text-slate-800">Employee Profile</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 text-sm transition-colors">✕</button>
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0 bg-white">
+          <div className="flex items-center gap-2">
+            {viewMode !== 'profile' && (
+              <button
+                onClick={() => setViewMode('profile')}
+                className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold mr-1 cursor-pointer transition-colors"
+                title="Back to profile"
+              >
+                ←
+              </button>
+            )}
+            <h3 className="text-sm font-semibold text-slate-800">
+              {viewMode === 'profile' && 'Employee Profile'}
+              {viewMode === 'edit' && 'Edit Employee Profile'}
+              {viewMode === 'history' && 'Employee Ride History'}
+            </h3>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 text-sm transition-colors cursor-pointer">✕</button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {/* Identity */}
-          <div className="px-6 py-5 border-b border-slate-100">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
-                {initials}
-              </div>
-              <div>
-                <div className="font-bold text-slate-900 text-base">{emp.name}</div>
-                <div className="text-xs text-slate-400 mono mt-0.5">{emp.id}</div>
-              </div>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
-                ORG_COLORS[emp.org]
-                  ? `${ORG_COLORS[emp.org].bg} ${ORG_COLORS[emp.org].text} ${ORG_COLORS[emp.org].border}`
-                  : 'bg-blue-50 text-blue-700 border-blue-200'
-              }`}>
-                🏢 {emp.org}
-              </span>
-              <Badge label={emp.status} color={emp.status === 'Active' ? 'green' : 'slate'} />
-              <Badge label={emp.eligible ? 'Transport Eligible' : 'Ineligible'} color={emp.eligible ? 'blue' : 'red'} />
-              <Badge label={emp.shift + ' Shift'} color="slate" />
-            </div>
-          </div>
-
-          {/* Details grid */}
-          <div className="px-6 py-5 border-b border-slate-100">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
-              {[
-                { label: 'Organization', value: emp.org, icon: '🏢' },
-                { label: 'Department', value: emp.dept, icon: '🏬' },
-                { label: 'Shift', value: emp.shift, icon: '⏰' },
-                { label: 'Phone', value: emp.phone, icon: '📞' },
-                { label: 'Email', value: emp.email, icon: '📧' },
-                { label: 'Pickup Location', value: emp.pickup, icon: '📍' },
-                { label: 'Drop Location', value: emp.drop, icon: '🏁' },
-                { label: 'Upcoming Ride', value: emp.ride, icon: '🚗' },
-                { label: 'Emergency Contact', value: 'Restricted 🔒', icon: '🆘', restricted: true },
-              ].map(f => (
-                <div key={f.label} className="flex items-start gap-2.5 py-2 border-b border-slate-50">
-                  <span className="text-sm mt-0.5 flex-shrink-0">{f.icon}</span>
-                  <div className="min-w-0">
-                    <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">{f.label}</div>
-                    <div className={`text-xs font-medium ${f.restricted ? 'text-red-400' : 'text-slate-800'} truncate`}>{f.value}</div>
+        {/* ── VIEW 1: PROFILE DETAILS ── */}
+        {viewMode === 'profile' && (
+          <>
+            <div className="flex-1 overflow-y-auto">
+              {/* Identity */}
+              <div className="px-6 py-5 border-b border-slate-100">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-sm">
+                    {initials}
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 text-base">{currentEmp.name}</div>
+                    <div className="text-xs text-slate-400 mono mt-0.5">{currentEmp.id}</div>
                   </div>
                 </div>
-              ))}
+                <div className="flex gap-2 flex-wrap">
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                    ORG_COLORS[currentEmp.org]
+                      ? `${ORG_COLORS[currentEmp.org].bg} ${ORG_COLORS[currentEmp.org].text} ${ORG_COLORS[currentEmp.org].border}`
+                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                  }`}>
+                    🏢 {currentEmp.org}
+                  </span>
+                  <Badge label={currentEmp.status} color={currentEmp.status === 'Active' ? 'green' : 'slate'} />
+                  <Badge label={currentEmp.eligible ? 'Transport Eligible' : 'Ineligible'} color={currentEmp.eligible ? 'blue' : 'red'} />
+                  <Badge label={currentEmp.shift + ' Shift'} color="slate" />
+                </div>
+              </div>
+
+              {/* Confirmation bar if deactivation initiated */}
+              {confirmDeactivate && (
+                <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+                  <div className="text-red-700 font-medium">
+                    ⚠️ Deactivate <span className="font-bold">{currentEmp.name}</span>? They will be marked Inactive and transport eligibility disabled.
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => setConfirmDeactivate(false)}
+                      className="px-2.5 py-1 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 cursor-pointer font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleToggleStatus}
+                      className="px-2.5 py-1 text-white bg-red-600 rounded-lg hover:bg-red-700 cursor-pointer font-semibold shadow-2xs"
+                    >
+                      Confirm Deactivate
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Details grid */}
+              <div className="px-6 py-5 border-b border-slate-100">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
+                  {[
+                    { label: 'Organization', value: currentEmp.org, icon: '🏢' },
+                    { label: 'Department', value: currentEmp.dept, icon: '🏬' },
+                    { label: 'Shift', value: currentEmp.shift, icon: '⏰' },
+                    { label: 'Phone', value: currentEmp.phone, icon: '📞' },
+                    { label: 'Email', value: currentEmp.email, icon: '📧' },
+                    { label: 'Pickup Location', value: currentEmp.pickup, icon: '📍' },
+                    { label: 'Drop Location', value: currentEmp.drop, icon: '🏁' },
+                    { label: 'Upcoming Ride', value: currentEmp.ride, icon: '🚗' },
+                    { label: 'Emergency Contact', value: 'Restricted 🔒', icon: '🆘', restricted: true },
+                  ].map(f => (
+                    <div key={f.label} className="flex items-start gap-2.5 py-2 border-b border-slate-50">
+                      <span className="text-sm mt-0.5 flex-shrink-0">{f.icon}</span>
+                      <div className="min-w-0">
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">{f.label}</div>
+                        <div className={`text-xs font-medium ${f.restricted ? 'text-red-400' : 'text-slate-800'} truncate`}>{f.value}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions Toolbar - 4 Highlighted Features */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 grid grid-cols-2 gap-2 flex-shrink-0">
+              <button
+                onClick={() => {
+                  setEditForm({
+                    name: currentEmp.name,
+                    org: currentEmp.org,
+                    dept: currentEmp.dept,
+                    shift: currentEmp.shift,
+                    pickup: currentEmp.pickup,
+                    drop: currentEmp.drop,
+                    email: currentEmp.email,
+                    phone: currentEmp.phone,
+                  });
+                  setViewMode('edit');
+                }}
+                className="py-2.5 text-xs bg-blue-50 text-blue-700 rounded-xl border border-blue-200 font-semibold hover:bg-blue-100 active:bg-blue-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <span>✏️</span> Edit Profile
+              </button>
+
+              <button
+                onClick={() => setViewMode('history')}
+                className="py-2.5 text-xs bg-slate-100 text-slate-700 rounded-xl border border-slate-200 font-semibold hover:bg-slate-200 active:bg-slate-300 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <span>📋</span> Ride History
+              </button>
+
+              <button
+                onClick={handleToggleEligibility}
+                className={`py-2.5 text-xs rounded-xl border font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
+                  currentEmp.eligible
+                    ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                    : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                }`}
+                title={currentEmp.eligible ? 'Click to make Ineligible' : 'Click to make Eligible'}
+              >
+                <span>{currentEmp.eligible ? '🚫' : '✅'}</span>
+                {currentEmp.eligible ? 'Disable Eligibility' : 'Enable Eligibility'}
+              </button>
+
+              <button
+                onClick={() => {
+                  if (currentEmp.status === 'Active') {
+                    setConfirmDeactivate(true);
+                  } else {
+                    handleToggleStatus();
+                  }
+                }}
+                className={`py-2.5 text-xs rounded-xl border font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
+                  currentEmp.status === 'Active'
+                    ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                }`}
+              >
+                <span>{currentEmp.status === 'Active' ? '⏸️' : '▶️'}</span>
+                {currentEmp.status === 'Active' ? 'Deactivate' : 'Activate Employee'}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── VIEW 2: EDIT PROFILE FORM ── */}
+        {viewMode === 'edit' && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+              {editError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700 font-medium">
+                  {editError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+                  <input
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    value={editForm.name}
+                    onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="e.g. Sneha Kulkarni"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Organization <span className="text-red-500">*</span></label>
+                  <select
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+                    value={editForm.org}
+                    onChange={e => setEditForm(f => ({ ...f, org: e.target.value }))}
+                  >
+                    {ALL_ORGANIZATIONS.map(org => (
+                      <option key={org} value={org}>
+                        {org}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Department</label>
+                  <select
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+                    value={editForm.dept}
+                    onChange={e => setEditForm(f => ({ ...f, dept: e.target.value }))}
+                  >
+                    {['Engineering', 'HR', 'Finance', 'Operations', 'Marketing', 'Legal', 'Design', 'Product'].map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Shift</label>
+                  <select
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+                    value={editForm.shift}
+                    onChange={e => setEditForm(f => ({ ...f, shift: e.target.value }))}
+                  >
+                    {['Morning', 'General', 'Evening', 'Night'].map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Work Email <span className="text-red-500">*</span></label>
+                  <input
+                    type="email"
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    value={editForm.email}
+                    onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                    placeholder="email@company.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Phone</label>
+                  <input
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    value={editForm.phone}
+                    onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                    placeholder="+91 98765 43210"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Pickup Location <span className="text-red-500">*</span></label>
+                  <input
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    value={editForm.pickup}
+                    onChange={e => setEditForm(f => ({ ...f, pickup: e.target.value }))}
+                    placeholder="Pickup location"
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Drop Location <span className="text-red-500">*</span></label>
+                  <input
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    value={editForm.drop}
+                    onChange={e => setEditForm(f => ({ ...f, drop: e.target.value }))}
+                    placeholder="Drop location"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex gap-3 flex-shrink-0">
+              <button
+                onClick={() => setViewMode('profile')}
+                className="flex-1 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors cursor-pointer shadow-xs"
+              >
+                Save Changes ✓
+              </button>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Actions */}
-        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 grid grid-cols-2 gap-2 flex-shrink-0">
-          <button className="py-2.5 text-xs bg-blue-50 text-blue-700 rounded-xl border border-blue-200 font-semibold hover:bg-blue-100 transition-colors">Edit Profile</button>
-          <button className="py-2.5 text-xs bg-slate-100 text-slate-700 rounded-xl border border-slate-200 font-semibold hover:bg-slate-200 transition-colors">Ride History</button>
-          <button className="py-2.5 text-xs bg-amber-50 text-amber-700 rounded-xl border border-amber-200 font-semibold hover:bg-amber-100 transition-colors">Toggle Eligibility</button>
-          <button className="py-2.5 text-xs bg-red-50 text-red-700 rounded-xl border border-red-200 font-semibold hover:bg-red-100 transition-colors">Deactivate</button>
-        </div>
+        {/* ── VIEW 3: RIDE HISTORY ── */}
+        {viewMode === 'history' && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+              {/* Header Card */}
+              <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 rounded-xl flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <div className="text-xs text-slate-400">Total Lifetime Transport</div>
+                  <div className="text-xl font-bold mt-0.5">38 Completed Trips</div>
+                  <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+                    <span>✓</span> 98.4% On-time arrival · 0 safety incidents reported
+                  </div>
+                </div>
+                <div className="bg-white/10 px-3 py-2 rounded-lg text-right">
+                  <div className="text-[10px] text-slate-300 uppercase tracking-wide">Upcoming Trip</div>
+                  <div className="font-mono text-xs font-bold text-cyan-300">
+                    {currentEmp.ride !== '—' ? currentEmp.ride : 'No active ride'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rides List */}
+              <div className="space-y-2.5">
+                <div className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>Recent Trips (Last 7 Days)</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Auto-synced from Shivneri Telematics</span>
+                </div>
+
+                {mockRides.map(ride => (
+                  <div key={ride.id} className="p-3 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition-colors shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-blue-600">{ride.id}</span>
+                        <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                          {ride.type}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded border border-emerald-200">
+                          {ride.status}
+                        </span>
+                        <span className="text-xs font-bold text-amber-500">{ride.rating}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg">
+                      <div>
+                        <span className="text-slate-400 block text-[9px] uppercase font-semibold">Route</span>
+                        <span className="font-medium text-slate-800">{ride.from} ➔ {ride.to}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[9px] uppercase font-semibold">Driver & Vehicle</span>
+                        <span className="font-medium text-slate-800">{ride.driver} ({ride.vehicle})</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                      <span>🕒 {ride.date}</span>
+                      <span className="text-emerald-600 font-medium">🛡️ TrustPass {ride.safeDrop}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
+              <span className="text-xs text-slate-500">Showing last 5 completed rides</span>
+              <button
+                onClick={() => setViewMode('profile')}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              >
+                ← Back to Profile
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
@@ -3685,7 +4133,16 @@ function EmployeesView() {
           onAdd={emp => setEmployees(prev => [emp, ...prev])}
         />
       )}
-      {profileEmp && <EmpProfileDrawer emp={profileEmp} onClose={() => setProfileEmp(null)} />}
+      {profileEmp && (
+        <EmpProfileDrawer
+          emp={profileEmp}
+          onClose={() => setProfileEmp(null)}
+          onUpdateEmp={updated => {
+            setEmployees(prev => prev.map(e => (e.id === updated.id ? updated : e)));
+            setProfileEmp(updated);
+          }}
+        />
+      )}
 
       {/* Toolbar: Search, Organization Name Filters, Add Employee */}
       <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
