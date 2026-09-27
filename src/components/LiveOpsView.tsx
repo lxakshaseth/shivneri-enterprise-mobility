@@ -21,6 +21,7 @@ export interface LiveRide {
   drop: string; // e.g. 'Infosys Phase 2'
   dropName: string;
   dropCoords: { x: number; y: number };
+  waypoints?: { x: number; y: number }[];
   eta: string; // e.g. '08 Minutes'
   status: 'On Route' | 'Delayed' | 'SOS' | 'Assigned';
   org: string;
@@ -65,8 +66,9 @@ export interface ActivityEvent {
   vehicle?: string;
 }
 
-// ─── SEED ACTIVE TRIPS (Aligned with Client Demo Recommendations) ───────────
+// ─── SEED ACTIVE TRIPS (21 Enterprise Vehicles across Pune Corridors) ──────
 const SEED_RIDES: LiveRide[] = [
+  // 1. INFOSYS - Baner to Hinjewadi Ph 2
   {
     id: 'TRIP-10421',
     tripId: 'TRIP-10421',
@@ -79,24 +81,30 @@ const SEED_RIDES: LiveRide[] = [
     vehicleModel: 'Maruti Suzuki Dzire (White)',
     passengers: 4,
     capacity: 6,
-    currentLocation: 'Baner',
+    currentLocation: 'Baner High Street',
     pickup: 'Baner',
     pickupName: 'Baner High Street Gate',
     pickupCoords: { x: 370, y: 365 },
     drop: 'Infosys Phase 2',
     dropName: 'Infosys Ph2 Gate 3',
     dropCoords: { x: 140, y: 320 },
+    waypoints: [
+      { x: 310, y: 320 },
+      { x: 260, y: 290 },
+      { x: 180, y: 280 },
+    ],
     eta: '08 Minutes',
     status: 'On Route',
     org: 'Infosys',
     mapX: 34,
     mapY: 36,
-    speed: 38,
+    speed: 42,
     heading: 300,
     vehicleType: 'cab',
     progressStage: 'on_route',
     progressPct: 65,
   },
+  // 2. INFOSYS - Baner to Wipro Circle Ph2 (Delayed in Wakad Traffic)
   {
     id: 'TRIP-10422',
     tripId: 'TRIP-10422',
@@ -107,26 +115,32 @@ const SEED_RIDES: LiveRide[] = [
     driverPhone: '+91 98220 54321',
     vehicle: 'MH12CD5678',
     vehicleModel: 'Maruti Suzuki Ertiga (Silver)',
-    passengers: 4,
+    passengers: 5,
     capacity: 6,
-    currentLocation: 'Wakad Bridge',
+    currentLocation: 'Wakad Bridge Interchange',
     pickup: 'Baner Circle',
     pickupName: 'Baner Orchid Junction',
     pickupCoords: { x: 370, y: 365 },
     drop: 'Hinjewadi Ph2',
     dropName: 'Wipro Circle Ph2',
     dropCoords: { x: 140, y: 320 },
+    waypoints: [
+      { x: 320, y: 330 },
+      { x: 260, y: 290 },
+      { x: 190, y: 305 },
+    ],
     eta: '22 Minutes',
     status: 'Delayed',
     org: 'Infosys',
     mapX: 38,
     mapY: 38,
-    speed: 14,
+    speed: 15,
     heading: 290,
     vehicleType: 'suv',
     progressStage: 'on_route',
     progressPct: 40,
   },
+  // 3. WIPRO - Aundh to Magarpatta Cybercity
   {
     id: 'TRIP-10423',
     tripId: 'TRIP-10423',
@@ -146,17 +160,24 @@ const SEED_RIDES: LiveRide[] = [
     drop: 'Magarpatta',
     dropName: 'Magarpatta Cybercity Tower 4',
     dropCoords: { x: 820, y: 560 },
+    waypoints: [
+      { x: 480, y: 370 },
+      { x: 580, y: 410 },
+      { x: 690, y: 460 },
+      { x: 760, y: 520 },
+    ],
     eta: '14 Minutes',
     status: 'On Route',
     org: 'Wipro',
     mapX: 62,
     mapY: 62,
-    speed: 42,
+    speed: 44,
     heading: 135,
     vehicleType: 'cab',
     progressStage: 'on_route',
     progressPct: 55,
   },
+  // 4. WNS - CRITICAL SOS EMERGENCY (Stationary at Hinjewadi Ph1 bypass)
   {
     id: 'TRIP-10438',
     tripId: 'TRIP-10438',
@@ -169,13 +190,14 @@ const SEED_RIDES: LiveRide[] = [
     vehicleModel: 'Mahindra Scorpio (Black)',
     passengers: 4,
     capacity: 6,
-    currentLocation: 'Hinjewadi Phase 1',
+    currentLocation: 'Hinjewadi Phase 1 Bypass',
     pickup: 'Wakad',
     pickupName: 'Bhumkar Chowk Overpass',
     pickupCoords: { x: 260, y: 290 },
     drop: 'Hinjewadi Phase 1',
     dropName: 'WNS Global Campus Gate 1',
     dropCoords: { x: 180, y: 280 },
+    waypoints: [{ x: 215, y: 285 }],
     eta: 'SOS Alert',
     status: 'SOS',
     org: 'WNS',
@@ -185,8 +207,9 @@ const SEED_RIDES: LiveRide[] = [
     heading: 270,
     vehicleType: 'suv',
     progressStage: 'on_route',
-    progressPct: 80,
+    progressPct: 78,
   },
+  // 5. TCS PUNE - Pimple Saudagar to Baner Hub (Assigned)
   {
     id: 'TRIP-10439',
     tripId: 'TRIP-10439',
@@ -206,17 +229,22 @@ const SEED_RIDES: LiveRide[] = [
     drop: 'Baner Rd',
     dropName: 'TCS Baner Delivery Hub',
     dropCoords: { x: 370, y: 365 },
-    eta: '31 Minutes',
+    waypoints: [
+      { x: 350, y: 280 },
+      { x: 360, y: 320 },
+    ],
+    eta: '26 Minutes',
     status: 'Assigned',
     org: 'TCS Pune',
     mapX: 35,
     mapY: 26,
-    speed: 25,
+    speed: 28,
     heading: 215,
     vehicleType: 'cab',
     progressStage: 'pickup',
-    progressPct: 15,
+    progressPct: 20,
   },
+  // 6. TCS PUNE - Koregaon Park to Hadapsar Magarpatta
   {
     id: 'TRIP-10440',
     tripId: 'TRIP-10440',
@@ -227,7 +255,7 @@ const SEED_RIDES: LiveRide[] = [
     driverPhone: '+91 98789 01234',
     vehicle: 'MH12KL2345',
     vehicleModel: 'Force Traveller Shuttle (White)',
-    passengers: 4,
+    passengers: 6,
     capacity: 6,
     currentLocation: 'Bund Garden Bridge',
     pickup: 'Koregaon Park',
@@ -236,17 +264,22 @@ const SEED_RIDES: LiveRide[] = [
     drop: 'Hadapsar',
     dropName: 'Magarpatta Tower 7',
     dropCoords: { x: 840, y: 640 },
+    waypoints: [
+      { x: 740, y: 510 },
+      { x: 790, y: 570 },
+    ],
     eta: '11 Minutes',
     status: 'On Route',
     org: 'TCS Pune',
     mapX: 74,
     mapY: 52,
-    speed: 34,
+    speed: 38,
     heading: 120,
     vehicleType: 'shuttle',
     progressStage: 'on_route',
     progressPct: 70,
   },
+  // 7. INFOSYS - Kothrud to Baner High Street
   {
     id: 'TRIP-10441',
     tripId: 'TRIP-10441',
@@ -264,8 +297,12 @@ const SEED_RIDES: LiveRide[] = [
     pickupName: 'Kothrud Depot Gate 2',
     pickupCoords: { x: 430, y: 560 },
     drop: 'Baner',
-    dropName: 'Baner High Street Wipro Hub',
+    dropName: 'Baner High Street Infosys Hub',
     dropCoords: { x: 370, y: 365 },
+    waypoints: [
+      { x: 410, y: 490 },
+      { x: 390, y: 430 },
+    ],
     eta: '06 Minutes',
     status: 'On Route',
     org: 'Infosys',
@@ -277,6 +314,7 @@ const SEED_RIDES: LiveRide[] = [
     progressStage: 'on_route',
     progressPct: 85,
   },
+  // 8. TCS PUNE - Pashan Sus to TCS Sahyadri Park Hinjewadi
   {
     id: 'TRIP-10444',
     tripId: 'TRIP-10444',
@@ -296,16 +334,484 @@ const SEED_RIDES: LiveRide[] = [
     drop: 'Hinjewadi Ph1',
     dropName: 'TCS Sahyadri Park Main Gate',
     dropCoords: { x: 180, y: 280 },
+    waypoints: [
+      { x: 310, y: 330 },
+      { x: 260, y: 290 },
+    ],
     eta: '09 Minutes',
     status: 'On Route',
     org: 'TCS Pune',
     mapX: 29,
     mapY: 33,
-    speed: 32,
+    speed: 38,
     heading: 300,
     vehicleType: 'cab',
     progressStage: 'on_route',
     progressPct: 60,
+  },
+  // 9. COGNIZANT - Wakad to Hinjewadi Ph3 Megapolis
+  {
+    id: 'TRIP-10448',
+    tripId: 'TRIP-10448',
+    employee: 'Ananya Deshmukh',
+    employeePhone: '+91 98902 44321',
+    company: 'Cognizant',
+    driver: 'Aniket Deshmukh',
+    driverPhone: '+91 98451 90812',
+    vehicle: 'MH12PQ3412',
+    vehicleModel: 'Toyota Innova Crysta (Silver)',
+    passengers: 5,
+    capacity: 6,
+    currentLocation: 'Hinjewadi Phase 2 Junction',
+    pickup: 'Wakad',
+    pickupName: 'Wakad Ginger Chowk',
+    pickupCoords: { x: 260, y: 290 },
+    drop: 'Cognizant Ph3',
+    dropName: 'Cognizant Megapolis Ph3 Campus',
+    dropCoords: { x: 100, y: 360 },
+    waypoints: [
+      { x: 180, y: 280 },
+      { x: 140, y: 320 },
+    ],
+    eta: '07 Minutes',
+    status: 'On Route',
+    org: 'Cognizant',
+    mapX: 16,
+    mapY: 33,
+    speed: 46,
+    heading: 235,
+    vehicleType: 'suv',
+    progressStage: 'on_route',
+    progressPct: 72,
+  },
+  // 10. COGNIZANT - Shivajinagar to Kharadi EON
+  {
+    id: 'TRIP-10450',
+    tripId: 'TRIP-10450',
+    employee: 'Rohit Verma',
+    employeePhone: '+91 98223 88712',
+    company: 'Cognizant',
+    driver: 'Nitin Shinde',
+    driverPhone: '+91 98760 11234',
+    vehicle: 'MH12UV5634',
+    vehicleModel: 'Maruti Suzuki Dzire (White)',
+    passengers: 3,
+    capacity: 4,
+    currentLocation: 'Yerwada Bridge',
+    pickup: 'Shivaji Nagar',
+    pickupName: 'Shivaji Nagar Central Interchange',
+    pickupCoords: { x: 580, y: 410 },
+    drop: 'Kharadi',
+    dropName: 'Kharadi EON Free Zone Gate 2',
+    dropCoords: { x: 910, y: 410 },
+    waypoints: [
+      { x: 670, y: 410 },
+      { x: 740, y: 410 },
+      { x: 820, y: 410 },
+    ],
+    eta: '13 Minutes',
+    status: 'On Route',
+    org: 'Cognizant',
+    mapX: 68,
+    mapY: 41,
+    speed: 42,
+    heading: 90,
+    vehicleType: 'cab',
+    progressStage: 'on_route',
+    progressPct: 52,
+  },
+  // 11. CAPGEMINI - Aundh to Hinjewadi Ph3
+  {
+    id: 'TRIP-10452',
+    tripId: 'TRIP-10452',
+    employee: 'Pooja Kulkarni',
+    employeePhone: '+91 98450 77123',
+    company: 'Capgemini',
+    driver: 'Sachin Jadhav',
+    driverPhone: '+91 98230 45678',
+    vehicle: 'MH12WX7819',
+    vehicleModel: 'Maruti Suzuki Ertiga (White)',
+    passengers: 4,
+    capacity: 6,
+    currentLocation: 'NH48 Wakad Bypass',
+    pickup: 'Aundh',
+    pickupName: 'Aundh DP Road Junction',
+    pickupCoords: { x: 420, y: 310 },
+    drop: 'Capgemini Ph3',
+    dropName: 'Capgemini Tech Park Phase 3',
+    dropCoords: { x: 100, y: 360 },
+    waypoints: [
+      { x: 330, y: 280 },
+      { x: 260, y: 290 },
+      { x: 170, y: 310 },
+    ],
+    eta: '16 Minutes',
+    status: 'On Route',
+    org: 'Capgemini',
+    mapX: 25,
+    mapY: 30,
+    speed: 48,
+    heading: 250,
+    vehicleType: 'suv',
+    progressStage: 'on_route',
+    progressPct: 48,
+  },
+  // 12. CAPGEMINI - Viman Nagar to Magarpatta City (Shuttle)
+  {
+    id: 'TRIP-10455',
+    tripId: 'TRIP-10455',
+    employee: 'Tanvi Mehta',
+    employeePhone: '+91 98909 33211',
+    company: 'Capgemini',
+    driver: 'Ganesh More',
+    driverPhone: '+91 98112 55667',
+    vehicle: 'MH12ZA9021',
+    vehicleModel: 'Force Traveller Shuttle (White)',
+    passengers: 6,
+    capacity: 6,
+    currentLocation: 'Mundhwa Bridge',
+    pickup: 'Viman Nagar',
+    pickupName: 'Phoenix Mall North Gate',
+    pickupCoords: { x: 770, y: 350 },
+    drop: 'Magarpatta',
+    dropName: 'Magarpatta City Tower 3',
+    dropCoords: { x: 820, y: 560 },
+    waypoints: [
+      { x: 750, y: 420 },
+      { x: 780, y: 490 },
+    ],
+    eta: '09 Minutes',
+    status: 'On Route',
+    org: 'Capgemini',
+    mapX: 76,
+    mapY: 46,
+    speed: 36,
+    heading: 160,
+    vehicleType: 'shuttle',
+    progressStage: 'on_route',
+    progressPct: 68,
+  },
+  // 13. HCL TECHNOLOGIES - Senapati Bapat Rd to Blue Ridge Hinjewadi
+  {
+    id: 'TRIP-10458',
+    tripId: 'TRIP-10458',
+    employee: 'Siddharth Joshi',
+    employeePhone: '+91 98811 22900',
+    company: 'HCL Technologies',
+    driver: 'Pradeep Kulkarni',
+    driverPhone: '+91 98224 10099',
+    vehicle: 'MH12BC4310',
+    vehicleModel: 'Maruti Suzuki Dzire (White)',
+    passengers: 3,
+    capacity: 4,
+    currentLocation: 'Pune University Circle',
+    pickup: 'Senapati Bapat Rd',
+    pickupName: 'ICC Tech Towers Gate 1',
+    pickupCoords: { x: 520, y: 430 },
+    drop: 'HCL Hinjewadi',
+    dropName: 'HCL Blue Ridge Ph1 Campus',
+    dropCoords: { x: 180, y: 280 },
+    waypoints: [
+      { x: 480, y: 370 },
+      { x: 420, y: 310 },
+      { x: 310, y: 295 },
+    ],
+    eta: '18 Minutes',
+    status: 'On Route',
+    org: 'HCL Technologies',
+    mapX: 42,
+    mapY: 33,
+    speed: 40,
+    heading: 305,
+    vehicleType: 'cab',
+    progressStage: 'on_route',
+    progressPct: 42,
+  },
+  // 14. HCL TECHNOLOGIES - Pimpri MIDC to Kharadi WTC (Delayed in Khadki)
+  {
+    id: 'TRIP-10461',
+    tripId: 'TRIP-10461',
+    employee: 'Neha Kadam',
+    employeePhone: '+91 98452 66789',
+    company: 'HCL Technologies',
+    driver: 'Vinod Pawar',
+    driverPhone: '+91 98781 44556',
+    vehicle: 'MH12DE6542',
+    vehicleModel: 'Hyundai Aura (Silver)',
+    passengers: 4,
+    capacity: 4,
+    currentLocation: 'Khadki Rail Underpass',
+    pickup: 'Pimpri',
+    pickupName: 'MIDC Auto Cluster Gate',
+    pickupCoords: { x: 300, y: 160 },
+    drop: 'Kharadi',
+    dropName: 'World Trade Center Tower B',
+    dropCoords: { x: 910, y: 410 },
+    waypoints: [
+      { x: 390, y: 210 },
+      { x: 480, y: 260 },
+      { x: 680, y: 310 },
+      { x: 790, y: 360 },
+    ],
+    eta: '25 Minutes',
+    status: 'Delayed',
+    org: 'HCL Technologies',
+    mapX: 48,
+    mapY: 26,
+    speed: 16,
+    heading: 125,
+    vehicleType: 'cab',
+    progressStage: 'on_route',
+    progressPct: 35,
+  },
+  // 15. MPHASIS - Deccan Gymkhana to Magarpatta Cybercity
+  {
+    id: 'TRIP-10464',
+    tripId: 'TRIP-10464',
+    employee: 'Nikhil Tambe',
+    employeePhone: '+91 98229 55432',
+    company: 'Mphasis',
+    driver: 'Kiran Salunke',
+    driverPhone: '+91 98900 88776',
+    vehicle: 'MH12FG8721',
+    vehicleModel: 'Maruti Suzuki Dzire (Grey)',
+    passengers: 4,
+    capacity: 4,
+    currentLocation: 'Shankarsheth Road',
+    pickup: 'Deccan Gymkhana',
+    pickupName: 'FC Road Goodluck Cafe',
+    pickupCoords: { x: 560, y: 490 },
+    drop: 'Magarpatta',
+    dropName: 'Mphasis Cybercity Tower 6',
+    dropCoords: { x: 820, y: 560 },
+    waypoints: [
+      { x: 620, y: 520 },
+      { x: 710, y: 540 },
+    ],
+    eta: '10 Minutes',
+    status: 'On Route',
+    org: 'Mphasis',
+    mapX: 65,
+    mapY: 53,
+    speed: 39,
+    heading: 105,
+    vehicleType: 'cab',
+    progressStage: 'on_route',
+    progressPct: 62,
+  },
+  // 16. MPHASIS - Kalyani Nagar to Hinjewadi Ph2 Embassy
+  {
+    id: 'TRIP-10467',
+    tripId: 'TRIP-10467',
+    employee: 'Shruti Mane',
+    employeePhone: '+91 98810 11987',
+    company: 'Mphasis',
+    driver: 'Sunil Thorat',
+    driverPhone: '+91 98129 33445',
+    vehicle: 'MH12HI1289',
+    vehicleModel: 'Maruti Suzuki Ertiga (Silver)',
+    passengers: 5,
+    capacity: 6,
+    currentLocation: 'Senapati Bapat Road',
+    pickup: 'Kalyani Nagar',
+    pickupName: 'East Riverbank Tech Hub',
+    pickupCoords: { x: 730, y: 410 },
+    drop: 'Hinjewadi Ph2',
+    dropName: 'Embassy Tech Zone Phase 2',
+    dropCoords: { x: 140, y: 320 },
+    waypoints: [
+      { x: 650, y: 410 },
+      { x: 580, y: 410 },
+      { x: 480, y: 370 },
+      { x: 370, y: 365 },
+      { x: 260, y: 290 },
+    ],
+    eta: '20 Minutes',
+    status: 'On Route',
+    org: 'Mphasis',
+    mapX: 45,
+    mapY: 37,
+    speed: 45,
+    heading: 285,
+    vehicleType: 'suv',
+    progressStage: 'on_route',
+    progressPct: 50,
+  },
+  // 17. ZENSAR - Kharadi to Viman Nagar Symbiosis
+  {
+    id: 'TRIP-10470',
+    tripId: 'TRIP-10470',
+    employee: 'Omkar Shirodkar',
+    employeePhone: '+91 98905 66778',
+    company: 'Zensar',
+    driver: 'Amit Ghorpade',
+    driverPhone: '+91 98762 99001',
+    vehicle: 'MH12JK3490',
+    vehicleModel: 'Toyota Innova Crysta (White)',
+    passengers: 4,
+    capacity: 6,
+    currentLocation: 'Nagar Highway Checkpoint',
+    pickup: 'Kharadi',
+    pickupName: 'Zensar Knowledge Park',
+    pickupCoords: { x: 910, y: 410 },
+    drop: 'Viman Nagar',
+    dropName: 'Symbiosis Campus Gate 1',
+    dropCoords: { x: 770, y: 350 },
+    waypoints: [
+      { x: 840, y: 380 },
+      { x: 800, y: 360 },
+    ],
+    eta: '05 Minutes',
+    status: 'On Route',
+    org: 'Zensar',
+    mapX: 82,
+    mapY: 37,
+    speed: 43,
+    heading: 300,
+    vehicleType: 'suv',
+    progressStage: 'on_route',
+    progressPct: 82,
+  },
+  // 18. ZENSAR - Hadapsar Industrial to Baner High Street
+  {
+    id: 'TRIP-10472',
+    tripId: 'TRIP-10472',
+    employee: 'Shweta Bhagat',
+    employeePhone: '+91 98220 77665',
+    company: 'Zensar',
+    driver: 'Vikas Chavan',
+    driverPhone: '+91 98450 11998',
+    vehicle: 'MH12LM5612',
+    vehicleModel: 'Maruti Suzuki Dzire (White)',
+    passengers: 3,
+    capacity: 4,
+    currentLocation: 'Camp Connector',
+    pickup: 'Hadapsar',
+    pickupName: 'Hadapsar Industrial Belt Gate',
+    pickupCoords: { x: 840, y: 640 },
+    drop: 'Baner',
+    dropName: 'Baner High Street Zensar Desk',
+    dropCoords: { x: 370, y: 365 },
+    waypoints: [
+      { x: 720, y: 550 },
+      { x: 560, y: 490 },
+      { x: 440, y: 530 },
+      { x: 390, y: 430 },
+    ],
+    eta: '24 Minutes',
+    status: 'On Route',
+    org: 'Zensar',
+    mapX: 58,
+    mapY: 50,
+    speed: 41,
+    heading: 300,
+    vehicleType: 'cab',
+    progressStage: 'on_route',
+    progressPct: 45,
+  },
+  // 19. WIPRO - Pune Airport to Hinjewadi Ph2 (Shuttle)
+  {
+    id: 'TRIP-10475',
+    tripId: 'TRIP-10475',
+    employee: 'Devendra Rao',
+    employeePhone: '+91 98118 44556',
+    company: 'Wipro',
+    driver: 'Pramod Jagtap',
+    driverPhone: '+91 98233 77889',
+    vehicle: 'MH12NO7834',
+    vehicleModel: 'Force Traveller Shuttle (Silver)',
+    passengers: 6,
+    capacity: 6,
+    currentLocation: 'Vishrantwadi Chowk',
+    pickup: 'Airport (PNQ)',
+    pickupName: 'Pune Airport Terminal 2 Apron',
+    pickupCoords: { x: 790, y: 250 },
+    drop: 'Wipro Ph2',
+    dropName: 'Wipro Technologies Ph2 Campus',
+    dropCoords: { x: 140, y: 320 },
+    waypoints: [
+      { x: 670, y: 270 },
+      { x: 480, y: 320 },
+      { x: 370, y: 320 },
+      { x: 260, y: 290 },
+    ],
+    eta: '28 Minutes',
+    status: 'On Route',
+    org: 'Wipro',
+    mapX: 54,
+    mapY: 29,
+    speed: 50,
+    heading: 260,
+    vehicleType: 'shuttle',
+    progressStage: 'on_route',
+    progressPct: 38,
+  },
+  // 20. TCS PUNE - Chandani Chowk Kothrud to TCS Sahyadri (Assigned)
+  {
+    id: 'TRIP-10478',
+    tripId: 'TRIP-10478',
+    employee: 'Mansi Khedekar',
+    employeePhone: '+91 98906 11223',
+    company: 'TCS Pune',
+    driver: 'Rahul Jagdale',
+    driverPhone: '+91 98440 88990',
+    vehicle: 'MH12RS9145',
+    vehicleModel: 'Maruti Suzuki Dzire (White)',
+    passengers: 4,
+    capacity: 4,
+    currentLocation: 'Bavdhan Flyover',
+    pickup: 'Kothrud',
+    pickupName: 'Chandani Chowk Kothrud',
+    pickupCoords: { x: 430, y: 560 },
+    drop: 'Hinjewadi Ph1',
+    dropName: 'TCS Sahyadri Park Gate 2',
+    dropCoords: { x: 180, y: 280 },
+    waypoints: [
+      { x: 370, y: 480 },
+      { x: 310, y: 380 },
+    ],
+    eta: '19 Minutes',
+    status: 'Assigned',
+    org: 'TCS Pune',
+    mapX: 36,
+    mapY: 46,
+    speed: 32,
+    heading: 325,
+    vehicleType: 'cab',
+    progressStage: 'pickup',
+    progressPct: 25,
+  },
+  // 21. WIPRO - Standby Fleet Hinjewadi Ph2
+  {
+    id: 'TRIP-10480',
+    tripId: 'TRIP-10480',
+    employee: 'Pooja Patil',
+    employeePhone: '+91 98225 33441',
+    company: 'Wipro',
+    driver: 'Amol Deshpande',
+    driverPhone: '+91 98761 22330',
+    vehicle: 'MH12TU1098',
+    vehicleModel: 'Toyota Innova Crysta (White)',
+    passengers: 2,
+    capacity: 6,
+    currentLocation: 'Wipro Circle Ph2',
+    pickup: 'Hinjewadi Ph2',
+    pickupName: 'Wipro Gate 1 Staging',
+    pickupCoords: { x: 140, y: 320 },
+    drop: 'Hinjewadi Ph3',
+    dropName: 'Megapolis Circle Drop',
+    dropCoords: { x: 100, y: 360 },
+    waypoints: [{ x: 120, y: 340 }],
+    eta: '04 Minutes',
+    status: 'Assigned',
+    org: 'Wipro',
+    mapX: 13,
+    mapY: 33,
+    speed: 25,
+    heading: 220,
+    vehicleType: 'suv',
+    progressStage: 'pickup',
+    progressPct: 15,
   },
 ];
 
@@ -320,7 +826,7 @@ const INITIAL_SOS_INCIDENT: SosIncident = {
   driverPhone: '+91 98901 23456',
   vehicle: 'MH12XY4567',
   vehicleModel: 'Mahindra Scorpio (Black)',
-  location: 'Hinjewadi Phase 1',
+  location: 'Hinjewadi Phase 1 Bypass',
   alertTime: '10:42 PM',
   severity: 'High',
   status: 'Active',
@@ -540,6 +1046,13 @@ const PUNE_MAP_TILES = [
   { x: 2886, y: 1834 }, { x: 2887, y: 1834 }, { x: 2888, y: 1834 }, { x: 2889, y: 1834 },
 ];
 
+// ─── HELPER: BUILD SVG POLYLINE PATH ──────────────────────────────────────
+function buildPolylinePath(points: { x: number; y: number }[]): string {
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x},${points[0].y}`;
+  return `M ${points[0].x},${points[0].y} ` + points.slice(1).map((p) => `L ${p.x},${p.y}`).join(' ');
+}
+
 export default function LiveOpsView() {
   const [selectedId, setSelectedId] = useState<string | null>('TRIP-10421'); // Default select recommended demo trip
   const [tracking, setTracking] = useState<string | null>('TRIP-10421');
@@ -547,7 +1060,7 @@ export default function LiveOpsView() {
   const [activeTab, setActiveTab] = useState<'trips' | 'feed'>('trips'); // 'trips' or 'feed'
   const [feedFilter, setFeedFilter] = useState<'all' | 'trip' | 'traffic' | 'sos'>('all');
   const [showSmartDispatchModal, setShowSmartDispatchModal] = useState(false);
-  
+
   // SOS Incident state
   const [sosIncident, setSosIncident] = useState<SosIncident>(INITIAL_SOS_INCIDENT);
   const [showSosIncident, setShowSosIncident] = useState(false);
@@ -587,6 +1100,7 @@ export default function LiveOpsView() {
   // Handler triggered ONLY when Active SOS is clicked
   const handleOpenActiveSos = (source = 'Active SOS Click') => {
     playSosChime();
+    setShowRightPanel(true);
     setShowSosIncident(true);
     setSelectedId('TRIP-10438');
     setTracking('TRIP-10438');
@@ -595,7 +1109,7 @@ export default function LiveOpsView() {
     setSosNotification({
       open: true,
       title: 'Active SOS Emergency Notification',
-      desc: `Priya Sharma (${sosIncident.company}) reported an emergency on ${sosIncident.vehicleModel} (${sosIncident.vehicle})`,
+      desc: `${sosIncident.employee} (${sosIncident.company}) reported an emergency on ${sosIncident.vehicleModel} (${sosIncident.vehicle})`,
       time: sosIncident.alertTime,
       vehicle: sosIncident.vehicle,
       location: sosIncident.location,
@@ -611,6 +1125,10 @@ export default function LiveOpsView() {
   const [filterStatus, setFilterStatus] = useState('All');
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [toast, setToast] = useState('');
+
+  // Overlay Panels Visibility (Hide / Show for Clear Map View)
+  const [showRightPanel, setShowRightPanel] = useState(true);
+  const [showLeftPanel, setShowLeftPanel] = useState(true);
 
   // Map Navigation & Layers State
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -629,15 +1147,78 @@ export default function LiveOpsView() {
     setTimeout(() => setToast(''), 3400);
   };
 
-  // Simulation loop for live vehicle movement (Gentle 800ms pace)
+  // Simulation loop for live vehicle movement (Gentle 800ms heartbeat)
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 800);
     return () => clearInterval(id);
   }, []);
 
+  // Periodic simulated real-time activity feed streaming (New telemetry every 14 seconds)
+  useEffect(() => {
+    const feedInterval = setInterval(() => {
+      const movingRides = SEED_RIDES.filter((r) => r.status === 'On Route');
+      if (movingRides.length === 0) return;
+      const randomRide = movingRides[Math.floor(Math.random() * movingRides.length)];
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const templates = [
+        {
+          type: 'trip' as const,
+          color: 'text-cyan-400',
+          bg: 'rgba(34,211,238,0.08)',
+          icon: '📍',
+          msg: `Checkpoint passed — ${randomRide.drop}`,
+          sub: `${randomRide.driver} (${randomRide.vehicle}) en route for ${randomRide.company}`,
+        },
+        {
+          type: 'traffic' as const,
+          color: 'text-amber-400',
+          bg: 'rgba(245,158,11,0.08)',
+          icon: '🚦',
+          msg: `Corridor traffic normal`,
+          sub: `${randomRide.vehicle} cruising smoothly at ${randomRide.speed} km/h`,
+        },
+        {
+          type: 'trip' as const,
+          color: 'text-emerald-400',
+          bg: 'rgba(34,197,94,0.08)',
+          icon: '✓',
+          msg: `GPS telemetry sync lock`,
+          sub: `${randomRide.company} commute on track for ${randomRide.drop}`,
+        },
+      ];
+      const template = templates[Math.floor(Math.random() * templates.length)];
+      const newEvent: ActivityEvent = {
+        id: `act-${Date.now()}`,
+        time: nowStr,
+        type: template.type,
+        color: template.color,
+        bg: template.bg,
+        icon: template.icon,
+        msg: template.msg,
+        sub: template.sub,
+        tripId: randomRide.id,
+        vehicle: randomRide.vehicle,
+      };
+      setActivityFeed((prev) => [newEvent, ...prev.slice(0, 24)]);
+    }, 14000);
+    return () => clearInterval(feedInterval);
+  }, []);
+
   // Filtered vehicles
   const ALL_VEHICLES = SEED_RIDES;
-  const ORG_OPTIONS = ['All', 'Infosys', 'TCS Pune', 'Wipro', 'Cognizant', 'WNS'];
+  const ORG_OPTIONS = [
+    'All',
+    'Infosys',
+    'TCS Pune',
+    'Wipro',
+    'Cognizant',
+    'Capgemini',
+    'HCL Technologies',
+    'Mphasis',
+    'Zensar',
+    'WNS',
+  ];
+
   const filteredVehicles = ALL_VEHICLES.filter((r) => {
     const matchOrg = filterOrg === 'All' || r.org === filterOrg || r.company === filterOrg;
     const matchStatus = filterStatus === 'All' || r.status === filterStatus;
@@ -660,18 +1241,114 @@ export default function LiveOpsView() {
     }
   };
 
-  // Realistic vehicle telemetry positioning (Slow, smooth, gentle cruising along roads)
+  // ─── ACCURATE REAL-TIME VEHICLE TELEMETRY POSITIONING ──────────────────────
+  // Advances each moving vehicle forward along its actual road waypoints across Pune
   const getVehiclePosition = (ride: LiveRide) => {
-    const baseSpeed = ride.status === 'On Route' ? 0.035 : ride.status === 'Delayed' ? 0.012 : 0;
-    const phase = ride.mapX * 0.15 + ride.mapY * 0.11;
-    const offsetX = Math.sin(tick * baseSpeed + phase) * 1.5;
-    const offsetY = Math.cos(tick * baseSpeed * 0.8 + phase) * 1.0;
+    // SOS vehicle is stationary at its incident coordinates
+    if (ride.status === 'SOS') {
+      const sx = (ride.mapX / 100) * 1200;
+      const sy = (ride.mapY / 100) * 800;
+      return {
+        x: sx,
+        y: sy,
+        pctX: ride.mapX,
+        pctY: ride.mapY,
+        progressPct: ride.progressPct,
+        speed: 0,
+        heading: ride.heading,
+        eta: 'SOS Alert',
+        currentLocation: ride.currentLocation,
+        routePoints: [ride.pickupCoords, { x: sx, y: sy }, ride.dropCoords],
+        completedPoints: [ride.pickupCoords, { x: sx, y: sy }],
+        remainingPoints: [{ x: sx, y: sy }, ride.dropCoords],
+      };
+    }
 
-    // Convert percentage to SVG viewBox coordinates (1200 x 800)
-    const svgX = (ride.mapX / 100) * 1200 + offsetX * 12;
-    const svgY = (ride.mapY / 100) * 800 + offsetY * 8;
+    // Build route points: pickup -> waypoints -> drop
+    const routePoints: { x: number; y: number }[] = [
+      ride.pickupCoords,
+      ...(ride.waypoints && ride.waypoints.length > 0
+        ? ride.waypoints
+        : [
+            {
+              x: (ride.pickupCoords.x + ride.dropCoords.x) / 2,
+              y: (ride.pickupCoords.y + ride.dropCoords.y) / 2 - 20,
+            },
+          ]),
+      ride.dropCoords,
+    ];
 
-    return { x: svgX, y: svgY, pctX: ride.mapX + offsetX, pctY: ride.mapY + offsetY };
+    // Compute segment lengths
+    const segmentLengths: number[] = [];
+    let totalLength = 0;
+    for (let i = 0; i < routePoints.length - 1; i++) {
+      const dx = routePoints[i + 1].x - routePoints[i].x;
+      const dy = routePoints[i + 1].y - routePoints[i].y;
+      const len = Math.hypot(dx, dy);
+      segmentLengths.push(len);
+      totalLength += len;
+    }
+
+    if (totalLength === 0) totalLength = 1;
+
+    // Movement speed progression
+    const speedFactor = ride.status === 'Delayed' ? 0.16 : ride.status === 'Assigned' ? 0.22 : 0.45;
+    const initialOffset = (ride.progressPct / 100) * totalLength;
+    const currentDistance = (initialOffset + tick * speedFactor * 3.6) % totalLength;
+    const currentPct = Math.round((currentDistance / totalLength) * 100);
+
+    // Locate current segment and exact position
+    let accumulated = 0;
+    let currX = routePoints[0].x;
+    let currY = routePoints[0].y;
+    let heading = ride.heading;
+    const completedPoints: { x: number; y: number }[] = [routePoints[0]];
+    let remainingPoints: { x: number; y: number }[] = [];
+
+    for (let i = 0; i < segmentLengths.length; i++) {
+      const len = segmentLengths[i];
+      if (accumulated + len >= currentDistance) {
+        const segProgress = len > 0 ? (currentDistance - accumulated) / len : 0;
+        const p0 = routePoints[i];
+        const p1 = routePoints[i + 1];
+        currX = p0.x + (p1.x - p0.x) * segProgress;
+        currY = p0.y + (p1.y - p0.y) * segProgress;
+        const angle = (Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180) / Math.PI;
+        heading = Math.round((angle + 360) % 360);
+
+        completedPoints.push({ x: currX, y: currY });
+        remainingPoints = [{ x: currX, y: currY }, ...routePoints.slice(i + 1)];
+        break;
+      }
+      accumulated += len;
+      completedPoints.push(routePoints[i + 1]);
+    }
+
+    // Dynamic remaining minutes countdown
+    const remainingDistance = Math.max(0, totalLength - currentDistance);
+    const nominalTripMins = ride.status === 'Delayed' ? 24 : 18;
+    const remainingMins = Math.max(1, Math.round((remainingDistance / totalLength) * nominalTripMins));
+    const dynamicEta = `${remainingMins < 10 ? '0' : ''}${remainingMins} Minutes`;
+
+    // Realistic live speed fluctuation
+    const baseSpeed = ride.status === 'Delayed' ? 14 : ride.speed || 38;
+    const jitter = Math.sin(tick * 0.15 + (ride.tripId.charCodeAt(6) || 0)) * 3;
+    const liveSpeed = Math.max(8, Math.round(baseSpeed + jitter));
+
+    return {
+      x: currX,
+      y: currY,
+      pctX: (currX / 1200) * 100,
+      pctY: (currY / 800) * 100,
+      progressPct: currentPct,
+      speed: liveSpeed,
+      heading,
+      eta: dynamicEta,
+      currentLocation: ride.currentLocation,
+      routePoints,
+      completedPoints,
+      remainingPoints,
+    };
   };
 
   // Zoom handlers
@@ -860,7 +1537,7 @@ export default function LiveOpsView() {
                 handleTrackLiveIncident();
                 setSosNotification(null);
               }}
-              className="py-2 px-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-center text-[11px] transition-colors shadow-sm">
+              className="py-2 px-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-center text-[11px] transition-colors shadow-sm cursor-pointer">
               🎯 Track Live
             </button>
             <button
@@ -874,7 +1551,7 @@ export default function LiveOpsView() {
                 });
                 setSosNotification(null);
               }}
-              className="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-center text-[11px] border border-white/10 transition-colors">
+              className="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-center text-[11px] border border-white/10 transition-colors cursor-pointer">
               📞 Call Driver
             </button>
             <button
@@ -888,14 +1565,14 @@ export default function LiveOpsView() {
                 });
                 setSosNotification(null);
               }}
-              className="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-center text-[11px] border border-white/10 transition-colors">
+              className="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-center text-[11px] border border-white/10 transition-colors cursor-pointer">
               📱 Passenger
             </button>
           </div>
         </div>
       )}
 
-      {/* ─── TOP KPI DISPATCH BAR (Directly from Suggested Layout) ─────── */}
+      {/* ─── TOP KPI DISPATCH BAR (Interactive Controls & Metrics) ─────── */}
       <header
         className="flex items-center gap-3 px-5 py-2.5 z-30 flex-shrink-0"
         style={glassPanel(0.95)}>
@@ -909,12 +1586,12 @@ export default function LiveOpsView() {
           </div>
         </div>
 
-        {/* Recommended KPI Metric Cards Bar */}
+        {/* Recommended KPI Metric Cards Bar with Active Filtering */}
         <div className="flex items-center gap-4 text-xs overflow-x-auto py-0.5">
           {[
-            { label: 'Active Trips', val: '18', color: '#38bdf8', icon: '🚘' },
-            { label: 'On-Time Trips', val: '229', color: '#22c55e', icon: '⏱️' },
-            { label: 'Delayed Trips', val: '12', color: '#f59e0b', icon: '⚠️' },
+            { label: 'Active Trips', val: '18', color: '#38bdf8', icon: '🚘', action: 'all' },
+            { label: 'On-Time Trips', val: '229', color: '#22c55e', icon: '⏱️', action: 'on-time' },
+            { label: 'Delayed Trips', val: '12', color: '#f59e0b', icon: '⚠️', action: 'delayed' },
             {
               label: 'SOS Incidents',
               val: sosIncident.status === 'Active' ? '1 Active' : '0 Active (1 Solved)',
@@ -923,8 +1600,8 @@ export default function LiveOpsView() {
               pulse: sosIncident.status === 'Active',
               isSos: true,
             },
-            { label: 'Fleet Utilization', val: '91%', color: '#38bdf8', icon: '📊' },
-            { label: 'ETA Accuracy', val: '96%', color: '#22c55e', icon: '🎯' },
+            { label: 'Fleet Utilization', val: '91%', color: '#38bdf8', icon: '📊', action: 'utilization' },
+            { label: 'ETA Accuracy', val: '96%', color: '#22c55e', icon: '🎯', action: 'accuracy' },
           ].map((kpi) => {
             const isSosCard = (kpi as { isSos?: boolean }).isSos;
             return (
@@ -933,15 +1610,29 @@ export default function LiveOpsView() {
                 onClick={() => {
                   if (isSosCard) {
                     handleOpenActiveSos('Active SOS KPI Card');
+                  } else if (kpi.action === 'all') {
+                    setFilterStatus('All');
+                    setFilterOrg('All');
+                    showToast('Showing all Active Commute Trips across Pune');
+                  } else if (kpi.action === 'on-time') {
+                    setFilterStatus('On Route');
+                    showToast('Filtered for On-Time Trips on route');
+                  } else if (kpi.action === 'delayed') {
+                    setFilterStatus('Delayed');
+                    showToast('Filtered for Delayed Trips with bottlenecks');
+                  } else if (kpi.action === 'utilization') {
+                    showToast('📊 Fleet Utilization: 91% (18 of 21 vehicles actively on transit)');
+                  } else if (kpi.action === 'accuracy') {
+                    showToast('🎯 ETA Accuracy: 96% across Hinjewadi and Hadapsar routes');
                   }
                 }}
-                title={isSosCard ? 'Click to open Active SOS Emergency Notification & Response Center' : undefined}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border flex-shrink-0 transition-all ${
+                title={isSosCard ? 'Click to open Active SOS Emergency Notification & Response Center' : 'Click to filter'}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border flex-shrink-0 transition-all cursor-pointer ${
                   isSosCard
                     ? sosIncident.status === 'Active'
-                      ? 'bg-red-950/40 border-red-500/50 hover:bg-red-900/50 hover:border-red-400 cursor-pointer shadow-lg shadow-red-950/50 ring-1 ring-red-500/40 hover:scale-105 active:scale-95'
-                      : 'bg-emerald-950/20 border-emerald-500/30 hover:bg-emerald-900/30 cursor-pointer'
-                    : 'bg-white/4 border-white/5'
+                      ? 'bg-red-950/40 border-red-500/50 hover:bg-red-900/50 hover:border-red-400 shadow-lg shadow-red-950/50 ring-1 ring-red-500/40 hover:scale-105 active:scale-95'
+                      : 'bg-emerald-950/20 border-emerald-500/30 hover:bg-emerald-900/30'
+                    : 'bg-white/4 border-white/5 hover:bg-white/10 hover:border-slate-600'
                 }`}>
                 <span className="text-sm">{kpi.icon}</span>
                 <div>
@@ -969,16 +1660,18 @@ export default function LiveOpsView() {
           <div
             className="flex gap-1 rounded-xl p-0.5 border"
             style={{ background: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.08)' }}>
-            {['All', 'On Route', 'Delayed', 'SOS'].map((s) => (
+            {['All', 'On Route', 'Delayed', 'Assigned', 'SOS'].map((s) => (
               <button
                 key={s}
                 onClick={() => {
                   setFilterStatus(s);
                   if (s === 'SOS') {
                     handleOpenActiveSos('Status Filter: SOS');
+                  } else if (s === 'Assigned') {
+                    showToast('Showing Assigned & Standby vehicles');
                   }
                 }}
-                className="px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all"
+                className="px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer"
                 style={
                   filterStatus === s
                     ? {
@@ -989,7 +1682,9 @@ export default function LiveOpsView() {
                             ? '#d97706'
                             : s === 'On Route'
                             ? '#16a34a'
-                            : '#2563eb',
+                            : s === 'Assigned'
+                            ? '#2563eb'
+                            : '#0284c7',
                         color: '#ffffff',
                       }
                     : { color: '#94a3b8' }
@@ -1003,14 +1698,14 @@ export default function LiveOpsView() {
           <div className="relative">
             <button
               onClick={() => setIsOrgDropdownOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-xl border transition-all text-slate-200"
+              className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-xl border transition-all text-slate-200 cursor-pointer"
               style={{ background: 'rgba(255, 255, 255, 0.06)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
               <span>🏢 {filterOrg === 'All' ? 'All Companies' : filterOrg}</span>
               <span className="text-[10px] text-slate-400">▾</span>
             </button>
             {isOrgDropdownOpen && (
               <div
-                className="absolute right-0 mt-1.5 w-40 rounded-xl shadow-2xl border border-slate-700 py-1 z-50 bg-slate-900 text-xs"
+                className="absolute right-0 mt-1.5 w-44 rounded-xl shadow-2xl border border-slate-700 py-1 z-50 bg-slate-900 text-xs max-h-72 overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}>
                 {ORG_OPTIONS.map((orgName) => (
                   <button
@@ -1018,8 +1713,9 @@ export default function LiveOpsView() {
                     onClick={() => {
                       setFilterOrg(orgName);
                       setIsOrgDropdownOpen(false);
+                      showToast(`Filter applied: ${orgName}`);
                     }}
-                    className={`w-full text-left px-3 py-1.5 transition-colors flex items-center justify-between ${
+                    className={`w-full text-left px-3 py-1.5 transition-colors flex items-center justify-between cursor-pointer ${
                       filterOrg === orgName ? 'bg-blue-600/30 text-cyan-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
                     }`}>
                     <span>{orgName}</span>
@@ -1045,7 +1741,7 @@ export default function LiveOpsView() {
 
       {/* ─── MAIN WORKSPACE: MAP CANVAS + PANELS ─────────────────────────── */}
       <div id="map-canvas-container" className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing">
-        
+
         {/* ─── MAP CANVAS WITH REAL-WORLD TILES & ROUTE VISUALIZATION ─────── */}
         <div
           className="absolute inset-0 transition-transform duration-200 ease-out origin-center pointer-events-none"
@@ -1139,28 +1835,28 @@ export default function LiveOpsView() {
               </g>
             )}
 
-            {/* ─── ROUTE VISUALIZATION (ENHANCEMENT #1 FROM DOCUMENT) ────── */}
-            {/* Renders Pickup Point, Drop Location, and Route Path */}
+            {/* ─── ROUTE VISUALIZATION (ENHANCED GIS POLYLINE CORRIDORS) ────── */}
             {showRoutes &&
               filteredVehicles.map((ride) => {
                 const isSelected = selectedId === ride.id;
                 const vPos = getVehiclePosition(ride);
 
-                // Origin / Pickup point
+                // Origin / Destination points
                 const pickupPt = ride.pickupCoords;
-                // Destination / Drop point
                 const dropPt = ride.dropCoords;
 
                 if (!isSelected) {
-                  // Non-selected subtle corridor
+                  // Non-selected subtle ambient corridor
                   return (
                     <path
                       key={ride.id + '-ambient-route'}
-                      d={`M ${pickupPt.x},${pickupPt.y} Q ${vPos.x},${vPos.y} ${dropPt.x},${dropPt.y}`}
+                      d={buildPolylinePath(vPos.routePoints)}
                       fill="none"
-                      stroke="rgba(56, 189, 248, 0.18)"
+                      stroke="rgba(56, 189, 248, 0.22)"
                       strokeWidth="1.5"
                       strokeDasharray="4 4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                   );
                 }
@@ -1168,41 +1864,41 @@ export default function LiveOpsView() {
                 // ─── ACTIVE SELECTED TRIP DETAILED ROUTE VISUALIZATION ───
                 return (
                   <Fragment key={ride.id + '-highlight-route'}>
-                    {/* 1. Complete Road Corridor: Pickup -> Vehicle -> Drop */}
+                    {/* 1. Road corridor casing */}
                     <path
-                      d={`M ${pickupPt.x},${pickupPt.y} Q ${(pickupPt.x + vPos.x) / 2},${(pickupPt.y + vPos.y) / 2 - 15} ${vPos.x},${vPos.y}`}
+                      d={buildPolylinePath(vPos.routePoints)}
                       fill="none"
                       stroke="#071529"
-                      strokeWidth="14"
+                      strokeWidth="12"
                       strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity="0.8"
                     />
+
+                    {/* 2. Completed Segment (Pickup -> Vehicle) */}
                     <path
-                      d={`M ${pickupPt.x},${pickupPt.y} Q ${(pickupPt.x + vPos.x) / 2},${(pickupPt.y + vPos.y) / 2 - 15} ${vPos.x},${vPos.y}`}
+                      d={buildPolylinePath(vPos.completedPoints)}
                       fill="none"
                       stroke="#22c55e"
                       strokeWidth="4"
                       strokeLinecap="round"
-                      opacity="0.85"
+                      strokeLinejoin="round"
+                      opacity="0.9"
                     />
 
+                    {/* 3. Upcoming Segment (Vehicle -> Destination) */}
                     <path
-                      d={`M ${vPos.x},${vPos.y} Q ${(vPos.x + dropPt.x) / 2 + 10},${(vPos.y + dropPt.y) / 2 - 20} ${dropPt.x},${dropPt.y}`}
-                      fill="none"
-                      stroke="#071529"
-                      strokeWidth="14"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d={`M ${vPos.x},${vPos.y} Q ${(vPos.x + dropPt.x) / 2 + 10},${(vPos.y + dropPt.y) / 2 - 20} ${dropPt.x},${dropPt.y}`}
+                      d={buildPolylinePath(vPos.remainingPoints)}
                       fill="none"
                       stroke="url(#selectedRouteGrad)"
                       strokeWidth="4"
                       strokeLinecap="round"
+                      strokeLinejoin="round"
                       strokeDasharray="8 5"
                       filter="url(#highwayGlow)"
                     />
 
-                    {/* 2. PICKUP POINT NODE (Document Page 2) */}
+                    {/* 4. PICKUP POINT NODE */}
                     <g transform={`translate(${pickupPt.x}, ${pickupPt.y})`}>
                       <circle r="14" fill="#22c55e" opacity="0.3" className="pulse-dot" />
                       <circle r="7" fill="#22c55e" stroke="#ffffff" strokeWidth="2.5" />
@@ -1215,7 +1911,7 @@ export default function LiveOpsView() {
                       </g>
                     </g>
 
-                    {/* 3. DROP DESTINATION NODE (Document Page 2) */}
+                    {/* 5. DROP DESTINATION NODE */}
                     <g transform={`translate(${dropPt.x}, ${dropPt.y})`}>
                       <circle r="16" fill="#3b82f6" opacity="0.3" className="pulse-dot" />
                       <circle r="8" fill="#1d4ed8" stroke="#ffffff" strokeWidth="2.5" />
@@ -1270,14 +1966,19 @@ export default function LiveOpsView() {
                   } else {
                     setShowSosIncident(false);
                     setSelectedId(isSel ? null : ride.id);
+                    if (!isSel) {
+                      setShowRightPanel(true);
+                      setTracking(ride.id);
+                    }
                   }
                 }}
-                className="absolute pointer-events-auto cursor-pointer group transition-all duration-700 ease-out"
+                className="absolute pointer-events-auto cursor-pointer group"
                 style={{
-                  left: `${(vPos.x / 1200) * 100}%`,
-                  top: `${(vPos.y / 800) * 100}%`,
+                  left: `${vPos.pctX}%`,
+                  top: `${vPos.pctY}%`,
                   transform: 'translate(-50%, -50%)',
                   zIndex: isSos ? 35 : isSel ? 32 : 20,
+                  transition: 'left 800ms linear, top 800ms linear',
                 }}>
                 {/* Radar pulse for moving or SOS vehicle */}
                 {(isSos || isSel) && (
@@ -1310,22 +2011,33 @@ export default function LiveOpsView() {
                     border: `1.5px solid ${color}`,
                     boxShadow: `0 0 16px ${color}88`,
                   }}>
-                  {isSos ? '🚨' : ride.vehicleType === 'shuttle' ? '🚐' : '🚗'}
+                  {isSos ? '🚨' : ride.vehicleType === 'shuttle' ? '🚐' : ride.vehicleType === 'suv' ? '🚙' : '🚗'}
+
+                  {/* Compass heading arrow pointing in travel direction */}
+                  {!isSos && (
+                    <div
+                      className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 border border-cyan-400 flex items-center justify-center text-[7px] text-cyan-300 font-bold transition-transform duration-300 pointer-events-none"
+                      style={{ transform: `rotate(${vPos.heading}deg)` }}>
+                      ▲
+                    </div>
+                  )}
                 </div>
 
-                {/* Floating Cab Tooltip HUD with Plate & Driver */}
+                {/* Floating Cab Tooltip HUD with Plate, Driver & Live Telemetry */}
                 <div
-                  className={`absolute left-10 -top-2 px-2.5 py-1.5 rounded-xl border whitespace-nowrap z-50 transition-opacity ${
+                  className={`absolute left-10 -top-2 px-2.5 py-1.5 rounded-xl border whitespace-nowrap z-50 transition-opacity pointer-events-none ${
                     isSel ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                   }`}
                   style={glassPanel(0.95)}>
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
                     <span className="font-mono font-bold text-white text-[11px]">{ride.vehicle}</span>
-                    <span className="text-[10px] text-slate-400">· {ride.driver}</span>
+                    <span className="text-[10px] text-slate-400">· {ride.driver} ({ride.company})</span>
                   </div>
-                  <div className="text-[9px] text-slate-300 mt-0.5">
-                    {ride.pickup} → {ride.drop} · <strong className="text-emerald-400">{ride.eta}</strong>
+                  <div className="text-[9px] text-slate-300 mt-0.5 flex items-center gap-2">
+                    <span>{ride.pickup} → {ride.drop}</span>
+                    <span className="font-mono text-cyan-300">{vPos.speed} km/h</span>
+                    <strong className="text-emerald-400 font-mono">{vPos.eta}</strong>
                   </div>
                 </div>
               </div>
@@ -1334,74 +2046,80 @@ export default function LiveOpsView() {
         </div>
 
         {/* ─── ROUTE PROGRESS INDICATOR HUD (ENHANCEMENT #1 STEPPER) ──────── */}
-        {selectedRide && (
-          <div
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-2xl flex items-center gap-4 text-xs shadow-2xl border"
-            style={glassPanel(0.95)}>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-white font-mono">{selectedRide.vehicle}</span>
-              <span className="text-[10px] text-slate-400">({selectedRide.driver})</span>
-            </div>
-
-            <div className="h-4 w-px bg-white/20" />
-
-            {/* Stepper: Pickup -> On Route -> Destination */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-emerald-400 font-bold text-[11px]">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span>Pickup: {selectedRide.pickup}</span>
+        {selectedRide && (() => {
+          const vPos = getVehiclePosition(selectedRide);
+          return (
+            <div
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-2xl flex items-center gap-4 text-xs shadow-2xl border animate-in fade-in slide-in-from-top-2"
+              style={glassPanel(0.95)}>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-white font-mono">{selectedRide.vehicle}</span>
+                <span className="text-[10px] text-slate-400">({selectedRide.driver} · {selectedRide.company})</span>
               </div>
 
-              <span className="text-slate-500 font-mono">────</span>
+              <div className="h-4 w-px bg-white/20" />
 
-              <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-[11px] bg-cyan-950/60 px-2 py-0.5 rounded-lg border border-cyan-500/30">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                <span>On Route ({selectedRide.progressPct}%)</span>
+              {/* Stepper: Pickup -> On Route -> Destination */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 text-emerald-400 font-bold text-[11px]">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span>Pickup: {selectedRide.pickup}</span>
+                </div>
+
+                <span className="text-slate-500 font-mono">────</span>
+
+                <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-[11px] bg-cyan-950/60 px-2.5 py-0.5 rounded-lg border border-cyan-500/30">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                  <span>On Route ({vPos.progressPct}%) · {vPos.speed} km/h</span>
+                </div>
+
+                <span className="text-slate-500 font-mono">────</span>
+
+                <div className="flex items-center gap-1 text-slate-400 text-[11px]">
+                  <span className="w-2 h-2 rounded-full bg-slate-600" />
+                  <span>Destination: {selectedRide.drop}</span>
+                </div>
               </div>
 
-              <span className="text-slate-500 font-mono">────</span>
+              <div className="h-4 w-px bg-white/20" />
 
-              <div className="flex items-center gap-1 text-slate-400 text-[11px]">
-                <span className="w-2 h-2 rounded-full bg-slate-600" />
-                <span>Destination: {selectedRide.drop}</span>
+              <div className="font-mono text-emerald-400 font-bold text-xs flex items-center gap-1">
+                <span>ETA:</span>
+                <span>{vPos.eta}</span>
               </div>
             </div>
-
-            <div className="h-4 w-px bg-white/20" />
-
-            <div className="font-mono text-emerald-400 font-bold text-xs">
-              ETA: {selectedRide.eta}
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ─── FLOATING ZOOM & MAP LAYER CONTROLS ─────────────────────────── */}
-        <div className="absolute top-4 right-[345px] flex flex-col gap-1.5 z-20">
+        <div className={`absolute flex flex-col gap-1.5 z-20 transition-all duration-300 ${
+          showRightPanel ? 'top-4 right-[345px]' : 'top-14 right-4'
+        }`}>
           <button
             onClick={() => handleZoom(0.25)}
             title="Zoom In"
-            className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors"
+            className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
             style={glassPanel(0.85)}>
             +
           </button>
           <button
             onClick={() => handleZoom(-0.25)}
             title="Zoom Out"
-            className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors"
+            className="w-8 h-8 rounded-xl text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
             style={glassPanel(0.85)}>
             −
           </button>
           <button
             onClick={handleResetView}
             title="Reset Centered View"
-            className="w-8 h-8 rounded-xl text-slate-300 hover:text-cyan-400 flex items-center justify-center text-xs transition-colors"
+            className="w-8 h-8 rounded-xl text-slate-300 hover:text-cyan-400 flex items-center justify-center text-xs transition-colors cursor-pointer"
             style={glassPanel(0.85)}>
             ⊙
           </button>
           <button
             onClick={() => setShowTraffic((t) => !t)}
             title="Toggle Live Traffic Heatmap"
-            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors ${
+            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors cursor-pointer ${
               showTraffic ? 'text-amber-400 ring-1 ring-amber-400/50' : 'text-slate-400'
             }`}
             style={glassPanel(0.85)}>
@@ -1410,16 +2128,38 @@ export default function LiveOpsView() {
           <button
             onClick={() => setMapStyle((s) => (s === 'dark-ops' ? 'satellite-contrast' : 'dark-ops'))}
             title={mapStyle === 'dark-ops' ? 'Switch to Real-World Satellite' : 'Switch to Real-World Dark GIS'}
-            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors ${
+            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors cursor-pointer ${
               mapStyle === 'satellite-contrast' ? 'text-cyan-400 ring-1 ring-cyan-400/50' : 'text-slate-400 hover:text-white'
             }`}
             style={glassPanel(0.85)}>
             {mapStyle === 'satellite-contrast' ? '🛰️' : '🗺️'}
           </button>
+          {/* Full Map Mode Toggle (Hide / Restore Overlays) */}
+          <button
+            onClick={() => {
+              if (!showRightPanel && !showLeftPanel) {
+                setShowRightPanel(true);
+                setShowLeftPanel(true);
+              } else {
+                setShowRightPanel(false);
+                setShowLeftPanel(false);
+              }
+            }}
+            title={!showRightPanel && !showLeftPanel ? 'Restore Side Panels' : 'Full Map Mode (Hide All Overlays)'}
+            className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs transition-colors cursor-pointer ${
+              !showRightPanel && !showLeftPanel
+                ? 'text-emerald-400 ring-1 ring-emerald-400/60 bg-emerald-500/20'
+                : 'text-slate-300 hover:text-white'
+            }`}
+            style={glassPanel(0.85)}>
+            {!showRightPanel && !showLeftPanel ? '◱' : '⛶'}
+          </button>
         </div>
 
         {/* Mapbox Live GIS Attribution */}
-        <div className="absolute bottom-4 left-[345px] z-20 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-700/60 shadow-lg pointer-events-auto select-none">
+        <div className={`absolute bottom-4 z-20 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-700/60 shadow-lg pointer-events-auto select-none transition-all duration-300 ${
+          showLeftPanel ? 'left-[345px]' : 'left-4'
+        }`}>
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-white tracking-wide">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-emerald-400 font-mono tracking-tight font-extrabold">OpenStreetMap</span>
@@ -1430,511 +2170,581 @@ export default function LiveOpsView() {
           </span>
         </div>
 
+        {/* Floating trigger to restore left panel when hidden */}
+        {!showLeftPanel && (
+          <button
+            onClick={() => setShowLeftPanel(true)}
+            className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-950/90 hover:bg-slate-900 text-white text-xs font-semibold border border-emerald-500/40 hover:border-emerald-400 shadow-xl backdrop-blur-md transition-all cursor-pointer group animate-in fade-in"
+            title="Open Live Dispatch Stream">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-slate-200 group-hover:text-white">
+              Dispatch Stream ({filteredVehicles.length})
+            </span>
+            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-400/30">
+              Show ▸
+            </span>
+          </button>
+        )}
+
         {/* ─── LEFT PANEL: ACTIVE TRIPS & REAL-TIME ACTIVITY FEED ─────────── */}
-        <div
-          className="absolute left-4 top-4 bottom-4 w-80 flex flex-col overflow-hidden rounded-2xl z-20"
-          style={glassPanel(0.94)}>
-          {/* Header with Switcher Tabs */}
-          <div className="p-3.5 border-b border-white/10 flex-shrink-0">
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                  Live Dispatch Stream
-                </h3>
+        {showLeftPanel && (
+          <div
+            className="absolute left-4 top-4 bottom-4 w-80 flex flex-col overflow-hidden rounded-2xl z-20 animate-in slide-in-from-left duration-200"
+            style={glassPanel(0.94)}>
+            {/* Header with Switcher Tabs */}
+            <div className="p-3.5 border-b border-white/10 flex-shrink-0">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Live Dispatch Stream
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                    AUTO SYNC
+                  </span>
+                  <button
+                    onClick={() => setShowLeftPanel(false)}
+                    className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                    title="Hide Dispatch Stream / View Map">
+                    ✕
+                  </button>
+                </div>
               </div>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                AUTO SYNC
-              </span>
+
+              {/* Tab switchers: Active Trips vs Real-Time Activity Feed */}
+              <div className="flex gap-1 p-1 bg-slate-900/80 rounded-xl border border-slate-800">
+                <button
+                  onClick={() => setActiveTab('trips')}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                    activeTab === 'trips'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}>
+                  Active Trips ({filteredVehicles.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('feed')}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                    activeTab === 'feed'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}>
+                  Activity Feed ({activityFeed.length})
+                </button>
+              </div>
             </div>
 
-            {/* Tab switchers: Active Trips vs Real-Time Activity Feed */}
-            <div className="flex gap-1 p-1 bg-slate-900/80 rounded-xl border border-slate-800">
-              <button
-                onClick={() => setActiveTab('trips')}
-                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                  activeTab === 'trips'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}>
-                Active Trips ({filteredVehicles.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('feed')}
-                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                  activeTab === 'feed'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}>
-                Activity Feed ({activityFeed.length})
-              </button>
-            </div>
-          </div>
+            {/* List Content */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+              {activeTab === 'trips' ? (
+                /* ─── ACTIVE TRIPS CARDS (Enhanced with Route Indicators & Live Telemetry) ─── */
+                filteredVehicles.map((ride) => {
+                  const isSel = selectedId === ride.id;
+                  const color = getStatusColor(ride.status);
+                  const vPos = getVehiclePosition(ride);
+                  return (
+                    <div
+                      key={ride.id}
+                      onClick={() => {
+                        if (ride.status === 'SOS') {
+                          handleOpenActiveSos('Active Trips Stream');
+                        } else {
+                          setShowSosIncident(false);
+                          setSelectedId(isSel ? null : ride.id);
+                          if (!isSel) setTracking(ride.id);
+                        }
+                      }}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                        isSel
+                          ? 'bg-blue-600/25 border-cyan-400 shadow-md ring-1 ring-cyan-400/50'
+                          : 'bg-white/3 border-white/5 hover:border-slate-600 hover:bg-white/5'
+                      }`}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-mono font-bold text-white tracking-wide">
+                          {ride.id}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ background: color, boxShadow: `0 0 6px ${color}` }}
+                          />
+                          <span className="text-[10px] font-bold" style={{ color }}>
+                            {ride.status}
+                          </span>
+                        </div>
+                      </div>
 
-          {/* List Content */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-            {activeTab === 'trips' ? (
-              /* ─── ACTIVE TRIPS CARDS (Enhanced with Route Indicators) ─── */
-              filteredVehicles.map((ride) => {
-                const isSel = selectedId === ride.id;
-                const color = getStatusColor(ride.status);
-                return (
-                  <div
-                    key={ride.id}
-                    onClick={() => {
-                      if (ride.status === 'SOS') {
-                        handleOpenActiveSos('Active Trips Stream');
-                      } else {
-                        setShowSosIncident(false);
-                        setSelectedId(isSel ? null : ride.id);
-                        if (!isSel) setTracking(ride.id);
-                      }
-                    }}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer ${
-                      isSel
-                        ? 'bg-blue-600/25 border-cyan-400 shadow-md ring-1 ring-cyan-400/50'
-                        : 'bg-white/3 border-white/5 hover:border-slate-600 hover:bg-white/5'
-                    }`}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-mono font-bold text-white tracking-wide">
-                        {ride.id}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ background: color, boxShadow: `0 0 6px ${color}` }}
-                        />
-                        <span className="text-[10px] font-bold" style={{ color }}>
-                          {ride.status}
+                      <div className="text-xs text-slate-200 font-semibold">
+                        {ride.driver} · <span className="text-cyan-300 font-mono font-normal">{ride.vehicle}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">
+                        Employee: <strong className="text-white">{ride.employee}</strong> ({ride.company})
+                      </div>
+
+                      {/* Route Corridor Progress */}
+                      <div className="bg-slate-900/60 p-2 rounded-lg border border-white/5 mt-2 space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-slate-300">
+                          <span>📍 {ride.pickup}</span>
+                          <span className="text-slate-500">→</span>
+                          <span>🏢 {ride.drop}</span>
+                        </div>
+                        {/* Mini progress bar */}
+                        <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full transition-all duration-700"
+                            style={{ width: `${vPos.progressPct}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+                        <span className="text-xs font-bold font-mono text-emerald-400">
+                          ETA: {vPos.eta}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          👥 {ride.passengers} / {ride.capacity} Passengers · {vPos.speed} km/h
                         </span>
                       </div>
                     </div>
-
-                    <div className="text-xs text-slate-200 font-semibold">
-                      {ride.driver} · <span className="text-cyan-300 font-mono font-normal">{ride.vehicle}</span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
-                      Employee: <strong className="text-white">{ride.employee}</strong> ({ride.company})
-                    </div>
-
-                    {/* Route Corridor Progress */}
-                    <div className="bg-slate-900/60 p-2 rounded-lg border border-white/5 mt-2 space-y-1">
-                      <div className="flex items-center justify-between text-[10px] text-slate-300">
-                        <span>📍 {ride.pickup}</span>
-                        <span className="text-slate-500">→</span>
-                        <span>🏢 {ride.drop}</span>
-                      </div>
-                      {/* Mini progress bar */}
-                      <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full"
-                          style={{ width: `${ride.progressPct}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-                      <span className="text-xs font-bold font-mono text-emerald-400">
-                        ETA: {ride.eta}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        👥 {ride.passengers} / {ride.capacity} Passengers
-                      </span>
-                    </div>
+                  );
+                })
+              ) : (
+                /* ─── REAL-TIME ACTIVITY FEED STREAM (Document Page 4-5) ─── */
+                <div className="space-y-2">
+                  {/* Filter tags for Activity Feed */}
+                  <div className="flex items-center gap-1 pb-2 border-b border-white/5 overflow-x-auto text-[10px]">
+                    {(['all', 'trip', 'traffic', 'sos'] as const).map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setFeedFilter(cat)}
+                        className={`px-2 py-0.5 rounded-md font-semibold capitalize transition-colors cursor-pointer ${
+                          feedFilter === cat
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white/5 text-slate-400 hover:text-white'
+                        }`}>
+                        {cat}
+                      </button>
+                    ))}
                   </div>
-                );
-              })
-            ) : (
-              /* ─── REAL-TIME ACTIVITY FEED STREAM (Document Page 4-5) ─── */
-              <div className="space-y-2">
-                {/* Filter tags for Activity Feed */}
-                <div className="flex items-center gap-1 pb-2 border-b border-white/5 overflow-x-auto text-[10px]">
-                  {(['all', 'trip', 'traffic', 'sos'] as const).map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setFeedFilter(cat)}
-                      className={`px-2 py-0.5 rounded-md font-semibold capitalize transition-colors ${
-                        feedFilter === cat
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white/5 text-slate-400 hover:text-white'
-                      }`}>
-                      {cat}
-                    </button>
+
+                  {filteredFeed.map((evt) => (
+                    <div
+                      key={evt.id}
+                      onClick={() => {
+                        if (evt.type === 'sos') {
+                          handleOpenActiveSos('Activity Feed Event');
+                        } else if (evt.tripId) {
+                          setShowSosIncident(false);
+                          setSelectedId(evt.tripId);
+                          setTracking(evt.tripId);
+                        }
+                      }}
+                      className="p-2.5 rounded-xl border border-white/5 transition-all cursor-pointer hover:border-slate-500 hover:scale-[1.01]"
+                      style={{ background: evt.bg }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-[11px] font-bold flex items-center gap-1.5 ${evt.color}`}>
+                          <span>{evt.icon}</span>
+                          <span>{evt.msg}</span>
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-mono">{evt.time}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-300 pl-4">{evt.sub}</div>
+                    </div>
                   ))}
                 </div>
-
-                {filteredFeed.map((evt) => (
-                  <div
-                    key={evt.id}
-                    onClick={() => {
-                      if (evt.type === 'sos') {
-                        handleOpenActiveSos('Activity Feed Event');
-                      } else if (evt.tripId) {
-                        setShowSosIncident(false);
-                        setSelectedId(evt.tripId);
-                        setTracking(evt.tripId);
-                      }
-                    }}
-                    className="p-2.5 rounded-xl border border-white/5 transition-all cursor-pointer hover:border-slate-500 hover:scale-[1.01]"
-                    style={{ background: evt.bg }}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`text-[11px] font-bold flex items-center gap-1.5 ${evt.color}`}>
-                        <span>{evt.icon}</span>
-                        <span>{evt.msg}</span>
-                      </span>
-                      <span className="text-[9px] text-slate-400 font-mono">{evt.time}</span>
-                    </div>
-                    <div className="text-[10px] text-slate-300 pl-4">{evt.sub}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Floating trigger to restore right panel / popup when hidden */}
+        {!showRightPanel && (
+          <button
+            onClick={() => setShowRightPanel(true)}
+            className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-950/90 hover:bg-slate-900 text-white text-xs font-semibold border border-cyan-500/40 hover:border-cyan-400 shadow-xl backdrop-blur-md transition-all cursor-pointer group animate-in fade-in"
+            title="Open Operations Overview & Trip Details Popup">
+            <span>📊</span>
+            <span className="text-slate-200 group-hover:text-white">
+              {selectedRide ? `Trip ${selectedRide.tripId}` : 'Operations Overview'}
+            </span>
+            <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-400/30">
+              Open ▾
+            </span>
+          </button>
+        )}
 
         {/* ─── RIGHT PANEL: TRIP DETAILS / SOS / HEALTH SUMMARY ──────────── */}
-        <div
-          className="absolute right-4 top-4 bottom-4 w-80 flex flex-col gap-3 overflow-y-auto pr-1 z-20"
-          style={{ scrollbarWidth: 'none' }}>
+        {showRightPanel && (
+          <div
+            className="absolute right-4 top-4 bottom-4 w-80 flex flex-col gap-3 overflow-y-auto pr-1 z-20 animate-in slide-in-from-right duration-200"
+            style={{ scrollbarWidth: 'none' }}>
 
-          {/* Conditional Display:
-              1. If showSosIncident is true -> CASE B: SOS INCIDENT CENTER (with close button ✕)
-              2. Else if selectedRide is truthy -> CASE A: ACTIVE TRIP DETAILS (with close button ✕)
-              3. Else -> CASE C: OPERATIONS HUB OVERVIEW (Default state when no ride selected & SOS not clicked)
-          */}
-          {showSosIncident ? (
-            /* ─── CASE B: SOS INCIDENT CENTER (Document Pages 5-6) ────────── */
-            <div
-              className="rounded-2xl overflow-hidden border border-red-500/40 shadow-2xl flex-shrink-0 animate-in fade-in duration-300"
-              style={{
-                background: 'linear-gradient(180deg, rgba(80, 15, 15, 0.9), rgba(40, 10, 10, 0.95))',
-                backdropFilter: 'blur(20px)',
-              }}>
-              <div className="px-4 py-3 bg-red-600/30 border-b border-red-500/30 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${sosIncident.status === 'Active' ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
-                  <span className="text-xs font-bold text-red-200 uppercase tracking-wider">
-                    SOS Incident Center
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      sosIncident.status === 'Active' ? 'bg-red-600 text-white animate-pulse' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
-                    }`}>
-                    {sosIncident.status === 'Active' ? 'CRITICAL HIGH' : 'RESOLVED'}
-                  </span>
-                  <button
-                    onClick={() => setShowSosIncident(false)}
-                    className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-red-200 hover:text-white flex items-center justify-center text-xs transition-colors"
-                    title="Close SOS Center">
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              {/* Exact Fields Specified in Document Pages 5-6 */}
-              <div className="p-4 space-y-2 text-xs">
-                {[
-                  { label: 'Employee', val: sosIncident.employee },
-                  { label: 'Company', val: sosIncident.company },
-                  { label: 'Driver', val: sosIncident.driver },
-                  { label: 'Vehicle', val: sosIncident.vehicle, isMono: true },
-                  { label: 'Location', val: sosIncident.location },
-                  { label: 'Alert Time', val: sosIncident.alertTime, isMono: true },
-                  { label: 'Severity', val: sosIncident.severity, isRed: sosIncident.status === 'Active' },
-                  { label: 'Status', val: sosIncident.status, isGreen: sosIncident.status === 'Resolved' },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between py-0.5">
-                    <span className="text-red-200/70 text-[11px]">{row.label}:</span>
-                    <span
-                      className={`text-[11px] font-semibold ${
-                        row.isMono ? 'font-mono' : ''
-                      } ${row.isRed ? 'text-red-400 font-bold' : row.isGreen ? 'text-emerald-400 font-bold' : 'text-white'}`}>
-                      {row.val}
+            {/* Conditional Display:
+                1. If showSosIncident is true -> CASE B: SOS INCIDENT CENTER
+                2. Else if selectedRide is truthy -> CASE A: ACTIVE TRIP DETAILS
+                3. Else -> CASE C: OPERATIONS HUB OVERVIEW
+            */}
+            {showSosIncident ? (
+              /* ─── CASE B: SOS INCIDENT CENTER (Document Pages 5-6) ────────── */
+              <div
+                className="rounded-2xl overflow-hidden border border-red-500/40 shadow-2xl flex-shrink-0 animate-in fade-in duration-300"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(80, 15, 15, 0.9), rgba(40, 10, 10, 0.95))',
+                  backdropFilter: 'blur(20px)',
+                }}>
+                <div className="px-4 py-3 bg-red-600/30 border-b border-red-500/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${sosIncident.status === 'Active' ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
+                    <span className="text-xs font-bold text-red-200 uppercase tracking-wider">
+                      SOS Incident Center
                     </span>
                   </div>
-                ))}
-
-                {/* Four Required Actions from Document Page 6 */}
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <button
-                    onClick={handleTrackLiveIncident}
-                    className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-red-600 hover:bg-red-700 transition-colors shadow-sm text-center">
-                    🎯 Track Live
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCallModal({
-                        open: true,
-                        type: 'driver',
-                        name: sosIncident.driver,
-                        phone: sosIncident.driverPhone,
-                        title: `SOS Emergency Call: Driver`,
-                      })
-                    }
-                    className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center">
-                    📞 Call Driver
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCallModal({
-                        open: true,
-                        type: 'employee',
-                        name: sosIncident.employee,
-                        phone: sosIncident.employeePhone,
-                        title: `SOS Emergency Call: Passenger`,
-                      })
-                    }
-                    className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center">
-                    📱 Call Employee
-                  </button>
-                  <button
-                    onClick={handleResolveIncident}
-                    className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm text-center">
-                    ✓ Resolve
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : selectedRide ? (
-            /* ─── CASE A: ACTIVE TRIP DETAILS PANEL (Document Page 3) ─────── */
-            <div
-              className="rounded-2xl p-4 border border-cyan-500/40 shadow-2xl flex-shrink-0 dialog-in"
-              style={{
-                background: 'linear-gradient(180deg, rgba(14, 30, 60, 0.95), rgba(9, 18, 36, 0.95))',
-                backdropFilter: 'blur(20px)',
-              }}>
-              <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
-                <div>
-                  <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">
-                    Active Trip Details
-                  </span>
-                  <h3 className="text-sm font-bold text-white font-mono mt-0.5">
-                    {selectedRide.tripId}
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                    style={{
-                      background: `${getStatusColor(selectedRide.status)}22`,
-                      color: getStatusColor(selectedRide.status),
-                      border: `1px solid ${getStatusColor(selectedRide.status)}44`,
-                    }}>
-                    ● {selectedRide.status}
-                  </span>
-                  <button
-                    onClick={() => setSelectedId(null)}
-                    className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs">
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              {/* Exact Fields Specified in Document Page 3 */}
-              <div className="space-y-2 text-xs">
-                {[
-                  { label: 'Trip ID', val: selectedRide.tripId, isMono: true, highlight: true },
-                  { label: 'Employee', val: selectedRide.employee },
-                  { label: 'Company', val: selectedRide.company },
-                  { label: 'Driver', val: selectedRide.driver },
-                  { label: 'Vehicle', val: selectedRide.vehicle, isMono: true },
-                  { label: 'Passengers', val: `${selectedRide.passengers} / ${selectedRide.capacity}` },
-                  { label: 'Current Location', val: selectedRide.currentLocation },
-                  { label: 'Destination', val: selectedRide.drop },
-                  { label: 'ETA', val: selectedRide.eta, isMono: true, isGreen: true },
-                  { label: 'Status', val: selectedRide.status },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between py-1 border-b border-white/5">
-                    <span className="text-slate-400 text-[11px]">{row.label}:</span>
+                  <div className="flex items-center gap-2">
                     <span
-                      className={`text-[11px] font-semibold ${
-                        row.isMono ? 'font-mono' : ''
-                      } ${row.isGreen ? 'text-emerald-400' : row.highlight ? 'text-cyan-300' : 'text-white'}`}>
-                      {row.val}
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        sosIncident.status === 'Active' ? 'bg-red-600 text-white animate-pulse' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                      }`}>
+                      {sosIncident.status === 'Active' ? 'CRITICAL HIGH' : 'RESOLVED'}
                     </span>
+                    <button
+                      onClick={() => setShowSosIncident(false)}
+                      className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-red-200 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                      title="Close SOS Center">
+                      ✕
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
 
-              {/* Route Progress Visual Stepper */}
-              <div className="mt-3 p-2.5 bg-slate-900/80 rounded-xl border border-white/5">
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                  Route Stage Progress
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-300 font-semibold mb-1">
-                  <span className="text-emerald-400">Pickup</span>
-                  <span className="text-cyan-300">On Route ({selectedRide.progressPct}%)</span>
-                  <span className="text-slate-500">Destination</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 rounded-full"
-                    style={{ width: `${selectedRide.progressPct}%` }}
-                  />
-                </div>
-              </div>
+                {/* Exact Fields Specified in Document Pages 5-6 */}
+                <div className="p-4 space-y-2 text-xs">
+                  {[
+                    { label: 'Employee', val: sosIncident.employee },
+                    { label: 'Company', val: sosIncident.company },
+                    { label: 'Driver', val: sosIncident.driver },
+                    { label: 'Vehicle', val: sosIncident.vehicle, isMono: true },
+                    { label: 'Location', val: sosIncident.location },
+                    { label: 'Alert Time', val: sosIncident.alertTime, isMono: true },
+                    { label: 'Severity', val: sosIncident.severity, isRed: sosIncident.status === 'Active' },
+                    { label: 'Status', val: sosIncident.status, isGreen: sosIncident.status === 'Resolved' },
+                  ].map((row) => (
+                    <div key={row.label} className="flex items-center justify-between py-0.5">
+                      <span className="text-red-200/70 text-[11px]">{row.label}:</span>
+                      <span
+                        className={`text-[11px] font-semibold ${
+                          row.isMono ? 'font-mono' : ''
+                        } ${row.isRed ? 'text-red-400 font-bold' : row.isGreen ? 'text-emerald-400 font-bold' : 'text-white'}`}>
+                        {row.val}
+                      </span>
+                    </div>
+                  ))}
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 pt-3">
-                <button
-                  onClick={() =>
-                    setCallModal({
-                      open: true,
-                      type: 'driver',
-                      name: selectedRide.driver,
-                      phone: selectedRide.driverPhone,
-                      title: `Driver Call — ${selectedRide.vehicle}`,
-                    })
-                  }
-                  className="py-2 px-3 text-xs font-bold text-white rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors shadow-xs text-center">
-                  📞 Call Driver
-                </button>
-                <button
-                  onClick={() =>
-                    setCallModal({
-                      open: true,
-                      type: 'employee',
-                      name: selectedRide.employee,
-                      phone: selectedRide.employeePhone,
-                      title: `Employee Comms — ${selectedRide.company}`,
-                    })
-                  }
-                  className="py-2 px-3 text-xs font-semibold text-cyan-200 hover:text-white rounded-xl border border-cyan-500/30 hover:bg-cyan-600/20 transition-colors text-center">
-                  📱 Call Employee
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* ─── CASE C: OPERATIONS HUB OVERVIEW (Default State) ─────── */
-            <div
-              className="rounded-2xl p-4 border border-white/10 shadow-2xl flex-shrink-0 animate-in fade-in duration-300"
-              style={glassPanel(0.92)}>
-              <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
-                <div>
-                  <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">
-                    Operations Overview
-                  </span>
-                  <h3 className="text-sm font-bold text-white mt-0.5">
-                    Pune Central Dispatch
-                  </h3>
+                  {/* Four Required Actions from Document Page 6 */}
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <button
+                      onClick={handleTrackLiveIncident}
+                      className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-red-600 hover:bg-red-700 transition-colors shadow-sm text-center cursor-pointer">
+                      🎯 Track Live
+                    </button>
+                    <button
+                      onClick={() =>
+                        setCallModal({
+                          open: true,
+                          type: 'driver',
+                          name: sosIncident.driver,
+                          phone: sosIncident.driverPhone,
+                          title: `SOS Emergency Call: Driver`,
+                        })
+                      }
+                      className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center cursor-pointer">
+                      📞 Call Driver
+                    </button>
+                    <button
+                      onClick={() =>
+                        setCallModal({
+                          open: true,
+                          type: 'employee',
+                          name: sosIncident.employee,
+                          phone: sosIncident.employeePhone,
+                          title: `SOS Emergency Call: Passenger`,
+                        })
+                      }
+                      className="py-2 px-2.5 text-[11px] font-semibold text-red-200 hover:text-white rounded-xl border border-red-500/40 hover:bg-red-600/20 transition-colors text-center cursor-pointer">
+                      📱 Call Employee
+                    </button>
+                    <button
+                      onClick={handleResolveIncident}
+                      className="py-2 px-2.5 text-[11px] font-bold text-white rounded-xl bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm text-center cursor-pointer">
+                      ✓ Resolve
+                    </button>
+                  </div>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  ONLINE
-                </span>
               </div>
-
-              {/* Interactive Banner: Only when Active SOS exists */}
-              {sosIncident.status === 'Active' ? (
+            ) : selectedRide ? (() => {
+              const liveSelected = getVehiclePosition(selectedRide);
+              return (
+                /* ─── CASE A: ACTIVE TRIP DETAILS PANEL (Document Page 3) ─────── */
                 <div
-                  onClick={() => handleOpenActiveSos('Overview SOS Banner')}
-                  className="p-3 mb-3 rounded-xl bg-gradient-to-r from-red-950/80 to-red-900/60 border border-red-500/40 hover:border-red-400 cursor-pointer transition-all shadow-md group">
-                  <div className="flex items-center justify-between text-xs font-bold text-red-200">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                      🚨 1 Active SOS Incident
-                    </span>
-                    <span className="text-[10px] text-red-300 group-hover:text-white underline">
-                      View Alert →
-                    </span>
+                  className="rounded-2xl p-4 border border-cyan-500/40 shadow-2xl flex-shrink-0 dialog-in"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(14, 30, 60, 0.95), rgba(9, 18, 36, 0.95))',
+                    backdropFilter: 'blur(20px)',
+                  }}>
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+                    <div>
+                      <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">
+                        Active Trip Details
+                      </span>
+                      <h3 className="text-sm font-bold text-white font-mono mt-0.5">
+                        {selectedRide.tripId}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{
+                          background: `${getStatusColor(selectedRide.status)}22`,
+                          color: getStatusColor(selectedRide.status),
+                          border: `1px solid ${getStatusColor(selectedRide.status)}44`,
+                        }}>
+                        ● {selectedRide.status}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setSelectedId(null);
+                          setShowRightPanel(false);
+                        }}
+                        className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                        title="Close Trip & Hide Panel">
+                        ✕
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-red-200/80 mt-1">
-                    {sosIncident.employee} ({sosIncident.company}) · {sosIncident.location}
-                  </p>
-                </div>
-              ) : (
-                <div className="p-2.5 mb-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
-                  <span>✅</span>
-                  <span className="text-[11px]">All emergency channels normal. 0 active SOS.</span>
-                </div>
-              )}
 
-              {/* Quick Fleet Highlights */}
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between py-1 border-b border-white/5">
-                  <span className="text-slate-400 text-[11px]">Active Cabs Stream:</span>
-                  <span className="text-white font-mono font-bold">8 Vehicles Active</span>
-                </div>
-                <div className="flex items-center justify-between py-1 border-b border-white/5">
-                  <span className="text-slate-400 text-[11px]">Primary Corridor:</span>
-                  <span className="text-cyan-300 font-semibold">Hinjewadi IT Park</span>
-                </div>
-                <div className="flex items-center justify-between py-1 border-b border-white/5">
-                  <span className="text-slate-400 text-[11px]">Standby Fleet:</span>
-                  <span className="text-emerald-400 font-mono font-semibold">2 Available</span>
-                </div>
-              </div>
+                  {/* Exact Fields Specified in Document Page 3 */}
+                  <div className="space-y-2 text-xs">
+                    {[
+                      { label: 'Trip ID', val: selectedRide.tripId, isMono: true, highlight: true },
+                      { label: 'Employee', val: selectedRide.employee },
+                      { label: 'Company', val: selectedRide.company },
+                      { label: 'Driver', val: selectedRide.driver },
+                      { label: 'Vehicle', val: selectedRide.vehicle, isMono: true },
+                      { label: 'Vehicle Model', val: selectedRide.vehicleModel },
+                      { label: 'Passengers', val: `${selectedRide.passengers} / ${selectedRide.capacity}` },
+                      { label: 'Current Speed', val: `${liveSelected.speed} km/h (Cruising)`, isMono: true },
+                      { label: 'Current Location', val: selectedRide.currentLocation },
+                      { label: 'Destination', val: selectedRide.drop },
+                      { label: 'Live ETA', val: liveSelected.eta, isMono: true, isGreen: true },
+                      { label: 'Status', val: selectedRide.status },
+                    ].map((row) => (
+                      <div key={row.label} className="flex items-center justify-between py-1 border-b border-white/5">
+                        <span className="text-slate-400 text-[11px]">{row.label}:</span>
+                        <span
+                          className={`text-[11px] font-semibold ${
+                            row.isMono ? 'font-mono' : ''
+                          } ${row.isGreen ? 'text-emerald-400' : row.highlight ? 'text-cyan-300' : 'text-white'}`}>
+                          {row.val}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
 
-              <div className="mt-3 p-2 bg-slate-900/60 rounded-xl border border-white/5 text-[11px] text-slate-400">
-                💡 <strong className="text-slate-300">Notice:</strong> Click on any vehicle marker or trip card to inspect telemetry, or click on <span className="text-red-400 font-semibold cursor-pointer underline" onClick={() => handleOpenActiveSos('Guide Text')}>🚨 1 Active SOS</span> to view emergency notification.
-              </div>
-            </div>
-          )}
+                  {/* Route Progress Visual Stepper */}
+                  <div className="mt-3 p-2.5 bg-slate-900/80 rounded-xl border border-white/5">
+                    <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                      Route Stage Progress
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-300 font-semibold mb-1">
+                      <span className="text-emerald-400">Pickup</span>
+                      <span className="text-cyan-300">On Route ({liveSelected.progressPct}%)</span>
+                      <span className="text-slate-500">Destination</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 rounded-full transition-all duration-700"
+                        style={{ width: `${liveSelected.progressPct}%` }}
+                      />
+                    </div>
+                  </div>
 
-          {/* ─── OPERATIONS HEALTH SUMMARY (Document Page 7) ─────────────── */}
-          <div className="rounded-2xl p-4 flex-shrink-0" style={glassPanel(0.88)}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                Operations Health Summary
-              </span>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">
-                DAILY METRICS
-              </span>
-            </div>
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-2 pt-3">
+                    <button
+                      onClick={() =>
+                        setCallModal({
+                          open: true,
+                          type: 'driver',
+                          name: selectedRide.driver,
+                          phone: selectedRide.driverPhone,
+                          title: `Driver Call — ${selectedRide.vehicle}`,
+                        })
+                      }
+                      className="py-2 px-3 text-xs font-bold text-white rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors shadow-xs text-center cursor-pointer">
+                      📞 Call Driver
+                    </button>
+                    <button
+                      onClick={() =>
+                        setCallModal({
+                          open: true,
+                          type: 'employee',
+                          name: selectedRide.employee,
+                          phone: selectedRide.employeePhone,
+                          title: `Employee Comms — ${selectedRide.company}`,
+                        })
+                      }
+                      className="py-2 px-3 text-xs font-semibold text-cyan-200 hover:text-white rounded-xl border border-cyan-500/30 hover:bg-cyan-600/20 transition-colors text-center cursor-pointer">
+                      📱 Call Employee
+                    </button>
+                  </div>
+                </div>
+              );
+            })() : (
+              /* ─── CASE C: OPERATIONS HUB OVERVIEW (Default State) ─────── */
+              <div
+                className="rounded-2xl p-4 border border-white/10 shadow-2xl flex-shrink-0 animate-in fade-in duration-300"
+                style={glassPanel(0.92)}>
+                <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+                  <div>
+                    <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">
+                      Operations Overview
+                    </span>
+                    <h3 className="text-sm font-bold text-white mt-0.5">
+                      Pune Central Dispatch
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      ONLINE
+                    </span>
+                    <button
+                      onClick={() => setShowRightPanel(false)}
+                      className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                      title="Hide Overview / View Clear Map">
+                      ✕
+                    </button>
+                  </div>
+                </div>
 
-            {/* Exactly Specified Metrics from Document Page 7 */}
-            <div className="space-y-2.5 text-xs">
-              <div className="flex justify-between items-center py-0.5 border-b border-white/5">
-                <span className="text-slate-300">Active Trips</span>
-                <span className="text-white font-mono font-bold">{OPS_HEALTH_METRICS.activeTrips}</span>
+                {/* Interactive Banner: Only when Active SOS exists */}
+                {sosIncident.status === 'Active' ? (
+                  <div
+                    onClick={() => handleOpenActiveSos('Overview SOS Banner')}
+                    className="p-3 mb-3 rounded-xl bg-gradient-to-r from-red-950/80 to-red-900/60 border border-red-500/40 hover:border-red-400 cursor-pointer transition-all shadow-md group">
+                    <div className="flex items-center justify-between text-xs font-bold text-red-200">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                        🚨 1 Active SOS Incident
+                      </span>
+                      <span className="text-[10px] text-red-300 group-hover:text-white underline">
+                        View Alert →
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-red-200/80 mt-1">
+                      {sosIncident.employee} ({sosIncident.company}) · {sosIncident.location}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-2.5 mb-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
+                    <span>✅</span>
+                    <span className="text-[11px]">All emergency channels normal. 0 active SOS.</span>
+                  </div>
+                )}
+
+                {/* Quick Fleet Highlights */}
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400 text-[11px]">Active Cabs Stream:</span>
+                    <span className="text-white font-mono font-bold">18 Vehicles Active</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400 text-[11px]">Primary Corridor:</span>
+                    <span className="text-cyan-300 font-semibold">Hinjewadi - Hadapsar - Kharadi</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-white/5">
+                    <span className="text-slate-400 text-[11px]">Standby Fleet:</span>
+                    <span className="text-emerald-400 font-mono font-semibold">3 Staged & Ready</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 p-2 bg-slate-900/60 rounded-xl border border-white/5 text-[11px] text-slate-400">
+                  💡 <strong className="text-slate-300">Notice:</strong> Click on any vehicle marker or trip card to inspect telemetry, or click on <span className="text-red-400 font-semibold cursor-pointer underline" onClick={() => handleOpenActiveSos('Guide Text')}>🚨 1 Active SOS</span> to view emergency notification.
+                </div>
               </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-white/5">
-                <span className="text-slate-300">On-Time Trips</span>
-                <span className="text-emerald-400 font-mono font-bold">{OPS_HEALTH_METRICS.onTimeTrips}</span>
-              </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-white/5">
-                <span className="text-slate-300">Delayed Trips</span>
-                <span className="text-amber-400 font-mono font-bold">{OPS_HEALTH_METRICS.delayedTrips}</span>
-              </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-white/5">
-                <span className="text-slate-300">SOS Incidents</span>
-                <span className="text-red-400 font-mono font-bold">
-                  {sosIncident.status === 'Active' ? '2 (1 Active)' : '2 (Resolved)'}
+            )}
+
+            {/* ─── OPERATIONS HEALTH SUMMARY (Document Page 7) ─────────────── */}
+            <div className="rounded-2xl p-4 flex-shrink-0" style={glassPanel(0.88)}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  Operations Health Summary
+                </span>
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">
+                  DAILY METRICS
                 </span>
               </div>
 
-              {/* Fleet Utilization Progress */}
-              <div className="pt-1">
-                <div className="flex justify-between items-center text-[11px] mb-1">
-                  <span className="text-slate-300">Fleet Utilization</span>
-                  <span className="text-cyan-300 font-mono font-bold">{OPS_HEALTH_METRICS.fleetUtilization}%</span>
+              {/* Exactly Specified Metrics from Document Page 7 */}
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between items-center py-0.5 border-b border-white/5">
+                  <span className="text-slate-300">Active Trips</span>
+                  <span className="text-white font-mono font-bold">{OPS_HEALTH_METRICS.activeTrips}</span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-cyan-400 rounded-full transition-all duration-700"
-                    style={{ width: `${OPS_HEALTH_METRICS.fleetUtilization}%` }}
-                  />
+                <div className="flex justify-between items-center py-0.5 border-b border-white/5">
+                  <span className="text-slate-300">On-Time Trips</span>
+                  <span className="text-emerald-400 font-mono font-bold">{OPS_HEALTH_METRICS.onTimeTrips}</span>
                 </div>
-              </div>
+                <div className="flex justify-between items-center py-0.5 border-b border-white/5">
+                  <span className="text-slate-300">Delayed Trips</span>
+                  <span className="text-amber-400 font-mono font-bold">{OPS_HEALTH_METRICS.delayedTrips}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5 border-b border-white/5">
+                  <span className="text-slate-300">SOS Incidents</span>
+                  <span className="text-red-400 font-mono font-bold">
+                    {sosIncident.status === 'Active' ? '2 (1 Active)' : '2 (Resolved)'}
+                  </span>
+                </div>
 
-              {/* Average ETA Accuracy Progress */}
-              <div className="pt-1">
-                <div className="flex justify-between items-center text-[11px] mb-1">
-                  <span className="text-slate-300">Average ETA Accuracy</span>
-                  <span className="text-emerald-400 font-mono font-bold">{OPS_HEALTH_METRICS.etaAccuracy}%</span>
+                {/* Fleet Utilization Progress */}
+                <div className="pt-1">
+                  <div className="flex justify-between items-center text-[11px] mb-1">
+                    <span className="text-slate-300">Fleet Utilization</span>
+                    <span className="text-cyan-300 font-mono font-bold">{OPS_HEALTH_METRICS.fleetUtilization}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-cyan-400 rounded-full transition-all duration-700"
+                      style={{ width: `${OPS_HEALTH_METRICS.fleetUtilization}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-400 rounded-full transition-all duration-700"
-                    style={{ width: `${OPS_HEALTH_METRICS.etaAccuracy}%` }}
-                  />
+
+                {/* Average ETA Accuracy Progress */}
+                <div className="pt-1">
+                  <div className="flex justify-between items-center text-[11px] mb-1">
+                    <span className="text-slate-300">Average ETA Accuracy</span>
+                    <span className="text-emerald-400 font-mono font-bold">{OPS_HEALTH_METRICS.etaAccuracy}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-400 rounded-full transition-all duration-700"
+                      style={{ width: `${OPS_HEALTH_METRICS.etaAccuracy}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Quick Hide Button at bottom of right panel */}
+            <button
+              onClick={() => setShowRightPanel(false)}
+              className="w-full py-2 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-white/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs flex-shrink-0"
+              title="Hide panel to clearly see the full map">
+              <span>🗺️</span> Hide Panel · Clear Map View
+            </button>
           </div>
-        </div>
+        )}
 
         {/* ─── MAP BOTTOM LEGEND (When no trip is inspected) ──────────────── */}
         {!selectedRide && (
@@ -1998,7 +2808,7 @@ export default function LiveOpsView() {
                 </a>
                 <button
                   onClick={() => setCallModal(null)}
-                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors">
+                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors cursor-pointer">
                   End Call
                 </button>
               </div>
