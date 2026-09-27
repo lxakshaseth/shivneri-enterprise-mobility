@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { useDispatchStore } from '../services/dispatch/useDispatchStore';
-import { getMapboxRasterTileUrl } from '../services/mapbox/mapboxService';
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 export interface Passenger {
@@ -54,8 +53,7 @@ const PUNE_MAP_TILES = [
 ];
 
 const getMapTileUrl = (x: number, y: number, style: 'dark' | 'satellite' | 'streets') => {
-  const mapboxStyle = style === 'satellite' ? 'satellite-streets' : style === 'streets' ? 'streets' : 'dark';
-  return getMapboxRasterTileUrl(mapboxStyle, 12, x, y);
+  return `https://tile.openstreetmap.org/12/${x}/${y}.png`;
 };
 
 // ─── SEED CORPORATE CAB ROUTES (Realistic 2, 3, 4 passengers) ──────────────
@@ -581,7 +579,7 @@ export default function RoutesView() {
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = `https://basemaps.cartocdn.com/rastertiles/dark_all/12/${t.x}/${t.y}.png`;
                   }}
-                  alt={`Mapbox Pune ${t.x},${t.y}`}
+                  alt={`OpenStreetMap Pune ${t.x},${t.y}`}
                   className="w-full h-full object-cover transition-opacity duration-500"
                   style={{
                     filter:
@@ -909,9 +907,9 @@ export default function RoutesView() {
 
             <div className="flex items-center gap-2">
               <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/60 border border-slate-700/60 text-[10px]">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                <span className="font-bold text-white tracking-wide">mapbox</span>
-                <span className="text-slate-400">© Mapbox</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-bold text-white tracking-wide">OpenStreetMap</span>
+                <span className="text-slate-400">© OpenStreetMap contributors</span>
               </div>
               <button
                 onClick={() => showToast(`SMS sent to ${activeRoute.employees} passengers: "Cab is 4 mins away"`)}

@@ -5,7 +5,6 @@
 
 import React, { useState } from 'react';
 import { DynamicRideStop, ReassignmentEvent, TrafficEvent } from '../../types/dispatch';
-import { getMapboxRasterTileUrl } from '../../services/mapbox/mapboxService';
 
 interface Props {
   stops: DynamicRideStop[];
@@ -63,17 +62,17 @@ export function RouteComparisonMap({ stops, reassignment, trafficEvent }: Props)
 
       {/* SVG Canvas Map */}
       <div className="flex-1 w-full h-full relative bg-radial from-slate-900 via-slate-950 to-black overflow-hidden">
-        {/* Real-World Mapbox Base Raster Tiles */}
-        <div className="absolute inset-0 grid grid-cols-2 grid-rows-1 select-none pointer-events-none opacity-25 mix-blend-screen overflow-hidden">
+        {/* Real-World OpenStreetMap Base Raster Tiles */}
+        <div className="absolute inset-0 grid grid-cols-2 grid-rows-1 select-none pointer-events-none opacity-30 mix-blend-screen overflow-hidden">
           <img
-            src={getMapboxRasterTileUrl('dark', 12, 2886, 1833)}
-            alt="Mapbox Pune West"
-            className="w-full h-full object-cover"
+            src="https://tile.openstreetmap.org/12/2886/1833.png"
+            alt="OpenStreetMap Pune West"
+            className="w-full h-full object-cover filter invert contrast-150 brightness-75"
           />
           <img
-            src={getMapboxRasterTileUrl('dark', 12, 2887, 1833)}
-            alt="Mapbox Pune East"
-            className="w-full h-full object-cover"
+            src="https://tile.openstreetmap.org/12/2887/1833.png"
+            alt="OpenStreetMap Pune East"
+            className="w-full h-full object-cover filter invert contrast-150 brightness-75"
           />
         </div>
 
@@ -236,11 +235,11 @@ export function RouteComparisonMap({ stops, reassignment, trafficEvent }: Props)
           </div>
         )}
 
-        {/* Mapbox GIS Watermark */}
+        {/* OpenStreetMap Attribution */}
         <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/70 backdrop-blur-xs border border-slate-700/60 text-[10px]">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-          <span className="font-bold text-white tracking-wide">mapbox</span>
-          <span className="text-slate-400">© Mapbox</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-bold text-white tracking-wide">OpenStreetMap</span>
+          <span className="text-slate-400">© OpenStreetMap contributors</span>
         </div>
       </div>
     </div>

@@ -35,12 +35,12 @@ import {
   DriverAssignmentOffer,
 } from './components/dispatch';
 import { useDispatchStore } from './services/dispatch/useDispatchStore';
-import { getMapboxStaticMapUrl } from './services/mapbox/mapboxService';
+import { LiveDriverDispatchPanel } from './components/map/LiveDriverDispatchPanel';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type View =
   | 'dashboard' | 'organizations' | 'employees' | 'drivers' | 'vehicles'
-  | 'rides' | 'live-ops' | 'smart-dispatch' | 'routes' | 'safety' | 'billing' | 'analytics'
+  | 'rides' | 'live-ops' | 'smart-dispatch' | 'osm-dispatch' | 'routes' | 'safety' | 'billing' | 'analytics'
   | 'access-control' | 'policy-engine' | 'policy-simulator' | 'approvals'
   | 'security-audit' | 'settings' | 'employee-mobile' | 'driver-mobile'
   | 'trustpass-control';
@@ -274,6 +274,7 @@ const NAV_PERMISSIONS: Partial<Record<View, string>> = {
   'rides':          'ride.read',
   'live-ops':       'tracking.view',
   'smart-dispatch': 'tracking.view',
+  'osm-dispatch':   'tracking.view',
   'routes':         'route.read',
   'safety':         'safety.view',
   'billing':        'billing.view',
@@ -9321,18 +9322,11 @@ function EmployeeMobileView() {
             {screen === 'track' && (
               <div>
                 <div className="relative overflow-hidden" style={{ height: 210, background: '#0f172a' }}>
-                  {/* Real-World Mapbox Static Map Background */}
+                  {/* OpenStreetMap Base Map Background */}
                   <img
-                    src={getMapboxStaticMapUrl({
-                      lng: 73.785,
-                      lat: 18.545,
-                      zoom: 12,
-                      width: 480,
-                      height: 210,
-                      style: 'dark',
-                    })}
-                    alt="Mapbox Live Tracking Route"
-                    className="absolute inset-0 w-full h-full object-cover opacity-60"
+                    src="https://tile.openstreetmap.org/12/2886/1833.png"
+                    alt="OpenStreetMap Live Tracking Route"
+                    className="absolute inset-0 w-full h-full object-cover opacity-60 filter invert contrast-125"
                   />
                   <svg className="absolute inset-0 w-full h-full">
                     <polyline points="15%,82% 38%,58% 62%,38% 85%,22%" fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="5 3" />
@@ -9720,18 +9714,11 @@ function DriverMobileView() {
             {screen === 'active-ride' && (
               <div>
                 <div className="relative overflow-hidden" style={{ height: 190, background: '#0f172a' }}>
-                  {/* Real-World Mapbox Static Navigation Background */}
+                  {/* OpenStreetMap Driver Navigation Background */}
                   <img
-                    src={getMapboxStaticMapUrl({
-                      lng: 73.785,
-                      lat: 18.545,
-                      zoom: 12,
-                      width: 480,
-                      height: 190,
-                      style: 'navigation-night',
-                    })}
-                    alt="Mapbox Driver Navigation Route"
-                    className="absolute inset-0 w-full h-full object-cover opacity-65"
+                    src="https://tile.openstreetmap.org/12/2886/1833.png"
+                    alt="OpenStreetMap Driver Navigation Route"
+                    className="absolute inset-0 w-full h-full object-cover opacity-65 filter invert contrast-125"
                   />
                   <svg className="absolute inset-0 w-full h-full">
                     <polyline points="20%,80% 50%,50% 75%,25%" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="5 3" />
@@ -9886,6 +9873,7 @@ const VIEW_META: Record<View, { title: string; subtitle?: string }> = {
   rides: { title: 'Rides', subtitle: 'Ride lifecycle and history' },
   'live-ops': { title: 'Live Operations Center', subtitle: 'Real-time vehicle tracking and incident response' },
   'smart-dispatch': { title: 'Smart Dynamic Dispatch & Reassignment', subtitle: 'Autonomous traffic delay detection, pickup SLA protection & driver reassignment' },
+  'osm-dispatch': { title: 'OpenStreetMap & OSRM Dispatch Center', subtitle: 'Live open-source driver tracking, OSRM route computation & automatic reassignment' },
   routes: { title: 'Routes', subtitle: 'Route planning and optimization' },
   safety: { title: 'Safety & Incidents', subtitle: 'SOS management, incidents, and emergency access' },
   billing: { title: 'Billing & Finance', subtitle: 'Invoices, cost analytics, and payment management' },
@@ -9919,6 +9907,7 @@ export default function App() {
       case 'rides': return <RidesView />;
       case 'live-ops':
       case 'smart-dispatch': return <LiveOpsView />;
+      case 'osm-dispatch': return <LiveDriverDispatchPanel />;
       case 'routes': return <RoutesView />;
       case 'access-control': return <AccessControlView />;
       case 'policy-engine': return <PolicyEngineView policies={sharedPolicies} setPolicies={setSharedPolicies} />;

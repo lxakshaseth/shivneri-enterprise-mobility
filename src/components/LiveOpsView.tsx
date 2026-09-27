@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { SmartDispatchLiveOpsPanel } from './dispatch';
-import { getMapboxRasterTileUrl, MAPBOX_ACCESS_TOKEN } from '../services/mapbox/mapboxService';
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────
 export interface LiveRide {
@@ -1058,16 +1057,11 @@ export default function LiveOpsView() {
             {PUNE_MAP_TILES.map((t) => (
               <div key={`${t.x}-${t.y}`} className="relative w-full h-full bg-slate-950 overflow-hidden">
                 <img
-                  src={getMapboxRasterTileUrl(
-                    mapStyle === 'satellite-contrast' ? 'satellite-streets' : 'dark',
-                    12,
-                    t.x,
-                    t.y
-                  )}
+                  src={`https://tile.openstreetmap.org/12/${t.x}/${t.y}.png`}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://basemaps.cartocdn.com/rastertiles/dark_all/12/${t.x}/${t.y}.png`;
+                    (e.target as HTMLImageElement).src = `https://tile.openstreetmap.org/12/${t.x}/${t.y}.png`;
                   }}
-                  alt={`Mapbox Pune ${t.x},${t.y}`}
+                  alt={`OpenStreetMap Pune ${t.x},${t.y}`}
                   className="w-full h-full object-cover transition-opacity duration-500"
                   style={{
                     filter:
@@ -1427,12 +1421,12 @@ export default function LiveOpsView() {
         {/* Mapbox Live GIS Attribution */}
         <div className="absolute bottom-4 left-[345px] z-20 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-700/60 shadow-lg pointer-events-auto select-none">
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-white tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            <span className="text-blue-400 font-mono tracking-tight font-extrabold">mapbox</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-emerald-400 font-mono tracking-tight font-extrabold">OpenStreetMap</span>
           </div>
-          <span className="text-[10px] text-slate-400 font-medium">© Mapbox © OpenStreetMap</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-950/80 text-blue-300 font-mono border border-blue-800/40">
-            GIS Tiles Active
+          <span className="text-[10px] text-slate-400 font-medium">© OpenStreetMap contributors</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 font-mono border border-emerald-800/40">
+            OSM Live Active
           </span>
         </div>
 
