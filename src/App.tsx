@@ -3266,27 +3266,196 @@ function OrganizationsView() {
 // Employees
 // ─── Employee types & data ────────────────────────────────────────────────────
 type EmpRow = {
-  id: string; name: string; dept: string; shift: string;
+  id: string; name: string; org: string; dept: string; shift: string;
   pickup: string; drop: string; eligible: boolean;
   ride: string; status: string; phone: string; email: string;
 };
 
-const SEED_EMPLOYEES: EmpRow[] = [
-  { id: 'EMP-10481', name: 'Akshat Gupta',    dept: 'Engineering', shift: 'Morning', pickup: 'Kothrud, Pune',      drop: 'Hinjewadi Phase 1', eligible: true,  ride: 'RIDE-10421', status: 'Active',   phone: '••••••4821', email: 'a.gupta@tcs.com' },
-  { id: 'EMP-10482', name: 'Priya Sharma',    dept: 'HR',          shift: 'General', pickup: 'Baner, Pune',        drop: 'Hinjewadi Phase 2', eligible: true,  ride: 'RIDE-10422', status: 'Active',   phone: '••••••7342', email: 'p.sharma@tcs.com' },
-  { id: 'EMP-10483', name: 'Rahul Joshi',     dept: 'Finance',     shift: 'Evening', pickup: 'Aundh, Pune',        drop: 'Magarpatta City',   eligible: true,  ride: '—',          status: 'Active',   phone: '••••••1190', email: 'r.joshi@tcs.com' },
-  { id: 'EMP-10484', name: 'Sneha Kulkarni',  dept: 'Operations',  shift: 'Night',   pickup: 'Wakad, Pune',        drop: 'Hinjewadi Phase 3', eligible: true,  ride: 'RIDE-10438', status: 'Active',   phone: '••••••5563', email: 's.kulkarni@tcs.com' },
-  { id: 'EMP-10485', name: 'Vijay Patil',     dept: 'Marketing',   shift: 'Morning', pickup: 'Pimple Saudagar',    drop: 'Baner Road',        eligible: false, ride: '—',          status: 'Inactive', phone: '••••••2281', email: 'v.patil@tcs.com' },
-  { id: 'EMP-10486', name: 'Anita Desai',     dept: 'Legal',       shift: 'General', pickup: 'Hadapsar, Pune',     drop: 'EON IT Park',       eligible: true,  ride: 'RIDE-10441', status: 'Active',   phone: '••••••9920', email: 'a.desai@tcs.com' },
-  { id: 'EMP-10487', name: 'Rohan Mehta',     dept: 'Engineering', shift: 'Morning', pickup: 'Karve Nagar',        drop: 'Hinjewadi Phase 1', eligible: true,  ride: 'RIDE-10421', status: 'Active',   phone: '••••••4410', email: 'r.mehta@tcs.com' },
-  { id: 'EMP-10488', name: 'Kavita Nair',     dept: 'HR',          shift: 'General', pickup: 'Pashan, Pune',       drop: 'Hinjewadi Phase 2', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••8823', email: 'k.nair@tcs.com' },
-  { id: 'EMP-10489', name: 'Sanjay Bhat',     dept: 'Finance',     shift: 'Morning', pickup: 'Shivajinagar',       drop: 'Magarpatta City',   eligible: false, ride: '—',          status: 'Active',   phone: '••••••3317', email: 's.bhat@tcs.com' },
-  { id: 'EMP-10490', name: 'Deepika Iyer',    dept: 'Operations',  shift: 'Evening', pickup: 'Chinchwad, Pune',    drop: 'Hinjewadi Phase 3', eligible: true,  ride: 'RIDE-10439', status: 'Active',   phone: '••••••6604', email: 'd.iyer@tcs.com' },
+const ALL_ORGANIZATIONS = [
+  'TCS Pune Campus',
+  'Infosys BPM Ltd',
+  'Wipro Technologies',
+  'Cognizant Hinjewadi',
+  'Capgemini India',
+  'HCL Technologies',
+  'Mphasis Bangalore',
+  'Zensar Technologies',
 ];
 
+const ORG_SHORT_NAMES: Record<string, string> = {
+  'TCS Pune Campus': 'TCS',
+  'Infosys BPM Ltd': 'Infosys',
+  'Wipro Technologies': 'Wipro',
+  'Cognizant Hinjewadi': 'Cognizant',
+  'Capgemini India': 'Capgemini',
+  'HCL Technologies': 'HCL',
+  'Mphasis Bangalore': 'Mphasis',
+  'Zensar Technologies': 'Zensar',
+};
+
+const ORG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  'TCS Pune Campus': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  'Infosys BPM Ltd': { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  'Wipro Technologies': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  'Cognizant Hinjewadi': { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
+  'Capgemini India': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  'HCL Technologies': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  'Mphasis Bangalore': { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+  'Zensar Technologies': { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
+};
+
+const TCS_EMPLOYEES: EmpRow[] = [
+  { id: 'EMP-10481', name: 'Akshat Gupta',    org: 'TCS Pune Campus', dept: 'Engineering', shift: 'Morning', pickup: 'Kothrud, Pune',      drop: 'Hinjewadi Phase 1', eligible: true,  ride: 'RIDE-10421', status: 'Active',   phone: '••••••4821', email: 'a.gupta@tcs.com' },
+  { id: 'EMP-10482', name: 'Priya Sharma',    org: 'TCS Pune Campus', dept: 'HR',          shift: 'General', pickup: 'Baner, Pune',        drop: 'Hinjewadi Phase 2', eligible: true,  ride: 'RIDE-10422', status: 'Active',   phone: '••••••7342', email: 'p.sharma@tcs.com' },
+  { id: 'EMP-10483', name: 'Rahul Joshi',     org: 'TCS Pune Campus', dept: 'Finance',     shift: 'Evening', pickup: 'Aundh, Pune',        drop: 'Magarpatta City',   eligible: true,  ride: '—',          status: 'Active',   phone: '••••••1190', email: 'r.joshi@tcs.com' },
+  { id: 'EMP-10484', name: 'Sneha Kulkarni',  org: 'TCS Pune Campus', dept: 'Operations',  shift: 'Night',   pickup: 'Wakad, Pune',        drop: 'Hinjewadi Phase 3', eligible: true,  ride: 'RIDE-10438', status: 'Active',   phone: '••••••5563', email: 's.kulkarni@tcs.com' },
+  { id: 'EMP-10485', name: 'Vijay Patil',     org: 'TCS Pune Campus', dept: 'Marketing',   shift: 'Morning', pickup: 'Pimple Saudagar',    drop: 'Baner Road',        eligible: false, ride: '—',          status: 'Inactive', phone: '••••••2281', email: 'v.patil@tcs.com' },
+  { id: 'EMP-10486', name: 'Anita Desai',     org: 'TCS Pune Campus', dept: 'Legal',       shift: 'General', pickup: 'Hadapsar, Pune',     drop: 'EON IT Park',       eligible: true,  ride: 'RIDE-10441', status: 'Active',   phone: '••••••9920', email: 'a.desai@tcs.com' },
+  { id: 'EMP-10487', name: 'Rohan Mehta',     org: 'TCS Pune Campus', dept: 'Engineering', shift: 'Morning', pickup: 'Karve Nagar',        drop: 'Hinjewadi Phase 1', eligible: true,  ride: 'RIDE-10421', status: 'Active',   phone: '••••••4410', email: 'r.mehta@tcs.com' },
+  { id: 'EMP-10488', name: 'Kavita Nair',     org: 'TCS Pune Campus', dept: 'HR',          shift: 'General', pickup: 'Pashan, Pune',       drop: 'Hinjewadi Phase 2', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••8823', email: 'k.nair@tcs.com' },
+  { id: 'EMP-10489', name: 'Sanjay Bhat',     org: 'TCS Pune Campus', dept: 'Finance',     shift: 'Morning', pickup: 'Shivajinagar',       drop: 'Magarpatta City',   eligible: false, ride: '—',          status: 'Active',   phone: '••••••3317', email: 's.bhat@tcs.com' },
+  { id: 'EMP-10490', name: 'Deepika Iyer',    org: 'TCS Pune Campus', dept: 'Operations',  shift: 'Evening', pickup: 'Chinchwad, Pune',    drop: 'Hinjewadi Phase 3', eligible: true,  ride: 'RIDE-10439', status: 'Active',   phone: '••••••6604', email: 'd.iyer@tcs.com' },
+  { id: 'EMP-10491', name: 'Amitav Roy',      org: 'TCS Pune Campus', dept: 'Engineering', shift: 'Night',   pickup: 'Bavdhan, Pune',      drop: 'Hinjewadi Phase 1', eligible: true,  ride: 'RIDE-10421', status: 'Active',   phone: '••••••8712', email: 'a.roy@tcs.com' },
+  { id: 'EMP-10492', name: 'Sunita Rao',      org: 'TCS Pune Campus', dept: 'Operations',  shift: 'Morning', pickup: 'Viman Nagar',        drop: 'Hinjewadi Phase 2', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••3198', email: 's.rao@tcs.com' },
+];
+
+const INFOSYS_EMPLOYEES: EmpRow[] = [
+  { id: 'EMP-10501', name: 'Vikram Malhotra',    org: 'Infosys BPM Ltd', dept: 'Engineering', shift: 'Morning', pickup: 'Aundh, Pune',        drop: 'Hinjewadi Phase 2', eligible: true,  ride: 'RIDE-10422', status: 'Active',   phone: '••••••4120', email: 'v.malhotra@infosys.com' },
+  { id: 'EMP-10502', name: 'Ananya Swaminathan', org: 'Infosys BPM Ltd', dept: 'HR',          shift: 'General', pickup: 'Baner, Pune',        drop: 'Hinjewadi Phase 2', eligible: true,  ride: 'RIDE-10422', status: 'Active',   phone: '••••••8391', email: 'a.swaminathan@infosys.com' },
+  { id: 'EMP-10503', name: 'Rajeshwari Pillai',  org: 'Infosys BPM Ltd', dept: 'Operations',  shift: 'Evening', pickup: 'Wakad, Pune',        drop: 'Hinjewadi Phase 2', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••7123', email: 'r.pillai@infosys.com' },
+  { id: 'EMP-10504', name: 'Karthik Venkatesh',  org: 'Infosys BPM Ltd', dept: 'Engineering', shift: 'Night',   pickup: 'Pimple Gurav',       drop: 'Hinjewadi Phase 2', eligible: true,  ride: 'RIDE-10438', status: 'Active',   phone: '••••••9012', email: 'k.venkatesh@infosys.com' },
+  { id: 'EMP-10505', name: 'Divya Menon',        org: 'Infosys BPM Ltd', dept: 'Finance',     shift: 'General', pickup: 'Hadapsar, Pune',     drop: 'EON IT Park',       eligible: true,  ride: 'RIDE-10441', status: 'Active',   phone: '••••••5431', email: 'd.menon@infosys.com' },
+  { id: 'EMP-10506', name: 'Sandeep Kulkarni',   org: 'Infosys BPM Ltd', dept: 'Operations',  shift: 'Morning', pickup: 'Pimpri, Pune',       drop: 'Hinjewadi Phase 2', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••6128', email: 's.kulkarni@infosys.com' },
+  { id: 'EMP-10507', name: 'Pooja Hegde',        org: 'Infosys BPM Ltd', dept: 'Marketing',   shift: 'General', pickup: 'Shivajinagar',       drop: 'Hinjewadi Phase 2', eligible: false, ride: '—',          status: 'Inactive', phone: '••••••3419', email: 'p.hegde@infosys.com' },
+  { id: 'EMP-10508', name: 'Manish Tiwari',      org: 'Infosys BPM Ltd', dept: 'Engineering', shift: 'Morning', pickup: 'Bavdhan, Pune',      drop: 'Hinjewadi Phase 2', eligible: true,  ride: 'RIDE-10422', status: 'Active',   phone: '••••••7781', email: 'm.tiwari@infosys.com' },
+  { id: 'EMP-10509', name: 'Shilpa Shetty',      org: 'Infosys BPM Ltd', dept: 'Legal',       shift: 'General', pickup: 'Karve Nagar',        drop: 'Hinjewadi Phase 2', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••2345', email: 's.shetty@infosys.com' },
+  { id: 'EMP-10510', name: 'Varun Saxena',       org: 'Infosys BPM Ltd', dept: 'Finance',     shift: 'Evening', pickup: 'Kothrud, Pune',      drop: 'Hinjewadi Phase 2', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••9182', email: 'v.saxena@infosys.com' },
+  { id: 'EMP-10511', name: 'Meera Nambiar',      org: 'Infosys BPM Ltd', dept: 'Operations',  shift: 'Night',   pickup: 'Chinchwad, Pune',    drop: 'Hinjewadi Phase 2', eligible: true,  ride: 'RIDE-10438', status: 'Active',   phone: '••••••4490', email: 'm.nambiar@infosys.com' },
+  { id: 'EMP-10512', name: 'Aditya Kashyap',     org: 'Infosys BPM Ltd', dept: 'Engineering', shift: 'Morning', pickup: 'Pashan, Pune',       drop: 'Hinjewadi Phase 2', eligible: true,  ride: 'RIDE-10422', status: 'Active',   phone: '••••••6821', email: 'a.kashyap@infosys.com' },
+];
+
+const WIPRO_EMPLOYEES: EmpRow[] = [
+  { id: 'EMP-10521', name: 'Venkat Raman',       org: 'Wipro Technologies', dept: 'Engineering', shift: 'Morning', pickup: 'Electronic City',    drop: 'Sarjapur Campus',   eligible: true,  ride: 'RIDE-10423', status: 'Active',   phone: '••••••5541', email: 'v.raman@wipro.com' },
+  { id: 'EMP-10522', name: 'Shweta Agarwal',     org: 'Wipro Technologies', dept: 'HR',          shift: 'General', pickup: 'Koramangala',        drop: 'Sarjapur Campus',   eligible: true,  ride: 'RIDE-10423', status: 'Active',   phone: '••••••2289', email: 's.agarwal@wipro.com' },
+  { id: 'EMP-10523', name: 'Harish Kumar',       org: 'Wipro Technologies', dept: 'Operations',  shift: 'Evening', pickup: 'HSR Layout',         drop: 'Sarjapur Campus',   eligible: true,  ride: '—',          status: 'Active',   phone: '••••••8832', email: 'h.kumar@wipro.com' },
+  { id: 'EMP-10524', name: 'Radhika Sen',        org: 'Wipro Technologies', dept: 'Finance',     shift: 'Morning', pickup: 'Indiranagar',        drop: 'Sarjapur Campus',   eligible: true,  ride: 'RIDE-10423', status: 'Active',   phone: '••••••1940', email: 'r.sen@wipro.com' },
+  { id: 'EMP-10525', name: 'Gaurav Banerjee',    org: 'Wipro Technologies', dept: 'Engineering', shift: 'Night',   pickup: 'Bellandur',          drop: 'Sarjapur Campus',   eligible: true,  ride: '—',          status: 'Active',   phone: '••••••7429', email: 'g.banerjee@wipro.com' },
+  { id: 'EMP-10526', name: 'Tanvi Chawla',       org: 'Wipro Technologies', dept: 'Marketing',   shift: 'General', pickup: 'Marathahalli',      drop: 'Sarjapur Campus',   eligible: false, ride: '—',          status: 'Inactive', phone: '••••••3812', email: 't.chawla@wipro.com' },
+  { id: 'EMP-10527', name: 'Prateek Mishra',     org: 'Wipro Technologies', dept: 'Engineering', shift: 'Morning', pickup: 'Whitefield',        drop: 'Sarjapur Campus',   eligible: true,  ride: 'RIDE-10423', status: 'Active',   phone: '••••••9321', email: 'p.mishra@wipro.com' },
+  { id: 'EMP-10528', name: 'Ritu Verma',         org: 'Wipro Technologies', dept: 'Legal',       shift: 'General', pickup: 'BTM Layout',         drop: 'Sarjapur Campus',   eligible: true,  ride: '—',          status: 'Active',   phone: '••••••6190', email: 'r.verma@wipro.com' },
+  { id: 'EMP-10529', name: 'Arvind Krishna',     org: 'Wipro Technologies', dept: 'Operations',  shift: 'Evening', pickup: 'Jayanagar',          drop: 'Sarjapur Campus',   eligible: true,  ride: '—',          status: 'Active',   phone: '••••••4501', email: 'a.krishna@wipro.com' },
+  { id: 'EMP-10530', name: 'Neha Singhania',     org: 'Wipro Technologies', dept: 'HR',          shift: 'Morning', pickup: 'Banashankari',       drop: 'Sarjapur Campus',   eligible: true,  ride: 'RIDE-10423', status: 'Active',   phone: '••••••8124', email: 'n.singhania@wipro.com' },
+  { id: 'EMP-10531', name: 'Abhinav Kapoor',     org: 'Wipro Technologies', dept: 'Engineering', shift: 'Night',   pickup: 'Electronic City',    drop: 'Sarjapur Campus',   eligible: true,  ride: '—',          status: 'Active',   phone: '••••••3287', email: 'a.kapoor@wipro.com' },
+  { id: 'EMP-10532', name: 'Pallavi Reddy',      org: 'Wipro Technologies', dept: 'Finance',     shift: 'General', pickup: 'Sarjapur Road',      drop: 'Sarjapur Campus',   eligible: true,  ride: '—',          status: 'Active',   phone: '••••••7651', email: 'p.reddy@wipro.com' },
+];
+
+const COGNIZANT_EMPLOYEES: EmpRow[] = [
+  { id: 'EMP-10541', name: 'Ananya Singh',       org: 'Cognizant Hinjewadi', dept: 'Engineering', shift: 'Morning', pickup: 'Wakad, Pune',       drop: 'Hinjewadi Phase 3', eligible: true,  ride: 'RIDE-10438', status: 'Active',   phone: '••••••6543', email: 'a.singh@cognizant.com' },
+  { id: 'EMP-10542', name: 'Tarun Bhatia',       org: 'Cognizant Hinjewadi', dept: 'Operations',  shift: 'Evening', pickup: 'Baner, Pune',       drop: 'Hinjewadi Phase 3', eligible: true,  ride: 'RIDE-10438', status: 'Active',   phone: '••••••9821', email: 't.bhatia@cognizant.com' },
+  { id: 'EMP-10543', name: 'Swati Deshpande',    org: 'Cognizant Hinjewadi', dept: 'HR',          shift: 'General', pickup: 'Pimple Saudagar',   drop: 'Hinjewadi Phase 3', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••4312', email: 's.deshpande@cognizant.com' },
+  { id: 'EMP-10544', name: 'Siddharth Nair',     org: 'Cognizant Hinjewadi', dept: 'Engineering', shift: 'Night',   pickup: 'Aundh, Pune',       drop: 'Hinjewadi Phase 3', eligible: true,  ride: 'RIDE-10438', status: 'Active',   phone: '••••••8765', email: 's.nair@cognizant.com' },
+  { id: 'EMP-10545', name: 'Namrata Joshi',      org: 'Cognizant Hinjewadi', dept: 'Finance',     shift: 'Morning', pickup: 'Kothrud, Pune',     drop: 'Hinjewadi Phase 3', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••2198', email: 'n.joshi@cognizant.com' },
+  { id: 'EMP-10546', name: 'Chetan Shinde',      org: 'Cognizant Hinjewadi', dept: 'Operations',  shift: 'General', pickup: 'Ravet, Pune',       drop: 'Hinjewadi Phase 3', eligible: true,  ride: 'RIDE-10438', status: 'Active',   phone: '••••••5432', email: 'c.shinde@cognizant.com' },
+  { id: 'EMP-10547', name: 'Monica Gokhale',     org: 'Cognizant Hinjewadi', dept: 'Marketing',   shift: 'Morning', pickup: 'Pashan, Pune',      drop: 'Hinjewadi Phase 3', eligible: false, ride: '—',          status: 'Inactive', phone: '••••••1098', email: 'm.gokhale@cognizant.com' },
+  { id: 'EMP-10548', name: 'Kunal Kamble',       org: 'Cognizant Hinjewadi', dept: 'Engineering', shift: 'Evening', pickup: 'Pimpri, Pune',      drop: 'Hinjewadi Phase 3', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••7654', email: 'k.kamble@cognizant.com' },
+  { id: 'EMP-10549', name: 'Bhavna Choudhury',   org: 'Cognizant Hinjewadi', dept: 'Legal',       shift: 'General', pickup: 'Shivajinagar',      drop: 'Hinjewadi Phase 3', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••3210', email: 'b.choudhury@cognizant.com' },
+  { id: 'EMP-10550', name: 'Deepak Salunke',     org: 'Cognizant Hinjewadi', dept: 'Operations',  shift: 'Night',   pickup: 'Chinchwad, Pune',   drop: 'Hinjewadi Phase 3', eligible: true,  ride: 'RIDE-10438', status: 'Active',   phone: '••••••8901', email: 'd.salunke@cognizant.com' },
+  { id: 'EMP-10551', name: 'Ishan Pandya',       org: 'Cognizant Hinjewadi', dept: 'Engineering', shift: 'Morning', pickup: 'Bavdhan, Pune',     drop: 'Hinjewadi Phase 3', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••4567', email: 'i.pandya@cognizant.com' },
+  { id: 'EMP-10552', name: 'Rashmi Kulkarni',    org: 'Cognizant Hinjewadi', dept: 'Finance',     shift: 'General', pickup: 'Karve Nagar',       drop: 'Hinjewadi Phase 3', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••9876', email: 'r.kulkarni@cognizant.com' },
+];
+
+const CAPGEMINI_EMPLOYEES: EmpRow[] = [
+  { id: 'EMP-10561', name: 'Sneha Kulkarni',     org: 'Capgemini India', dept: 'Operations',  shift: 'Morning', pickup: 'BKC Bandra',          drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••5432', email: 's.kulkarni@capgemini.in' },
+  { id: 'EMP-10562', name: 'Amit Shah',          org: 'Capgemini India', dept: 'Engineering', shift: 'General', pickup: 'Powai, Mumbai',       drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••8765', email: 'a.shah@capgemini.in' },
+  { id: 'EMP-10563', name: 'Roshni Merchant',    org: 'Capgemini India', dept: 'HR',          shift: 'Morning', pickup: 'Andheri East',        drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••2109', email: 'r.merchant@capgemini.in' },
+  { id: 'EMP-10564', name: 'Farhan Khan',        org: 'Capgemini India', dept: 'Finance',     shift: 'Evening', pickup: 'Thane West',          drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••6543', email: 'f.khan@capgemini.in' },
+  { id: 'EMP-10565', name: 'Preeti Zaveri',      org: 'Capgemini India', dept: 'Engineering', shift: 'Night',   pickup: 'Navi Mumbai',         drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••9870', email: 'p.zaveri@capgemini.in' },
+  { id: 'EMP-10566', name: 'Nilesh Godbole',     org: 'Capgemini India', dept: 'Operations',  shift: 'General', pickup: 'Dadar, Mumbai',       drop: 'Airoli Mindspace',  eligible: false, ride: '—',          status: 'Inactive', phone: '••••••3219', email: 'n.godbole@capgemini.in' },
+  { id: 'EMP-10567', name: 'Shruti Talwar',      org: 'Capgemini India', dept: 'Marketing',   shift: 'Morning', pickup: 'Chembur',             drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••7650', email: 's.talwar@capgemini.in' },
+  { id: 'EMP-10568', name: 'Sameer Bhatt',       org: 'Capgemini India', dept: 'Engineering', shift: 'Evening', pickup: 'Borivali, Mumbai',    drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••1094', email: 's.bhatt@capgemini.in' },
+  { id: 'EMP-10569', name: 'Aparna Sen',         org: 'Capgemini India', dept: 'Legal',       shift: 'General', pickup: 'Vashi, Navi Mumbai',  drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••5439', email: 'a.sen@capgemini.in' },
+  { id: 'EMP-10570', name: 'Vivek Oberoi',       org: 'Capgemini India', dept: 'Finance',     shift: 'Morning', pickup: 'Ghatkopar',           drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••8761', email: 'v.oberoi@capgemini.in' },
+  { id: 'EMP-10571', name: 'Madhuri Dixit',      org: 'Capgemini India', dept: 'HR',          shift: 'General', pickup: 'Mulund, Mumbai',      drop: 'Airoli Mindspace',  eligible: true,  ride: '—',          status: 'Active',   phone: '••••••2195', email: 'm.dixit@capgemini.in' },
+];
+
+const HCL_EMPLOYEES: EmpRow[] = [
+  { id: 'EMP-10581', name: 'Amit Gupta',         org: 'HCL Technologies', dept: 'Engineering', shift: 'Morning', pickup: 'Sector 62, Noida',    drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••4321', email: 'a.gupta@hcl.com' },
+  { id: 'EMP-10582', name: 'Suman Rastogi',      org: 'HCL Technologies', dept: 'HR',          shift: 'General', pickup: 'Indirapuram, Gzb',   drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••8765', email: 's.rastogi@hcl.com' },
+  { id: 'EMP-10583', name: 'Rajiv Saxena',       org: 'HCL Technologies', dept: 'Operations',  shift: 'Night',   pickup: 'Greater Noida',       drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••2109', email: 'r.saxena@hcl.com' },
+  { id: 'EMP-10584', name: 'Neetu Bhardwaj',     org: 'HCL Technologies', dept: 'Finance',     shift: 'General', pickup: 'Mayur Vihar, Delhi',  drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••6543', email: 'n.bhardwaj@hcl.com' },
+  { id: 'EMP-10585', name: 'Saurabh Tyagi',      org: 'HCL Technologies', dept: 'Engineering', shift: 'Evening', pickup: 'Sector 50, Noida',    drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••9876', email: 's.tyagi@hcl.com' },
+  { id: 'EMP-10586', name: 'Garima Chauhan',     org: 'HCL Technologies', dept: 'Marketing',   shift: 'Morning', pickup: 'Vaishali, Ghaziabad', drop: 'Sector 126 Campus', eligible: false, ride: '—',          status: 'Inactive', phone: '••••••3210', email: 'g.chauhan@hcl.com' },
+  { id: 'EMP-10587', name: 'Alok Pandey',        org: 'HCL Technologies', dept: 'Operations',  shift: 'General', pickup: 'Crossing Republik',   drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••7654', email: 'a.pandey@hcl.com' },
+  { id: 'EMP-10588', name: 'Divyansh Sharma',    org: 'HCL Technologies', dept: 'Engineering', shift: 'Morning', pickup: 'Noida Expressway',    drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••1098', email: 'd.sharma@hcl.com' },
+  { id: 'EMP-10589', name: 'Richa Goswami',      org: 'HCL Technologies', dept: 'Legal',       shift: 'General', pickup: 'Kaushambi, Gzb',     drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••5432', email: 'r.goswami@hcl.com' },
+  { id: 'EMP-10590', name: 'Pankaj Verma',       org: 'HCL Technologies', dept: 'Finance',     shift: 'Evening', pickup: 'Sector 76, Noida',    drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••8761', email: 'p.verma@hcl.com' },
+  { id: 'EMP-10591', name: 'Aarti Rawat',        org: 'HCL Technologies', dept: 'HR',          shift: 'Morning', pickup: 'Vasundhara, Gzb',     drop: 'Sector 126 Campus', eligible: true,  ride: '—',          status: 'Active',   phone: '••••••2190', email: 'a.rawat@hcl.com' },
+];
+
+const MPHASIS_EMPLOYEES: EmpRow[] = [
+  { id: 'EMP-10601', name: 'Kiran Bhat',         org: 'Mphasis Bangalore', dept: 'Engineering', shift: 'Morning', pickup: 'Bagmane Tech Park',   drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••3210', email: 'k.bhat@mphasis.com' },
+  { id: 'EMP-10602', name: 'Geetha Krishnan',    org: 'Mphasis Bangalore', dept: 'HR',          shift: 'General', pickup: 'Indiranagar',         drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••7654', email: 'g.krishnan@mphasis.com' },
+  { id: 'EMP-10603', name: 'Mahesh Namboodiri',  org: 'Mphasis Bangalore', dept: 'Operations',  shift: 'Night',   pickup: 'Marathahalli',        drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••1098', email: 'm.namboodiri@mphasis.com' },
+  { id: 'EMP-10604', name: 'Anjali Menon',       org: 'Mphasis Bangalore', dept: 'Finance',     shift: 'General', pickup: 'Koramangala',         drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••5432', email: 'a.menon@mphasis.com' },
+  { id: 'EMP-10605', name: 'Suresh Pillai',      org: 'Mphasis Bangalore', dept: 'Engineering', shift: 'Evening', pickup: 'Whitefield',          drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••8765', email: 's.pillai@mphasis.com' },
+  { id: 'EMP-10606', name: 'Shreya Hegde',       org: 'Mphasis Bangalore', dept: 'Marketing',   shift: 'Morning', pickup: 'HSR Layout',          drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••2109', email: 's.hegde@mphasis.com' },
+  { id: 'EMP-10607', name: 'Prashanth Rao',      org: 'Mphasis Bangalore', dept: 'Operations',  shift: 'Morning', pickup: 'Bellandur',           drop: 'CV Raman Nagar',    eligible: false, ride: '—',          status: 'Inactive', phone: '••••••6543', email: 'p.rao@mphasis.com' },
+  { id: 'EMP-10608', name: 'Lavanya Sundaram',   org: 'Mphasis Bangalore', dept: 'Engineering', shift: 'General', pickup: 'Electronic City',     drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••9876', email: 'l.sundaram@mphasis.com' },
+  { id: 'EMP-10609', name: 'Vinay Kulkarni',     org: 'Mphasis Bangalore', dept: 'Finance',     shift: 'Morning', pickup: 'Banaswadi',           drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••3219', email: 'v.kulkarni@mphasis.com' },
+  { id: 'EMP-10610', name: 'Ashwini Gowda',      org: 'Mphasis Bangalore', dept: 'Legal',       shift: 'General', pickup: 'Kalyan Nagar',        drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••7658', email: 'a.gowda@mphasis.com' },
+  { id: 'EMP-10611', name: 'Manoj Chandran',     org: 'Mphasis Bangalore', dept: 'HR',          shift: 'Evening', pickup: 'BTM Layout',          drop: 'CV Raman Nagar',    eligible: true,  ride: '—',          status: 'Active',   phone: '••••••1092', email: 'm.chandran@mphasis.com' },
+];
+
+const ZENSAR_EMPLOYEES: EmpRow[] = [
+  { id: 'EMP-10621', name: 'Deepak Patil',       org: 'Zensar Technologies', dept: 'Engineering', shift: 'Morning', pickup: 'EON IT Park Kharadi', drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••2109', email: 'd.patil@zensar.com' },
+  { id: 'EMP-10622', name: 'Kalyani More',       org: 'Zensar Technologies', dept: 'HR',          shift: 'General', pickup: 'Viman Nagar',         drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••6543', email: 'k.more@zensar.com' },
+  { id: 'EMP-10623', name: 'Omkar Jadhav',       org: 'Zensar Technologies', dept: 'Operations',  shift: 'Night',   pickup: 'Hadapsar, Pune',      drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••9876', email: 'o.jadhav@zensar.com' },
+  { id: 'EMP-10624', name: 'Sayali Kulkarni',    org: 'Zensar Technologies', dept: 'Finance',     shift: 'Morning', pickup: 'Magarpatta City',     drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••3210', email: 's.kulkarni@zensar.com' },
+  { id: 'EMP-10625', name: 'Bhushan Gaikwad',    org: 'Zensar Technologies', dept: 'Engineering', shift: 'Evening', pickup: 'Wadgaon Sheri',      drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••7654', email: 'b.gaikwad@zensar.com' },
+  { id: 'EMP-10626', name: 'Tanvi Thorat',       org: 'Zensar Technologies', dept: 'Marketing',   shift: 'General', pickup: 'Kalyani Nagar',       drop: 'Zensar Campus',      eligible: false, ride: '—',          status: 'Inactive', phone: '••••••1098', email: 't.thorat@zensar.com' },
+  { id: 'EMP-10627', name: 'Swapnil Jagtap',     org: 'Zensar Technologies', dept: 'Operations',  shift: 'General', pickup: 'Chandan Nagar',       drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••5432', email: 's.jagtap@zensar.com' },
+  { id: 'EMP-10628', name: 'Shraddha Shirole',   org: 'Zensar Technologies', dept: 'Engineering', shift: 'Morning', pickup: 'Vishrantwadi',       drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••8765', email: 's.shirole@zensar.com' },
+  { id: 'EMP-10629', name: 'Tushar Sawant',      org: 'Zensar Technologies', dept: 'Legal',       shift: 'General', pickup: 'Yerwada, Pune',       drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••2104', email: 't.sawant@zensar.com' },
+  { id: 'EMP-10630', name: 'Manisha Salve',      org: 'Zensar Technologies', dept: 'Finance',     shift: 'Evening', pickup: 'Fatima Nagar',        drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••6541', email: 'm.salve@zensar.com' },
+  { id: 'EMP-10631', name: 'Harshal Gholap',     org: 'Zensar Technologies', dept: 'HR',          shift: 'Morning', pickup: 'Koregaon Park',       drop: 'Zensar Campus',      eligible: true,  ride: '—',          status: 'Active',   phone: '••••••9872', email: 'h.gholap@zensar.com' },
+];
+
+// Interleave all organizations round-robin so the default view displays a vibrant mix across companies
+const SEED_EMPLOYEES: EmpRow[] = (() => {
+  const groups = [
+    TCS_EMPLOYEES,
+    INFOSYS_EMPLOYEES,
+    WIPRO_EMPLOYEES,
+    COGNIZANT_EMPLOYEES,
+    CAPGEMINI_EMPLOYEES,
+    HCL_EMPLOYEES,
+    MPHASIS_EMPLOYEES,
+    ZENSAR_EMPLOYEES,
+  ];
+  const maxLen = Math.max(...groups.map(g => g.length));
+  const result: EmpRow[] = [];
+  for (let i = 0; i < maxLen; i++) {
+    for (const g of groups) {
+      if (i < g.length) {
+        result.push(g[i]);
+      }
+    }
+  }
+  return result;
+})();
+
 // ─── Add Employee Modal ───────────────────────────────────────────────────────
-function AddEmpModal({ onClose, onAdd }: { onClose: () => void; onAdd: (e: EmpRow) => void }) {
-  const [form, setForm] = useState({ name: '', dept: 'Engineering', shift: 'Morning', pickup: '', drop: '', email: '', phone: '' });
+function AddEmpModal({ onClose, onAdd, defaultOrg }: { onClose: () => void; onAdd: (e: EmpRow) => void; defaultOrg?: string }) {
+  const [form, setForm] = useState({
+    name: '',
+    org: defaultOrg && defaultOrg !== 'All Organizations' ? defaultOrg : 'TCS Pune Campus',
+    dept: 'Engineering',
+    shift: 'Morning',
+    pickup: '',
+    drop: '',
+    email: '',
+    phone: '',
+  });
   const [error, setError] = useState('');
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -3294,10 +3463,11 @@ function AddEmpModal({ onClose, onAdd }: { onClose: () => void; onAdd: (e: EmpRo
     if (!form.name.trim()) { setError('Name is required.'); return; }
     if (!form.email.trim()) { setError('Email is required.'); return; }
     if (!form.pickup.trim() || !form.drop.trim()) { setError('Pickup and drop locations are required.'); return; }
-    const num = String(10491 + Math.floor(Math.random() * 500));
+    const num = String(10650 + Math.floor(Math.random() * 500));
     onAdd({
       id: `EMP-${num}`,
       name: form.name.trim(),
+      org: form.org,
       dept: form.dept,
       shift: form.shift,
       pickup: form.pickup.trim(),
@@ -3305,7 +3475,7 @@ function AddEmpModal({ onClose, onAdd }: { onClose: () => void; onAdd: (e: EmpRo
       eligible: true,
       ride: '—',
       status: 'Active',
-      phone: '••••••' + form.phone.slice(-4),
+      phone: '••••••' + (form.phone.slice(-4) || '9999'),
       email: form.email.trim(),
     });
     onClose();
@@ -3329,6 +3499,12 @@ function AddEmpModal({ onClose, onAdd }: { onClose: () => void; onAdd: (e: EmpRo
             <div className="col-span-2">
               <label className="block text-xs font-medium text-slate-600 mb-1.5">Full Name <span className="text-red-500">*</span></label>
               <input className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="e.g. Priya Sharma" value={form.name} onChange={e => set('name', e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1.5">Organization <span className="text-red-500">*</span></label>
+              <select className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300" value={form.org} onChange={e => set('org', e.target.value)}>
+                {ALL_ORGANIZATIONS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">Department</label>
@@ -3404,6 +3580,13 @@ function EmpProfileDrawer({ emp, onClose }: { emp: EmpRow; onClose: () => void }
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                ORG_COLORS[emp.org]
+                  ? `${ORG_COLORS[emp.org].bg} ${ORG_COLORS[emp.org].text} ${ORG_COLORS[emp.org].border}`
+                  : 'bg-blue-50 text-blue-700 border-blue-200'
+              }`}>
+                🏢 {emp.org}
+              </span>
               <Badge label={emp.status} color={emp.status === 'Active' ? 'green' : 'slate'} />
               <Badge label={emp.eligible ? 'Transport Eligible' : 'Ineligible'} color={emp.eligible ? 'blue' : 'red'} />
               <Badge label={emp.shift + ' Shift'} color="slate" />
@@ -3414,7 +3597,8 @@ function EmpProfileDrawer({ emp, onClose }: { emp: EmpRow; onClose: () => void }
           <div className="px-6 py-5 border-b border-slate-100">
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
               {[
-                { label: 'Department', value: emp.dept, icon: '🏢' },
+                { label: 'Organization', value: emp.org, icon: '🏢' },
+                { label: 'Department', value: emp.dept, icon: '🏬' },
                 { label: 'Shift', value: emp.shift, icon: '⏰' },
                 { label: 'Phone', value: emp.phone, icon: '📞' },
                 { label: 'Email', value: emp.email, icon: '📧' },
@@ -3451,40 +3635,60 @@ function EmpProfileDrawer({ emp, onClose }: { emp: EmpRow; onClose: () => void }
 function EmployeesView() {
   const [employees, setEmployees] = useState<EmpRow[]>(SEED_EMPLOYEES);
   const [search, setSearch] = useState('');
-  const [dept, setDept] = useState('All Depts');
+  const [orgFilter, setOrgFilter] = useState('All Organizations');
   const [showAddModal, setShowAddModal] = useState(false);
   const [profileEmp, setProfileEmp] = useState<EmpRow | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const DEPTS = ['All Depts', 'Engineering', 'HR', 'Finance', 'Operations'];
-  useEffect(() => { setPage(1); }, [search, dept, pageSize]);
+  useEffect(() => { setPage(1); }, [search, orgFilter, pageSize]);
 
   const filtered = employees.filter(e => {
-    const matchDept = dept === 'All Depts' || e.dept === dept;
+    const matchOrg =
+      orgFilter === 'All Organizations' ||
+      e.org === orgFilter ||
+      ORG_SHORT_NAMES[e.org] === orgFilter ||
+      (ORG_SHORT_NAMES[orgFilter] && e.org === ORG_SHORT_NAMES[orgFilter]);
     const q = search.toLowerCase();
-    const matchSearch = !q || e.name.toLowerCase().includes(q) || e.id.toLowerCase().includes(q) || e.dept.toLowerCase().includes(q) || e.pickup.toLowerCase().includes(q);
-    return matchDept && matchSearch;
+    const matchSearch =
+      !q ||
+      e.name.toLowerCase().includes(q) ||
+      e.id.toLowerCase().includes(q) ||
+      e.dept.toLowerCase().includes(q) ||
+      e.org.toLowerCase().includes(q) ||
+      e.pickup.toLowerCase().includes(q) ||
+      e.drop.toLowerCase().includes(q) ||
+      e.email.toLowerCase().includes(q);
+    return matchOrg && matchSearch;
   });
 
   const totalEmpPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pagedEmployees = filtered.slice((page - 1) * pageSize, page * pageSize);
 
-  const deptCounts: Record<string, number> = { 'All Depts': employees.length };
-  employees.forEach(e => { deptCounts[e.dept] = (deptCounts[e.dept] || 0) + 1; });
+  const resetAllFilters = () => {
+    setSearch('');
+    setOrgFilter('All Organizations');
+  };
+
+  const isFilterActive = search !== '' || orgFilter !== 'All Organizations';
+
+  const selectedSelectValue = ALL_ORGANIZATIONS.includes(orgFilter)
+    ? orgFilter
+    : Object.keys(ORG_SHORT_NAMES).find(k => ORG_SHORT_NAMES[k] === orgFilter) || 'All Organizations';
 
   return (
     <div className="p-6 slide-in overflow-y-auto h-full">
       {showAddModal && (
         <AddEmpModal
+          defaultOrg={orgFilter}
           onClose={() => setShowAddModal(false)}
           onAdd={emp => setEmployees(prev => [emp, ...prev])}
         />
       )}
       {profileEmp && <EmpProfileDrawer emp={profileEmp} onClose={() => setProfileEmp(null)} />}
 
-      {/* Toolbar */}
-      <div className="flex items-center justify-between mb-5">
+      {/* Toolbar: Search, Organization Name Filters, Add Employee */}
+      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           {/* Search */}
           <div className="relative">
@@ -3496,46 +3700,70 @@ function EmployeesView() {
               onChange={e => setSearch(e.target.value)}
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 text-sm leading-none">✕</button>
+              <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 text-sm leading-none cursor-pointer">✕</button>
             )}
           </div>
 
-          {/* Dept tabs */}
-          {DEPTS.map(d => (
-            <button
-              key={d}
-              onClick={() => setDept(d)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 ${
-                dept === d
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-              }`}
+          {/* Organization Filter Box */}
+          <div className="relative flex items-center bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-400 transition-colors">
+            <span className="text-slate-400 text-xs mr-1.5 flex-shrink-0">🏢</span>
+            <span className="text-xs text-slate-500 font-medium mr-1.5 whitespace-nowrap flex-shrink-0">Organization:</span>
+            <select
+              value={selectedSelectValue}
+              onChange={e => setOrgFilter(e.target.value)}
+              className="appearance-none bg-transparent text-xs font-semibold text-slate-800 pr-5 focus:outline-none cursor-pointer"
             >
-              {d}
-              {deptCounts[d] !== undefined && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${dept === d ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                  {deptCounts[d] ?? 0}
-                </span>
-              )}
+              <option value="All Organizations">All Organizations</option>
+              {ALL_ORGANIZATIONS.map(org => {
+                const short = ORG_SHORT_NAMES[org] || org;
+                return (
+                  <option key={org} value={org}>
+                    {short}
+                  </option>
+                );
+              })}
+            </select>
+            <span className="pointer-events-none text-slate-400 text-xs -ml-3">▾</span>
+          </div>
+
+          {isFilterActive && (
+            <button
+              onClick={resetAllFilters}
+              className="px-2.5 py-1 text-xs text-slate-500 hover:text-blue-600 border border-dashed border-slate-300 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-colors flex items-center gap-1 cursor-pointer"
+              title="Reset filter"
+            >
+              <span>✕</span> Reset
             </button>
-          ))}
+          )}
         </div>
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1.5 flex-shrink-0"
+          className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1.5 flex-shrink-0 shadow-xs cursor-pointer"
         >
           + Add Employee
         </button>
       </div>
 
       {/* Results line */}
-      <div className="mb-3 text-xs text-slate-400">
-        {filtered.length === employees.length
-          ? `${employees.length} employees`
-          : `${filtered.length} of ${employees.length} employees`}
-        {search && <span> matching "<span className="text-slate-600 font-medium">{search}</span>"</span>}
-        {dept !== 'All Depts' && <span> in <span className="text-slate-600 font-medium">{dept}</span></span>}
+      <div className="mb-3 text-xs text-slate-400 flex items-center justify-between flex-wrap gap-2">
+        <div>
+          {filtered.length === employees.length
+            ? `${employees.length} employees`
+            : `${filtered.length} of ${employees.length} employees`}
+          {search && <span> matching "<span className="text-slate-600 font-medium">{search}</span>"</span>}
+          {orgFilter !== 'All Organizations' && (
+            <span> in <span className="text-blue-600 font-semibold">{ORG_SHORT_NAMES[orgFilter] || orgFilter}</span></span>
+          )}
+        </div>
+        {isFilterActive && (
+          <button
+            onClick={resetAllFilters}
+            className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline cursor-pointer"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
 
       {/* Table Card Container */}
@@ -3544,7 +3772,7 @@ function EmployeesView() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/80">
-                {['Employee ID', 'Name', 'Dept', 'Shift', 'Pickup', 'Drop', 'Eligibility', 'Upcoming Ride', 'Status', 'Actions'].map(h => (
+                {['Employee ID', 'Name', 'Organization', 'Dept', 'Shift', 'Pickup', 'Drop', 'Eligibility', 'Upcoming Ride', 'Status', 'Actions'].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -3552,15 +3780,20 @@ function EmployeesView() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center">
+                  <td colSpan={11} className="px-4 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <span className="text-3xl">🔍</span>
                       <div className="text-sm text-slate-500 font-medium">No employees found</div>
                       <div className="text-xs text-slate-400">
-                        {search ? `No results for "${search}"` : `No employees in ${dept}`}
+                        {search
+                          ? `No results for "${search}"`
+                          : `No employees found in ${orgFilter !== 'All Organizations' ? (ORG_SHORT_NAMES[orgFilter] || orgFilter) : 'the system'}`}
                       </div>
-                      {(search || dept !== 'All Depts') && (
-                        <button onClick={() => { setSearch(''); setDept('All Depts'); }} className="mt-1 px-3 py-1.5 text-xs text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">
+                      {isFilterActive && (
+                        <button
+                          onClick={resetAllFilters}
+                          className="mt-1 px-3 py-1.5 text-xs text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer"
+                        >
                           Clear filters
                         </button>
                       )}
@@ -3575,8 +3808,24 @@ function EmployeesView() {
                       <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
                         {emp.name.split(' ').map(n => n[0]).join('')}
                       </div>
-                      <span className="text-xs font-medium text-slate-800">{emp.name}</span>
+                      <div>
+                        <span className="text-xs font-medium text-slate-800 block leading-tight">{emp.name}</span>
+                        <span className="text-[10px] text-slate-400 leading-tight block">{emp.email}</span>
+                      </div>
                     </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setOrgFilter(emp.org)}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border transition-opacity hover:opacity-80 cursor-pointer ${
+                        ORG_COLORS[emp.org]
+                          ? `${ORG_COLORS[emp.org].bg} ${ORG_COLORS[emp.org].text} ${ORG_COLORS[emp.org].border}`
+                          : 'bg-slate-100 text-slate-700 border-slate-200'
+                      }`}
+                      title={`Filter by ${emp.org}`}
+                    >
+                      🏢 {ORG_SHORT_NAMES[emp.org] || emp.org}
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-xs text-slate-600">{emp.dept}</td>
                   <td className="px-4 py-3 text-xs text-slate-600">{emp.shift}</td>
@@ -3593,13 +3842,13 @@ function EmployeesView() {
                     <div className="flex gap-1">
                       <button
                         onClick={() => setProfileEmp(emp)}
-                        className="px-2 py-1 text-[10px] bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
+                        className="px-2 py-1 text-[10px] bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium cursor-pointer"
                       >
                         View
                       </button>
                       <button
                         onClick={() => setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, eligible: !e.eligible } : e))}
-                        className="px-2 py-1 text-[10px] bg-slate-100 text-slate-600 rounded hover:bg-slate-200"
+                        className="px-2 py-1 text-[10px] bg-slate-100 text-slate-600 rounded hover:bg-slate-200 cursor-pointer"
                         title="Toggle eligibility"
                       >
                         {emp.eligible ? 'Disable' : 'Enable'}
@@ -3622,16 +3871,16 @@ function EmployeesView() {
             <div className="h-3.5 w-px bg-slate-300 hidden md:block" />
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active: {employees.filter(e => e.status === 'Active').length}
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active: {filtered.filter(e => e.status === 'Active').length}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive: {employees.filter(e => e.status === 'Inactive').length}
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive: {filtered.filter(e => e.status === 'Inactive').length}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Eligible: {employees.filter(e => e.eligible).length}
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Eligible: {filtered.filter(e => e.eligible).length}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ineligible: {employees.filter(e => !e.eligible).length}
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ineligible: {filtered.filter(e => !e.eligible).length}
               </span>
             </div>
           </div>
