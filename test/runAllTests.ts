@@ -7,6 +7,7 @@ import { runRoutingTests } from './routing.test';
 import { runDriverSelectionTests } from './driverSelection.test';
 import { runReassignmentTests } from './reassignment.test';
 import { runGeolocationTests } from './geolocation.test';
+import { runApiEndpointTests } from './apiEndpoints.test';
 
 async function main() {
   console.log('================================================================');
@@ -47,6 +48,14 @@ async function main() {
     passedSuites++;
   } catch (err) {
     console.error('  ✗ Geolocation Tests Failed:', err);
+    failedSuites++;
+  }
+
+  try {
+    await runApiEndpointTests();
+    passedSuites++;
+  } catch (err) {
+    console.error('  ✗ API Endpoint Tests Failed:', err);
     failedSuites++;
   }
 
