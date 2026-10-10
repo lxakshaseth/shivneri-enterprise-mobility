@@ -303,14 +303,23 @@ export default function RoutesView() {
   const [simSpeed, setSimSpeed] = useState<0.5 | 1 | 2>(1); // 0.5x Slow, 1x Normal, 2x Fast
   const [cabProgress, setCabProgress] = useState(0.28); // 0.0 to 1.0 along the route
   const [selectedPassenger, setSelectedPassenger] = useState<Passenger | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'Active' | 'Delayed' | 'Inactive'>('ALL');
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3200);
   };
 
-  // Filter routes
+  const statusCounts = {
+    ALL: routes.length,
+    Active: routes.filter((r) => r.status === 'Active').length,
+    Delayed: routes.filter((r) => r.status === 'Delayed').length,
+    Inactive: routes.filter((r) => r.status === 'Inactive').length,
+  };
+
+  // Filter routes by search query and status filter
   const filteredRoutes = routes.filter((r) => {
+    if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return (
@@ -415,7 +424,12 @@ export default function RoutesView() {
         <div className="p-4 border-b border-slate-200 flex-shrink-0 bg-slate-50/50">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Cab Routes</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-sm font-bold text-slate-900">Cab Routes</h3>
+                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded-md font-mono">
+                  {filteredRoutes.length}
+                </span>
+              </div>
               <p className="text-[11px] text-slate-500">
                 Shared Corporate Commutes · <strong className="text-blue-600">2-4 seats/cab</strong>
               </p>
@@ -446,6 +460,35 @@ export default function RoutesView() {
                 ✕
               </button>
             )}
+          </div>
+
+          {/* Status Filter Pills */}
+          <div className="flex items-center gap-1 mt-2.5 overflow-x-auto pb-0.5">
+            {(['ALL', 'Active', 'Delayed', 'Inactive'] as const).map((st) => {
+              const isCurrent = statusFilter === st;
+              const count = statusCounts[st];
+              return (
+                <button
+                  key={st}
+                  onClick={() => {
+                    setStatusFilter(st);
+                    setSelectedIdx(0);
+                  }}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all shrink-0 flex items-center gap-1 cursor-pointer ${
+                    isCurrent
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                  }`}>
+                  <span>{st === 'ALL' ? 'All' : st}</span>
+                  <span
+                    className={`text-[9px] px-1 py-0.2 rounded-full ${
+                      isCurrent ? 'bg-white/20 text-white font-mono' : 'bg-slate-200 text-slate-700 font-mono'
+                    }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -518,6 +561,22 @@ export default function RoutesView() {
               </div>
             );
           })}
+          {filteredRoutes.length === 0 && (
+            <div className="py-8 px-4 text-center text-slate-400 text-xs">
+              <div className="text-2xl mb-1.5">🚖</div>
+              <div className="font-semibold text-slate-700">No cab routes found</div>
+              <p className="text-[11px] text-slate-500 mt-1">Try resetting the status filter or search keyword</p>
+              <button
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('ALL');
+                }}
+                className="mt-3 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
