@@ -21,11 +21,48 @@ app.use('/api/drivers', driverRoutes);
 app.use('/api/routes', routeRoutes);
 app.use('/api/rides', rideRoutes);
 
+// Root welcome & API descriptor endpoint
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({
+    service: 'Shivneri Enterprise Mobility API',
+    version: '1.0.2',
+    status: 'online',
+    documentation: {
+      health: '/api/health',
+      drivers: '/api/drivers',
+      routes: '/api/routes',
+      rides: '/api/rides',
+    },
+    engine: {
+      map: 'OpenStreetMap',
+      routing: 'OSRM',
+      database: dbManager.isConnectedToMongo ? 'MongoDB (Native)' : 'MongoDB (2dsphere In-Memory Engine)',
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
+  const memory = process.memoryUsage();
+  const uptimeSeconds = Math.floor(process.uptime());
+
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
+    uptime: {
+      seconds: uptimeSeconds,
+      formatted: `${Math.floor(uptimeSeconds / 3600)}h ${Math.floor((uptimeSeconds % 3600) / 60)}m ${uptimeSeconds % 60}s`,
+    },
+    system: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      memory: {
+        heapUsedMb: Math.round((memory.heapUsed / 1024 / 1024) * 100) / 100,
+        heapTotalMb: Math.round((memory.heapTotal / 1024 / 1024) * 100) / 100,
+        rssMb: Math.round((memory.rss / 1024 / 1024) * 100) / 100,
+      },
+    },
     services: {
       mapData: 'OpenStreetMap (Free)',
       mapRendering: 'Leaflet / React-Leaflet',

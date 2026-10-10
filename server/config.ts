@@ -1,7 +1,12 @@
 import 'dotenv/config';
 
 export const CONFIG = {
-  PORT: parseInt(process.env.PORT || '5001', 10),
+  PORT: parseInt(
+    process.env.BACKEND_PORT ||
+      process.env.SERVER_PORT ||
+      (process.env.PORT && process.env.PORT !== '8443' ? process.env.PORT : '5001'),
+    10
+  ),
   MONGODB_URI:
     process.env.MONGODB_URI ||
     process.env.MONGO_URI ||
