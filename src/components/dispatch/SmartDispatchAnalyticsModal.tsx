@@ -3,7 +3,7 @@
 // Enterprise Operational Intelligence, SLA Protection Metrics & Performance Analytics
 // ============================================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, ResponsiveContainer,
   XAxis, YAxis, CartesianGrid, Tooltip
@@ -33,6 +33,42 @@ const ROUTE_DISTRIBUTION_DATA = [
 ];
 
 export function SmartDispatchAnalyticsModal({ kpis, onClose }: Props) {
+  const [exported, setExported] = useState(false);
+
+  const handleExportCsv = () => {
+    const lines: string[] = [
+      '=== SHIVNERI SMART DISPATCH & SLA PERFORMANCE REPORT ===',
+      `Generated At,${new Date().toISOString()}`,
+      `Pickups Saved From SLA Breach,${kpis.pickupsSavedFromSlaBreach}`,
+      `Average ETA Improvement (Minutes),${kpis.averageEtaImprovementMinutes}`,
+      `Driver Acceptance Rate (%),${kpis.driverAcceptanceRatePct}`,
+      `Total Reassignments Today,${kpis.totalReassignmentsToday}`,
+      `Average Reassignment Time (Seconds),${kpis.averageReassignmentTimeSeconds}`,
+      `TrustPass Verification Pass Rate (%),${kpis.trustPassSuccessRatePct}`,
+      `Average Search Radius (Km),${kpis.averageSearchRadiusKm}`,
+      `Average Candidate Pool Size,${kpis.averageCandidateCount}`,
+      '',
+      '=== HOURLY SAVED PICKUPS ===',
+      'Hour,Saved Pickups,Breaches Prevented',
+      ...HOURLY_SAVED_DATA.map((d) => `${d.hour},${d.saved},${d.breaches}`),
+      '',
+      '=== CORRIDOR REASSIGNMENT BREAKDOWN ===',
+      'Corridor Route,Reassignments',
+      ...ROUTE_DISTRIBUTION_DATA.map((d) => `"${d.route}",${d.reassignments}`),
+    ];
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `shivneri-dispatch-sla-report-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setExported(true);
+    setTimeout(() => setExported(false), 3000);
+  };
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl border border-slate-200 overflow-hidden max-h-[90vh] flex flex-col animate-scaleUp">
@@ -171,7 +207,14 @@ export function SmartDispatchAnalyticsModal({ kpis, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+          <button
+            onClick={handleExportCsv}
+            className="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+          >
+            <span>{exported ? '✓' : '📥'}</span>
+            <span>{exported ? 'Report Downloaded!' : 'Export CSV Audit Report'}</span>
+          </button>
           <button
             onClick={onClose}
             className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer"
